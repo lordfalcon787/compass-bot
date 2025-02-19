@@ -92,6 +92,23 @@ class misc(commands.Cog):
         embed.set_footer(icon_url=RC_ICON, text="Robbing Central Masters Event")
         await ctx.reply(embed=embed, mention_author=False)
 
+    @commands.command(name="check")
+    async def check_registered(self, ctx):
+        role = ctx.guild.get_role(1337099004391063625)
+        team_choco = ctx.guild.get_role(1341576933984436334)
+        team_moon = ctx.guild.get_role(1341576995019948112)
+        team_falcon = ctx.guild.get_role(1341577068609273878)
+        non_team_members = [member for member in role.members if team_choco not in member.roles and team_moon not in member.roles and team_falcon not in member.roles]
+        descp = "**Members without a team:**\n"
+        num = 1
+        for member in non_team_members:
+            descp = f"{descp}\n{num}. {member.mention}"
+            num += 1
+        embed = nextcord.Embed(title="Members Without a Team", description=descp, color=nextcord.Color.red())
+        embed.timestamp = nextcord.utils.utcnow()
+        embed.set_footer(icon_url=RC_ICON, text="Robbing Central Masters Event")
+        await ctx.reply(embed=embed, mention_author=False)
+            
     @commands.command(name="masterslb")
     async def masterslb(self, ctx):
         split = ctx.message.content.split(" ")
