@@ -98,7 +98,6 @@ class misc(commands.Cog):
         embed.set_footer(icon_url=RC_ICON, text="Robbing Central Masters Event")
         await ctx.reply(embed=embed, mention_author=False)
 
-
     @commands.command(name="masterslb")
     async def masterslb(self, ctx):
         split = ctx.message.content.split(" ")
