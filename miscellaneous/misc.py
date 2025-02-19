@@ -69,10 +69,9 @@ class misc(commands.Cog):
 
     @commands.command(name="mastersevent")
     async def mastersevent(self, ctx):
-        team_choco = ctx.guild.get_role(1337082100326862892).members
-        team_moon = ctx.guild.get_role(1337082046639636521).members
-        team_falcon = ctx.guild.get_role(1337081936740614318).members
-        team_dictators = ctx.guild.get_role(1340093480889749628).members
+        team_choco = ctx.guild.get_role(1341576933984436334).members
+        team_moon = ctx.guild.get_role(1341576995019948112).members
+        team_falcon = ctx.guild.get_role(1341577068609273878).members
         descp = "**Team Choco Members:**\n"
         num = 1
         for member in team_choco:
@@ -86,11 +85,6 @@ class misc(commands.Cog):
         descp = f"{descp}\n\n**Team Falcon Members:**\n"
         num = 1
         for member in team_falcon:
-            descp = f"{descp}\n{num}. {member.mention}"
-            num += 1
-        descp = f"{descp}\n\n**Team Dictators Members:**\n"
-        num = 1
-        for member in team_dictators:
             descp = f"{descp}\n{num}. {member.mention}"
             num += 1
         embed = nextcord.Embed(title="Masters Event Members", description=descp, color=nextcord.Color.yellow())
@@ -108,10 +102,9 @@ class misc(commands.Cog):
         if "user" in type:
             await self.masterslbusers(ctx)
         elif "team" in type:
-            team_choco = ctx.guild.get_role(1337082100326862892)
-            team_moon = ctx.guild.get_role(1337082046639636521)
-            team_falcon = ctx.guild.get_role(1337081936740614318)
-            team_dictators = ctx.guild.get_role(1340093480889749628)
+            team_choco = ctx.guild.get_role(1341576933984436334)
+            team_moon = ctx.guild.get_role(1341576995019948112)
+            team_falcon = ctx.guild.get_role(1341577068609273878)
             doc = masters.find_one({"_id": "masters_event"})
             if doc is None:
                 await ctx.reply("No users have any points.", mention_author=False)
@@ -120,7 +113,6 @@ class misc(commands.Cog):
             choco_points = 0
             moon_points = 0
             falcon_points = 0
-            dictators_points = 0
             for user_id, points in doc.items():
                 member = ctx.guild.get_member(int(user_id))
                 if member is None:
@@ -131,9 +123,7 @@ class misc(commands.Cog):
                     moon_points += points
                 elif team_falcon in member.roles:
                     falcon_points += points
-                elif team_dictators in member.roles:
-                    dictators_points += points
-            sorted_dict = {"Team Choco": choco_points, "Team Moon": moon_points, "Team Falcon": falcon_points, "Team Dictators": dictators_points}
+            sorted_dict = {"Team Choco": choco_points, "Team Moon": moon_points, "Team Falcon": falcon_points}
             sorted_dict = dict(sorted(sorted_dict.items(), key=lambda item: item[1], reverse=True))
             descp = ""
             num = 1
