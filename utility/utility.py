@@ -370,11 +370,11 @@ class utility(commands.Cog):
                 member = message.guild.get_member(message.author.id)
                 time = datetime.now() + timedelta(seconds=10)
                 await member.edit(timeout=time)
-            elif "timeout" in choice and "30" in choice and message.author.guild_permissions.administrator:
+            elif "timeout" in choice and "30" in choice and not message.author.guild_permissions.administrator:
                 member = message.guild.get_member(message.author.id)
                 time = datetime.now() + timedelta(seconds=30)
                 await member.edit(timeout=time)
-            elif "timeout" in choice and "60" in choice and message.author.guild_permissions.administrator:
+            elif "timeout" in choice and "60" in choice and not message.author.guild_permissions.administrator:
                 member = message.guild.get_member(message.author.id)
                 time = datetime.now() + timedelta(seconds=60)
                 await member.edit(timeout=time)
