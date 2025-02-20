@@ -93,19 +93,19 @@ class misc(commands.Cog):
         team_choco_button = nextcord.ui.Button(label="Team Choco", style=nextcord.ButtonStyle.primary)
         team_moon_button = nextcord.ui.Button(label="Team Moon", style=nextcord.ButtonStyle.primary)
 
-        @team_choco_button.callback
         async def team_choco_callback(interaction):
-            if interaction.author != ctx.author:
-                await interaction.response.send_message("You are not the original author of this command.", ephemeral=True)
+            await interaction.response.defer(ephemeral=True)
+            if interaction.user != ctx.author:
+                await interaction.followup.send("You are not the original author of this command.", ephemeral=True)
                 return
-            await interaction.response.edit_message(embed=embed_1)
+            await interaction.message.edit(embed=embed_1)
 
-        @team_moon_button.callback
         async def team_moon_callback(interaction):
-            if interaction.author != ctx.author:
-                await interaction.response.send_message("You are not the original author of this command.", ephemeral=True)
+            await interaction.response.defer(ephemeral=True)
+            if interaction.user != ctx.author:
+                await interaction.followup.send("You are not the original author of this command.", ephemeral=True)
                 return
-            await interaction.response.edit_message(embed=embed_2)
+            await interaction.message.edit(embed=embed_2)
 
         view = nextcord.ui.View()
         team_choco_button.callback = team_choco_callback
