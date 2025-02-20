@@ -942,7 +942,50 @@ class payouts(commands.Cog):
             
         return choices
     
-
+    async def get_message(self, interaction, message_id):
+        msg = None
+        if message_id:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(f"https://google.com") as response:
+                        if response.status == 200:
+                            msg = await interaction.channel.fetch_message(message_id)
+                        else:
+                            await interaction.send(content="Unable to find a message ID, make sure it is correct.", ephemeral=True)
+                            return
+            except:
+                await interaction.send(content="Unable to find a message ID, make sure it is correct.", ephemeral=True)
+                return
+            if loading_emoji in [str(reaction.emoji) for reaction in msg.reactions if reaction.me]:
+                await interaction.send(content="That message has already been used for a payout.", ephemeral=True)
+                return
+        else:
+            try:
+                messages = []
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(f"https://google.com") as response:
+                        if response.status == 200:
+                            messages = [msg async for msg in interaction.channel.history(limit=20)]
+                        else:
+                            await interaction.send(content="API connection failed. Please try using a manual message ID.", ephemeral=True)
+                            return
+                for message in messages:
+                    if message.author.bot:
+                        if loading_emoji not in [str(reaction.emoji) for reaction in message.reactions if reaction.me] and "locked" not in message.content.lower():
+                            if message.author.id == self.bot.user.id and message.content == "":
+                                continue
+                            elif "your mafia" in message.content.lower():
+                                continue
+                            elif message.embeds:
+                                if message.embeds[0].author:
+                                    if "calculate" in message.embeds[0].author.name.lower():
+                                        continue
+                            msg = message
+                            break
+            except:
+                await interaction.send(content="Unable to find a message ID, make sure it is correct.", ephemeral=True)
+                return
+        return msg
 
     @nextcord.slash_command(description="Payout commands.", name="payout")
     @application_checks.guild_only()
@@ -958,14 +1001,10 @@ class payouts(commands.Cog):
                               winners_list: str = SlashOption(description="The list of winners that won the event with spaces separated."),
                               winner_1_quantity: str = SlashOption(description="The quantity of the first winner to pay out."),
                               winner_2_quantity: str = SlashOption(description="The quantity of the second winner to pay out."),
-                              winner_1_item: Optional[str] = SlashOption(description="The item of the first winner to pay out", autocomplete=True),
-                              winner_2_item: Optional[str] = SlashOption(description="The item of the second winner to pay out", autocomplete=True),
                               winner_3_quantity: Optional[str] = SlashOption(description="The quantity of the third winner to pay out."),
-                              winner_3_item: Optional[str] = SlashOption(description="The item of the third winner to pay out", autocomplete=True),
                               winner_4_quantity: Optional[str] = SlashOption(description="The quantity of the fourth winner to pay out."),
-                              winner_4_item: Optional[str] = SlashOption(description="The item of the fourth winner to pay out", autocomplete=True),
                               winner_5_quantity: Optional[str] = SlashOption(description="The quantity of the fifth winner to pay out."),
-                              winner_5_item: Optional[str] = SlashOption(description="The item of the fifth winner to pay out", autocomplete=True),
+                              item: Optional[str] = SlashOption(description="The item to queue for the first winner.", autocomplete=True),
                               message_id: Optional[str] = SlashOption(description="The message id of the event.")):
         
         await interaction.response.defer(ephemeral=True)
@@ -977,35 +1016,27 @@ class payouts(commands.Cog):
             await interaction.send(content="You must manually input a message ID in the giveaway channel.", ephemeral=True)
             return
         
-        if message_id is None:
-            async for message in interaction.channel.history(limit=30):
-                if message.author.bot and len(message.reactions) == 0:
-                    message_id = message.id
-                    break
-        else:
-            if "/" in message_id:
-                message_id = message_id.split("/")[6]
-            message_id = int(message_id)
-        
-        try:
-            await interaction.channel.fetch_message(message_id)
-        except:
+        msg = None
+        msg = await self.get_message(interaction, message_id)
+            
+        if msg is None:
             await interaction.send(content="Unable to find a message ID, make sure it is correct.", ephemeral=True)
             return
         
+        messageid = msg.id
         winners = winners_list.split(" ")
         winners_count = len(winners)
         winner_details = []
         if winner_1_quantity:
-            winner_details.append((winner_1_quantity, winner_1_item))
+            winner_details.append((winner_1_quantity, item))
         if winner_2_quantity:
-            winner_details.append((winner_2_quantity, winner_2_item))
+            winner_details.append((winner_2_quantity, item))
         if winner_3_quantity:
-            winner_details.append((winner_3_quantity, winner_3_item))
+            winner_details.append((winner_3_quantity, item))
         if winner_4_quantity:
-            winner_details.append((winner_4_quantity, winner_4_item))
+            winner_details.append((winner_4_quantity, item))
         if winner_5_quantity:
-            winner_details.append((winner_5_quantity, winner_5_item))
+            winner_details.append((winner_5_quantity, item))
 
         if winners_count != len(winner_details):
             await interaction.send(
@@ -1057,6 +1088,7 @@ class payouts(commands.Cog):
             embed = nextcord.Embed(description=f"<a:loading_animation:1218134049780928584> | Setting up payouts for {len(winners)} winners.")
             embed.set_footer(text=f"This time may vary depending on the amount of winners.")
             await former_interaction.edit(embed=embed, view=None)
+            nonlocal messageid
             num = 0
             for winner in winners:
                 quan = winner_details[num][0]
@@ -1080,10 +1112,11 @@ class payouts(commands.Cog):
                     except ValueError:
                         await interaction.response.send_message(content="Invalid quantity. Please enter a number.", ephemeral=True)
                         return
-                args = [winner, quan, item, message_id, event]
+                args = [winner, quan, item, messageid, event]
                 await self.queue_payout(args, interaction)
                 num += 1
             embed.description = f"<:green_check:1218286675508199434> | Payouts have been queued successfully."
+            embed.color = 65280
             view = QueuedPayoutsView()
             config = configuration.find_one({"_id": "config"})
             claim = config[f"claim"]
@@ -1228,7 +1261,6 @@ class payouts(commands.Cog):
             await interaction.response.defer(ephemeral=True)
         except:
             return
-        time = datetime.now()
         config = configuration.find_one({"_id": "config"})
         event_manager = config[f"event_manager_role"]
         if str(interaction.guild.id) in event_manager:
@@ -1244,57 +1276,15 @@ class payouts(commands.Cog):
             return
         if override is None:
             override = False
-        time_1 = datetime.now()
         msg = None
-        if message_id:
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(f"https://google.com") as response:
-                        if response.status == 200:
-                            msg = await self.bot.get_channel(interaction.channel.id).fetch_message(message_id)
-                        else:
-                            await interaction.send(content="Unable to find a message ID, make sure it is correct.", ephemeral=True)
-                            return
-                msg = await interaction.channel.fetch_message(message_id)
-            except Exception as e:
-                print(f"Error in fetching message ID: {e}")
-                await interaction.send(content="Unable to find a message ID, make sure it is correct.", ephemeral=True)
-                return
-            if loading_emoji in [str(reaction.emoji) for reaction in msg.reactions if reaction.me] and not override:
-                await interaction.send(content="That message has already been used for a payout.", ephemeral=True)
-                return
-        else:
-            try:
-                messages = []
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(f"https://google.com") as response:
-                        if response.status == 200:
-                            messages = [msg async for msg in interaction.channel.history(limit=20)]
-                        else:
-                            await interaction.send(content="API connection failed. Please try using a manual message ID.", ephemeral=True)
-                            return
-                for message in messages:
-                    if message.author.bot:
-                        if loading_emoji not in [str(reaction.emoji) for reaction in message.reactions if reaction.me] and "locked" not in message.content.lower():
-                            if message.author.id == self.bot.user.id and message.content == "":
-                                continue
-                            elif "your mafia" in message.content.lower():
-                                continue
-                            elif message.embeds:
-                                if message.embeds[0].author:
-                                    if "calculate" in message.embeds[0].author.name.lower():
-                                        continue
-                            msg = message
-                            message_id = message.id
-                            break
-            except Exception as e:
-                print(f"Error fetching message history: {e}")
-                await interaction.send(content=f"Error fetching message history. Please enter message ID manually.", ephemeral=True)
-                return
-        time_2 = datetime.now()
+        msg = await self.get_message(interaction, message_id)
+
+
         if not msg:
             await interaction.send(content="No valid message found. Please enter manually.", ephemeral=True)
             return
+        
+        msgid = msg.id
         
         if event is not None:
             event = event.lower()
@@ -1313,12 +1303,11 @@ class payouts(commands.Cog):
                 event = "auction"
             else:
                 event = "Enter after confirmation."
-        time_3 = datetime.now()
+
         quantity = quantity.lower()
         args = ["+", "-", "*", "/"]
         if any(arg in quantity for arg in args):
             quantity = await self.calculator(interaction, quantity)
-        time_4 = datetime.now()
         multipliers = {'k': 1000, 'm': 1000000, 'b': 1000000000, 't': 1000000000000}
         if quantity[-1] in multipliers:
             try:
@@ -1350,10 +1339,8 @@ class payouts(commands.Cog):
         if quan <= 0:
             await interaction.send(content="You have entered an invalid quantity. Please enter a number greater than 0.", ephemeral=True)
             return
-        time_5 = datetime.now()
         winners = ", ".join([f"<@{usr}>" for usr in list])
         confirmation_embed = nextcord.Embed(title="Confirm Payouts", description=f"Are you sure you want to proceed with payouts for {len(list)} winners?\n\n{DOT} **Event:** {event}\n{DOT} **Winners:** {winners}\n{DOT} **Quantity:** {quan:,}\n{DOT} **Item:** {item if item else 'None'}\n{DOT} **Message:** {msg.jump_url}", color=nextcord.Color.blue())
-        time_6 = datetime.now()
         confirm_button = nextcord.ui.Button(label="Confirm", style=nextcord.ButtonStyle.green)
         cancel_button = nextcord.ui.Button(label="Cancel", style=nextcord.ButtonStyle.red)
 
@@ -1363,12 +1350,13 @@ class payouts(commands.Cog):
         view.add_item(cancel_button)
         msg = await interaction.send(embed=confirmation_embed, view=view, ephemeral=True)
         former_interaction = msg
-        time_7 = datetime.now()
+
         async def confirm_callback(interaction):
             nonlocal was_confirmed
+            nonlocal msgid
             was_confirmed = True
             if event == "Enter after confirmation.":
-                modal = EventModal(self.bot, interaction, list, quan, item, message_id, former_interaction)
+                modal = EventModal(self.bot, interaction, list, quan, item, msgid, former_interaction)
                 await interaction.response.send_modal(modal)
                 await asyncio.sleep(10)
                 try:
@@ -1382,7 +1370,7 @@ class payouts(commands.Cog):
             embed.set_footer(text=f"This time may vary depending on the amount of winners.")
             await former_interaction.edit(embed=embed, view=None)
             for usr in list:
-                args = [usr, quan, item, message_id, event]
+                args = [usr, quan, item, msgid, event]
                 await self.queue_payout(args, interaction)
             embed.description = f"<:green_check:1218286675508199434> | Payouts have been queued successfully."
             embed.color = 65280
@@ -1393,7 +1381,7 @@ class payouts(commands.Cog):
             view.add_item(nextcord.ui.Button(label="View Payouts", url=f"https://discord.com/channels/{interaction.guild.id}/{claim}/", emoji="🔗"))
             await former_interaction.edit(embed=embed, view=view)
             channel = self.bot.get_channel(interaction.channel.id)
-            message = await channel.fetch_message(int(message_id))
+            message = await channel.fetch_message(int(msgid))
             await message.add_reaction(loading_emoji)
             await asyncio.sleep(5)
             try:
@@ -1411,17 +1399,8 @@ class payouts(commands.Cog):
                 await former_interaction.delete()
             except:
                 return
-        time_8 = datetime.now()
         confirm_button.callback = confirm_callback
         cancel_button.callback = cancel_callback
-        print(f"Time 1: {(time_1 - time).total_seconds()}")
-        print(f"Time 2: {(time_2 - time_1).total_seconds()}")
-        print(f"Time 3: {(time_3 - time_2).total_seconds()}")
-        print(f"Time 4: {(time_4 - time_3).total_seconds()}")
-        print(f"Time 5: {(time_5 - time_4).total_seconds()}")
-        print(f"Time 6: {(time_6 - time_5).total_seconds()}")
-        print(f"Time 7: {(time_7 - time_6).total_seconds()}")
-        print(f"Time 8: {(time_8 - time_7).total_seconds()}")
         await asyncio.sleep(10)
         if not was_confirmed:
             await msg.edit(content="No response within 10 seconds, process terminated.", embed=None, view=None)
@@ -1774,11 +1753,7 @@ class payouts(commands.Cog):
             
 
     @payout_queue.on_autocomplete("item")
-    @payout_multiple.on_autocomplete("winner_1_item")
-    @payout_multiple.on_autocomplete("winner_2_item")
-    @payout_multiple.on_autocomplete("winner_3_item")
-    @payout_multiple.on_autocomplete("winner_4_item")
-    @payout_multiple.on_autocomplete("winner_5_item")
+    @payout_multiple.on_autocomplete("item")
     async def autocomplete_handler(self, interaction: nextcord.Interaction, current: str):
         try:
             choices = await self.get_choices(interaction, current)
