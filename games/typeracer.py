@@ -4,7 +4,7 @@ import aiohttp
 import random
 import io
 
-from fuzzywuzzy import fuzz
+from difflib import SequenceMatcher
 from datetime import datetime
 from nextcord.ext import commands
 from PIL import Image, ImageDraw, ImageFont
@@ -153,7 +153,7 @@ class Typeracer(commands.Cog):
         if con == quote:
             accuracy = 100
         else:
-            accuracy = fuzz.ratio(quote, con)
+            accuracy = SequenceMatcher(None, quote, con).ratio() * 100
         if accuracy > 95:
             self.cache.pop(message.channel.id)
             await message.add_reaction(GREEN_CHECK)
