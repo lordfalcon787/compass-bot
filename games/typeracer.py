@@ -28,8 +28,7 @@ class Typeracer(commands.Cog):
             if ctx.channel.id in self.cache:
                 await ctx.reply("There is already a game in progress in this channel.")
                 return
-            else:
-                await self.start_game(ctx)
+        await self.start_game(ctx)
 
     async def start_game(self, ctx):
         quote_data = await self.get_quote()
