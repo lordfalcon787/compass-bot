@@ -306,21 +306,6 @@ class PCMS(commands.Cog):
         except:
             pass
         view.message = await interaction.original_message()
-
-    @commands.Cog.listener()
-    async def on_message(self, message: nextcord.Message):
-        if message.author.bot:
-            return
-        con = message.content.lower()
-        if "<@&1205270486263795720>" not in con:
-            return
-        if message.channel.id != 1334991861185515636 and "1y" not in con and "1 year" not in con and "<#1336149180069969920>" not in con and "1 y" not in con and "master" not in con:
-            return
-        await message.reply("<@&1209676873949257899> 1 Year Event Detected! This counts towards the masters event! Join up!", mention_author=False)
-        if "gartic" not in con and "tea" not in con:
-            return
-        ice = await self.bot.fetch_user(582702884609851433)
-        await ice.send(f"1 Year Event Detected! {message.jump_url}")
             
 
 def setup(bot: commands.Bot):

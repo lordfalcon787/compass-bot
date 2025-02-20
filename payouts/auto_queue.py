@@ -18,7 +18,7 @@ class MafiaModal(nextcord.ui.Modal):
     def __init__(self, bot, interaction, winners_list):
         super().__init__(
             "Prize",
-            timeout=300,
+            timeout=None,
         )
 
         self.event_name = nextcord.ui.TextInput(
@@ -496,7 +496,7 @@ class Modal(nextcord.ui.Modal):
 
 class QueueThis(nextcord.ui.View):
     def __init__(self, bot):
-        super().__init__()
+        super().__init__(timeout=None)
         self.bot = bot
         
         button = nextcord.ui.Button(label="Queue This?", style=nextcord.ButtonStyle.primary, custom_id="auto_queue_confirm")
@@ -510,12 +510,13 @@ class QueueThis(nextcord.ui.View):
         winners_list = None
         try:
             await interaction.response.send_modal(MafiaModal(self.bot, interaction, winners_list))
-        except:
+        except Exception as e:
+            print(f"Error in auto_queue_confirm: {e}")
             return
         
 class QueueThisRumble(nextcord.ui.View):
     def __init__(self, bot):
-        super().__init__()
+        super().__init__(timeout=None)
         self.bot = bot
         
         button = nextcord.ui.Button(label="Queue This?", style=nextcord.ButtonStyle.primary, custom_id="auto_queue_rumble_confirm")
@@ -535,12 +536,11 @@ class auto_queue(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def cog_load(self):
-        self.bot.add_view(QueueThis(self.bot))
 
     @commands.Cog.listener()
     async def on_ready(self):
         self.bot.add_view(QueueThis(self.bot))
+        self.bot.add_view(QueueThisRumble(self.bot))
         print("Auto Queue Cog is ready.")
 
 
