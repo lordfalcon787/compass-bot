@@ -16,6 +16,7 @@ class Typeracer(commands.Cog):
         self.bot = bot
         self.cache = {}
         self.lock = asyncio.Lock()
+        self.lock2 = asyncio.Lock()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -23,11 +24,12 @@ class Typeracer(commands.Cog):
 
     @commands.command(name="typeracer", aliases=["tr"])
     async def typeracer(self, ctx):
-        if ctx.channel.id in self.cache:
-            await ctx.reply("There is already a game in progress in this channel.")
-            return
-        else:
-            await self.start_game(ctx)
+        async with self.lock2:
+            if ctx.channel.id in self.cache:
+                await ctx.reply("There is already a game in progress in this channel.")
+                return
+            else:
+                await self.start_game(ctx)
 
     async def start_game(self, ctx):
         quote_data = await self.get_quote()
