@@ -71,34 +71,55 @@ class misc(commands.Cog):
     async def mastersevent(self, ctx):
         team_choco = ctx.guild.get_role(1341576933984436334).members
         team_moon = ctx.guild.get_role(1341576995019948112).members
-        team_falcon = ctx.guild.get_role(1341577068609273878).members
-        descp = "**Team Choco Members:**\n"
-        num = 1
-        for member in team_choco:
-            descp = f"{descp}\n{num}. {member.mention}"
-            num += 1
-        descp = f"{descp}\n\n**Team Moon Members:**\n"
-        num = 1
-        for member in team_moon:
-            descp = f"{descp}\n{num}. {member.mention}"
-            num += 1
-        descp = f"{descp}\n\n**Team Falcon Members:**\n"
-        num = 1
-        for member in team_falcon:
-            descp = f"{descp}\n{num}. {member.mention}"
-            num += 1
-        embed = nextcord.Embed(title="Masters Event Members", description=descp, color=nextcord.Color.yellow())
-        embed.timestamp = nextcord.utils.utcnow()
-        embed.set_footer(icon_url=RC_ICON, text="Robbing Central Masters Event")
-        await ctx.reply(embed=embed, mention_author=False)
+        
+        choco_descp = "**Team Choco Members:**\n"
+        for num, member in enumerate(team_choco, start=1):
+            choco_descp = f"{choco_descp}\n{num}. {member.mention}"
+
+        moon_descp = "**Team Moon Members:**\n"
+        for num, member in enumerate(team_moon, start=1):
+            moon_descp = f"{moon_descp}\n{num}. {member.mention}"
+
+        embed_1 = nextcord.Embed(title="Masters Event", color=nextcord.Color.yellow())
+        embed_1.description = choco_descp
+        embed_1.timestamp = nextcord.utils.utcnow()
+        embed_1.set_footer(icon_url=RC_ICON, text="Robbing Central Masters Event")
+
+        embed_2 = nextcord.Embed(title="Masters Event", color=nextcord.Color.yellow())
+        embed_2.description = moon_descp
+        embed_2.timestamp = nextcord.utils.utcnow()
+        embed_2.set_footer(icon_url=RC_ICON, text="Robbing Central Masters Event")
+        
+        team_choco_button = nextcord.ui.Button(label="Team Choco", style=nextcord.ButtonStyle.primary)
+        team_moon_button = nextcord.ui.Button(label="Team Moon", style=nextcord.ButtonStyle.primary)
+
+        @team_choco_button.callback
+        async def team_choco_callback(interaction):
+            if interaction.author != ctx.author:
+                await interaction.response.send_message("You are not the original author of this command.", ephemeral=True)
+                return
+            await interaction.response.edit_message(embed=embed_1)
+
+        @team_moon_button.callback
+        async def team_moon_callback(interaction):
+            if interaction.author != ctx.author:
+                await interaction.response.send_message("You are not the original author of this command.", ephemeral=True)
+                return
+            await interaction.response.edit_message(embed=embed_2)
+
+        view = nextcord.ui.View()
+        team_choco_button.callback = team_choco_callback
+        team_moon_button.callback = team_moon_callback
+        view.add_item(team_choco_button)
+        view.add_item(team_moon_button)
+        await ctx.reply(embed=embed_1, view=view, mention_author=False)
 
     @commands.command(name="check")
     async def check_registered(self, ctx):
         role = ctx.guild.get_role(1337099004391063625)
         team_choco = ctx.guild.get_role(1341576933984436334)
         team_moon = ctx.guild.get_role(1341576995019948112)
-        team_falcon = ctx.guild.get_role(1341577068609273878)
-        non_team_members = [member for member in role.members if team_choco not in member.roles and team_moon not in member.roles and team_falcon not in member.roles]
+        non_team_members = [member for member in role.members if team_choco not in member.roles and team_moon not in member.roles]
         descp = "**Members without a team:**\n"
         num = 1
         for member in non_team_members:
@@ -121,7 +142,6 @@ class misc(commands.Cog):
         elif "team" in type:
             team_choco = ctx.guild.get_role(1341576933984436334)
             team_moon = ctx.guild.get_role(1341576995019948112)
-            team_falcon = ctx.guild.get_role(1341577068609273878)
             doc = masters.find_one({"_id": "masters_event"})
             if doc is None:
                 await ctx.reply("No users have any points.", mention_author=False)
@@ -129,7 +149,6 @@ class misc(commands.Cog):
             doc.pop("_id")
             choco_points = 0
             moon_points = 0
-            falcon_points = 0
             for user_id, points in doc.items():
                 member = ctx.guild.get_member(int(user_id))
                 if member is None:
@@ -138,9 +157,7 @@ class misc(commands.Cog):
                     choco_points += points
                 elif team_moon in member.roles:
                     moon_points += points
-                elif team_falcon in member.roles:
-                    falcon_points += points
-            sorted_dict = {"Team Choco": choco_points, "Team Moon": moon_points, "Team Falcon": falcon_points}
+            sorted_dict = {"Team Choco": choco_points, "Team Moon": moon_points}
             sorted_dict = dict(sorted(sorted_dict.items(), key=lambda item: item[1], reverse=True))
             descp = ""
             num = 1
