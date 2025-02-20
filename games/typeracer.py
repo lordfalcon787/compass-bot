@@ -149,13 +149,18 @@ class Typeracer(commands.Cog):
         quote = cache["quote"]
         msg = cache["message"]
         con = message.content
-        accuracy = fuzz.ratio(quote, con) / 100
+        accuracy = 0
+        if con == quote:
+            accuracy = 100
+        else:
+            accuracy = fuzz.ratio(quote, con)
         if accuracy > 0.95:
             self.cache.pop(message.channel.id)
             await message.add_reaction(GREEN_CHECK)
             time_completed = (time - cache["time"]).total_seconds()
             wpm = len(con.split()) / time_completed * 60
-            embed = nextcord.Embed(description=f"The race is over! Here are the results:\n1. {message.author.mention} [finished the quote]({msg.jump_url}) in `{time_completed:.2f}s` with an accuracy of **{accuracy * 100:.2f}%**. (**{wpm:.2f} WPM**)", color=nextcord.Color.green())
+            accuracy = float(f"{accuracy:.2f}")
+            embed = nextcord.Embed(description=f"The race is over! Here are the results:\n1. {message.author.mention} [finished the quote]({msg.jump_url}) in `{time_completed:.2f}s` with an accuracy of **{accuracy}%**. (**{wpm:.2f} WPM**)", color=nextcord.Color.green())
             await msg.reply(embed=embed)
     
     @commands.Cog.listener()
