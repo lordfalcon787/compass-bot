@@ -154,7 +154,7 @@ class Typeracer(commands.Cog):
             accuracy = 100
         else:
             accuracy = fuzz.ratio(quote, con)
-        if accuracy > 0.95:
+        if accuracy > 95:
             self.cache.pop(message.channel.id)
             await message.add_reaction(GREEN_CHECK)
             time_completed = (time - cache["time"]).total_seconds()
