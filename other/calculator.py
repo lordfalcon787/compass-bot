@@ -1,11 +1,9 @@
 import nextcord
-import json
 import re
 
 from nextcord.ext import commands
 from nextcord import SlashOption
 from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
 from utils.mongo_connection import MongoConnection
 
 mongo = MongoConnection.get_instance()
@@ -55,66 +53,43 @@ class Calculator(commands.Cog):
     async def item_finder(self, item_name):
         all_items = collection.find({})
         all_items = [item["_id"] for item in all_items if isinstance(item["_id"], str)]
-        
         cleaned_input = item_name.replace(",", "").replace("'", "").lower()
+        item_dict_simple = {}
+        item_dict_partial = {}
+        the_item = None
 
         for item in all_items:
-            if cleaned_input == item.lower():
-                return item
+            if item.lower() == cleaned_input:
+                the_item = item
+                break
+
+        if the_item is not None:
+            return the_item
         
         for item in all_items:
-            item_words = item.lower().split()
-            if cleaned_input in item_words:
-                return item
+            ratio = fuzz.ratio(item.lower(), cleaned_input)
+            ratio2 = fuzz.partial_ratio(item.lower(), cleaned_input)
+            if ratio > 90:
+                item_dict_simple[item] = ratio
+            item_dict_partial[item] = ratio2
+
+        item_dict_simple = sorted(item_dict_simple.items(), key=lambda x: x[1], reverse=True)
+        item_dict_partial = sorted(item_dict_partial.items(), key=lambda x: x[1], reverse=True)
+        if len(item_dict_simple) > 0:
+            the_item = item_dict_simple[0][0]
+        elif len(item_dict_partial) > 0:
+            the_item = item_dict_partial[0][0]
+        return the_item
         
-        best_match = process.extractOne(
-            cleaned_input,
-            all_items,
-            scorer=fuzz.token_sort_ratio,
-            score_cutoff=75
-        )
-        
-        if best_match:
-            return best_match[0]
-            
-        if len(cleaned_input) > 3:
-            for item in all_items:
-                if cleaned_input in item.lower():
-                    return item
-        best_match = process.extractOne(
-            cleaned_input,
-            all_items,
-            scorer=fuzz.partial_ratio,
-            score_cutoff=69
-        )
-
-        if not best_match:
-            if len(cleaned_input) >= 3:
-                matches = [item for item in all_items if item.lower().startswith(cleaned_input)]
-                if matches:
-                    return min(matches, key=len)
-                
-        if not best_match:
-            best_match = process.extractOne(
-            cleaned_input,
-            all_items,
-            scorer=fuzz.token_sort_ratio,
-            score_cutoff=50
-        )
-                
-        if not best_match:
-            best_match = process.extractOne(
-            cleaned_input,
-            all_items,
-            scorer=fuzz.partial_ratio,
-            score_cutoff=35
-        )
-
-
-        if best_match:
-            return best_match[0]
-        return None
-
+    @commands.command(name="testfuzz")
+    async def testfuzz(self, ctx):
+        content = ctx.message.content.split(' ', 1)[1]
+        args = re.findall(r'"([^"]*)"', content)
+        if len(args) != 2:
+            await ctx.send("Please provide exactly two quoted arguments. Example: !testfuzz \"first\" \"second\"")
+            return
+        response = f"Simple Ratio: {fuzz.ratio(args[0], args[1])}\nPartial Ratio: {fuzz.partial_ratio(args[0], args[1])}\nToken Sort Ratio: {fuzz.token_sort_ratio(args[0], args[1])}\nToken Set Ratio: {fuzz.token_set_ratio(args[0], args[1])}"
+        await ctx.send(response)
 
     @commands.Cog.listener()
     async def on_message(self, message: nextcord.Message):
