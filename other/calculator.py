@@ -35,7 +35,11 @@ class Calculator(commands.Cog):
                 await interaction.send(f"Unable to parse item: `{strip_item}`", ephemeral=False)
                 return
             quantity = quantity.replace("k", "000").replace("m", "000000").replace("b", "000000000").replace("t", "000000000000")
-            quantity = int(quantity)
+            try:
+                quantity = int(quantity)
+            except:
+                await interaction.send(f"Unable to parse quantity: `{quantity}`", ephemeral=False)
+                return
             item_name = " ".join(item_name)
             name = await self.item_finder(item_name.lower())
             if name is None:
@@ -54,6 +58,7 @@ class Calculator(commands.Cog):
         all_items = collection.find({})
         all_items = [item["_id"] for item in all_items if isinstance(item["_id"], str)]
         cleaned_input = item_name.replace(",", "").replace("'", "").lower()
+        cleaned_input = cleaned_input.replace("dev", "developer").replace("adv", "adventure")
         item_dict_simple = {}
         item_dict_partial = {}
         the_item = None
@@ -77,10 +82,23 @@ class Calculator(commands.Cog):
         item_dict_partial = sorted(item_dict_partial.items(), key=lambda x: x[1], reverse=True)
         if len(item_dict_simple) > 0:
             the_item = item_dict_simple[0][0]
-        elif len(item_dict_partial) > 0:
-            the_item = item_dict_partial[0][0]
-        return the_item
+            return the_item
+
+        for item in all_items:
+            if len(cleaned_input.split(" ")) > 1 and len(item.split(" ")) > 1:
+                if cleaned_input.split(" ")[0] in item.split(" ")[0] and cleaned_input.split(" ")[1] in item.split(" ")[1]:
+                    the_item = item
+                    break
+
+        if the_item is not None:    
+            return the_item
         
+        if len(item_dict_partial) > 0:
+            the_item = item_dict_partial[0][0]
+            return the_item
+        
+        return None
+    
     @commands.command(name="testfuzz")
     async def testfuzz(self, ctx):
         content = ctx.message.content.split(' ', 1)[1]
