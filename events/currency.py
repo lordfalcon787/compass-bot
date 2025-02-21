@@ -701,16 +701,19 @@ class Currency(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author.id not in self.cache:
+        try:
+            if message.author.id not in self.cache:
+                return
+            if message.guild.id != RC_ID:
+                return
+            user_time = self.cooldown.get(message.author.id, 0)
+            time = int(datetime.now().timestamp())
+            if time - user_time < 8:
+                return
+            self.cooldown[message.author.id] = time
+            asyncio.create_task(self.update_coins(message))
+        except:
             return
-        if message.guild.id != RC_ID:
-            return
-        user_time = self.cooldown.get(message.author.id, 0)
-        time = int(datetime.now().timestamp())
-        if time - user_time < 8:
-            return
-        self.cooldown[message.author.id] = time
-        asyncio.create_task(self.update_coins(message))
 
 def setup(bot):
     bot.add_cog(Currency(bot))
