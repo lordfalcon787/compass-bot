@@ -945,11 +945,13 @@ class payouts(commands.Cog):
     async def get_message(self, interaction, message_id):
         msg = None
         if message_id:
+            if "https://discord.com/channels/" in message_id:
+                message_id = message_id.split("/")[-1]
             try:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(f"https://google.com") as response:
                         if response.status == 200:
-                            msg = await interaction.channel.fetch_message(message_id)
+                            msg = await interaction.channel.fetch_message(int(message_id))
                         else:
                             await interaction.send(content="Unable to find a message ID, make sure it is correct.", ephemeral=True)
                             return
@@ -983,7 +985,7 @@ class payouts(commands.Cog):
                             msg = message
                             break
             except:
-                await interaction.send(content="Unable to find a message ID, make sure it is correct.", ephemeral=True)
+                await interaction.send(content="API failure when syncing through messages. Please try using a manual message ID.", ephemeral=True)
                 return
         return msg
 
