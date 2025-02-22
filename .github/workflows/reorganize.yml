@@ -22,13 +22,14 @@ jobs:
           # Create new directory structure
           mkdir -p compass/cogs
           
-          # Copy instead of move to debug
-          echo "Copying files..."
-          cp -v *.py compass/cogs/ 2>/dev/null || true
-          cp -v bot.py compass/ 2>/dev/null || true
-          cp -v *.json compass/ 2>/dev/null || true
-          cp -v README.md compass/ 2>/dev/null || true
-          cp -v requirements.txt compass/ 2>/dev/null || true
+          # First copy everything to cogs except bot.py
+          find . -maxdepth 1 -name "*.py" ! -name "bot.py" -exec cp {} compass/cogs/ \;
+          
+          # Copy specific files to compass root
+          cp bot.py compass/ || echo "No bot.py found"
+          cp *.json compass/ || echo "No json files found"
+          cp README.md compass/ || echo "No README.md found"
+          cp requirements.txt compass/ || echo "No requirements.txt found"
           
           echo "Final compass directory contents:"
           ls -R compass/
@@ -41,8 +42,8 @@ jobs:
           git init
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add .
+          git add -A
           git commit -m "Update from main repository" || echo "Nothing to commit"
           git branch -M main
           git remote add official https://${{ secrets.PAT_TOKEN }}@github.com/lordfalcon787/compass-official.git
-          git push -f official main
+          git push -f official main || echo "Push failed with: $?"
