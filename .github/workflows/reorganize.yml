@@ -26,6 +26,14 @@ jobs:
           find . -type f -name "requirements.txt" ! -path "./compass/*" -exec cp {} compass/ \;
           find . -type f -name "times.ttf" ! -path "./compass/*" -exec cp {} compass/ \;
 
+      - name: Fetch file from compass-config repository
+        run: |
+          git clone https://lordfalcon787:${{ secrets.PAT_TOKEN }}@github.com/lordfalcon787/compass-config.git /tmp/compass-config
+          cd /tmp/compass-config
+          git fetch --all
+          git checkout main
+          cp config.json /tmp/compass/config.json
+
       - name: List files in compass directory
         run: |
           cd compass
@@ -38,7 +46,6 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
-          git add -f compass/config.json
           git commit -m "Update from main repository"
           git branch -M main
           git remote add official https://${{ secrets.PAT_TOKEN }}@github.com/lordfalcon787/compass-official.git
