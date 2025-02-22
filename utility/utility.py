@@ -1,9 +1,10 @@
 import random
 import nextcord
 import asyncio
+
+from fuzzywuzzy import fuzz
 from nextcord.ext import commands
 from datetime import datetime, timedelta
-
 from utils.mongo_connection import MongoConnection
 
 GREEN_CHECK = "<:green_check2:1291173532432203816>"
@@ -12,6 +13,7 @@ CHANNELS = [1205270487454974061, 1214594429575503912, 1240782193270460476, 12861
 VALID_CHANNELS = [1205270487454974061, 1214594429575503912, 1286101587965775953, 1291161396368773183, 1219081468458831992, 1205270487274496054]
 RUMBLE_ROYALE = 693167035068317736
 WORDS = ["gtn", "gti", "gartic", "wordle"]
+RC_ID = 1205270486230110330
 
 mongo = MongoConnection.get_instance()
 db = mongo.get_db()
@@ -47,6 +49,21 @@ class utility(commands.Cog):
     async def on_ready(self):
         print(f"Utility cog loaded.")
         self.bot.add_view(View())
+
+    def get_best_match(self, members, args):
+        best_match = None
+        highest_ratio = 0
+        for member in members:
+            ratios = [
+                fuzz.ratio(args.lower(), member.name.lower()),
+                fuzz.ratio(args.lower(), member.display_name.lower()),
+                fuzz.ratio(args.lower(), member.nick.lower() if member.nick else "")
+            ]
+            max_ratio = max(ratios)
+            if max_ratio > highest_ratio:
+                highest_ratio = max_ratio
+                best_match = member
+        return best_match
     
     async def user_info(self, message):
         if len(message.content.split(" ")) == 1:
@@ -61,7 +78,7 @@ class utility(commands.Cog):
                     await message.channel.send(embed=nextcord.Embed(description=f"{RED_X} No members with the provided ID were found.", color=nextcord.Color.red()))
                     return
             else:
-                member = next((m for m in message.guild.members if args.lower() in m.name.lower()), None)
+                member = self.get_best_match(message.guild.members, args)
         if not member:
             await message.channel.send(embed=nextcord.Embed(description=f"{RED_X} No members with the provided name were found.", color=nextcord.Color.red()))
             return
@@ -95,6 +112,11 @@ class utility(commands.Cog):
         embed.set_footer(text=f"ID: {member.id}")
         embed.timestamp = datetime.utcnow()
         await message.channel.send(embed=embed)
+
+    @commands.command(name="userinfo", aliases=["ui", "w", "whois"])
+    async def userinfo_cmd(self, ctx):
+        await self.user_info(ctx.message)
+        return
         
     async def rumble(self, message):
         if not message.embeds:
@@ -386,7 +408,7 @@ class utility(commands.Cog):
         elif message.content.startswith("?av"):
             await self.avatar(message)
             return
-        elif message.content.startswith("?w"):
+        elif message.content.startswith("?w ") and message.guild.id == RC_ID:
             if len(message.content.split(" ")) == 1:
                 pass
             elif len(message.content.split(" ")) >= 2 and message.content.startswith("?w "):
