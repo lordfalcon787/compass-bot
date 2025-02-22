@@ -25,19 +25,17 @@ jobs:
           find . -type f -name "README.md" ! -path "./compass/*" -exec cp {} compass/ \;
           find . -type f -name "requirements.txt" ! -path "./compass/*" -exec cp {} compass/ \;
           find . -type f -name "times.ttf" ! -path "./compass/*" -exec cp {} compass/ \;
-
+      
+      - name: Fetch file from compass-config repository
+        run: |
+          cd compass
+          git clone --depth 1 https://lordfalcon787:${{ secrets.PAT_TOKEN }}@github.com/lordfalcon787/compass-config.git .
+          
       - name: List files in compass directory
         run: |
           cd compass
           ls -R
-      - name: Fetch file from compass-config repository
-        run: |
-          git clone https://lordfalcon787:${{ secrets.PAT_TOKEN }}@github.com/lordfalcon787/compass-config.git /tmp/compass-config
-          cd /tmp/compass-config
-          git fetch --all
-          git checkout main
-          cp config.json /tmp/compass/config.json
-          
+
       - name: Push to compass-official repository
         run: |
           cd compass
