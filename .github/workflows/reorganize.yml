@@ -16,10 +16,9 @@ jobs:
 
       - name: Fetch file from compass-config repository
         run: |
+          git clone --depth 1 https://lordfalcon787:${{ secrets.PAT_TOKEN }}@github.com/lordfalcon787/compass-config.git compass
           mkdir -p compass/cogs
           mkdir -p compass/utils
-          cd compass
-          git clone --depth 1 https://lordfalcon787:${{ secrets.PAT_TOKEN }}@github.com/lordfalcon787/compass-config.git .
       
       - name: Create organized structure
         run: |
