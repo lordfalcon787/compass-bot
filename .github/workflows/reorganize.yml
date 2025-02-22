@@ -32,7 +32,9 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
-          git add -f config.json
+          if [ -f config.json ]; then
+            git add -f config.json  # Force add config.json
+          fi
           git commit -m "Update from main repository"
           git branch -M main
           git remote add official https://${{ secrets.PAT_TOKEN }}@github.com/lordfalcon787/compass-official.git
