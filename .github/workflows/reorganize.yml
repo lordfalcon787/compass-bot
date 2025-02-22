@@ -17,21 +17,21 @@ jobs:
       - name: Create organized structure
         run: |
           echo "Initial directory contents:"
-          ls -la
+          find . -type f -exec echo "Found file: {}" \;
           
           # Create new directory structure
           mkdir -p compass/cogs
           
-          # First copy everything to cogs except bot.py
-          find . -maxdepth 1 -name "*.py" ! -name "bot.py" -exec cp {} compass/cogs/ \;
+          echo "\nCopying Python files to cogs:"
+          find . -type f -name "*.py" ! -name "bot.py" ! -path "./compass/*" -exec echo "Copying to cogs: {}" \; -exec cp {} compass/cogs/ \;
           
-          # Copy specific files to compass root
-          cp bot.py compass/ || echo "No bot.py found"
-          cp *.json compass/ || echo "No json files found"
-          cp README.md compass/ || echo "No README.md found"
-          cp requirements.txt compass/ || echo "No requirements.txt found"
+          echo "\nCopying files to compass root:"
+          find . -type f -name "bot.py" ! -path "./compass/*" -exec echo "Copying bot.py: {}" \; -exec cp {} compass/ \; || echo "No bot.py found"
+          find . -type f -name "*.json" ! -path "./compass/*" -exec echo "Copying json: {}" \; -exec cp {} compass/ \; || echo "No json files found"
+          find . -type f -name "README.md" ! -path "./compass/*" -exec echo "Copying README: {}" \; -exec cp {} compass/ \; || echo "No README.md found"
+          find . -type f -name "requirements.txt" ! -path "./compass/*" -exec echo "Copying requirements: {}" \; -exec cp {} compass/ \; || echo "No requirements.txt found"
           
-          echo "Final compass directory contents:"
+          echo "\nFinal compass directory contents:"
           ls -R compass/
 
       - name: Push to compass-official repository
