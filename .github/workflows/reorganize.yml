@@ -30,7 +30,14 @@ jobs:
         run: |
           cd compass
           ls -R
-
+      - name: Fetch file from compass-config repository
+        run: |
+          git clone https://lordfalcon787:${{ secrets.PAT_TOKEN }}@github.com/lordfalcon787/compass-config.git /tmp/compass-config
+          cd /tmp/compass-config
+          git fetch --all
+          git checkout main
+          cp config.json /tmp/compass/config.json
+          
       - name: Push to compass-official repository
         run: |
           cd compass
