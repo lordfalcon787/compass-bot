@@ -16,33 +16,33 @@ jobs:
       
       - name: Create organized structure
         run: |
-          echo "Current directory contents:"
+          echo "Initial directory contents:"
           ls -la
           
           # Create new directory structure
           mkdir -p compass/cogs
           
-          # Move all Python files except bot.py to cogs folder
-          shopt -s nullglob  # Handle case when no .py files exist
-          for file in *.py; do
-            if [ "$file" != "bot.py" ] && [ -f "$file" ]; then
-              mv "$file" compass/cogs/
-            fi
-          done
+          # Copy instead of move to debug
+          echo "Copying files..."
+          cp -v *.py compass/cogs/ 2>/dev/null || true
+          cp -v bot.py compass/ 2>/dev/null || true
+          cp -v *.json compass/ 2>/dev/null || true
+          cp -v README.md compass/ 2>/dev/null || true
+          cp -v requirements.txt compass/ 2>/dev/null || true
           
-          # Move bot.py and json files to compass folder
-          mv bot.py compass/ 2>/dev/null || true
-          mv *.json compass/ 2>/dev/null || true
-          mv README.md compass/ 2>/dev/null || true
-          mv requirements.txt compass/ 2>/dev/null || true
+          echo "Final compass directory contents:"
+          ls -R compass/
 
       - name: Push to compass-official repository
         run: |
           cd compass
+          echo "Contents of compass directory:"
+          ls -la
           git init
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          git commit -m "Update from main repository"
+          git commit -m "Update from main repository" || echo "Nothing to commit"
+          git branch -M main
           git remote add official https://${{ secrets.PAT_TOKEN }}@github.com/lordfalcon787/compass-official.git
           git push -f official main
