@@ -408,15 +408,10 @@ class utility(commands.Cog):
         elif message.content.startswith("?av"):
             await self.avatar(message)
             return
-        elif message.content.startswith("?w ") and message.guild.id == RC_ID:
-            if len(message.content.split(" ")) == 1:
-                pass
-            elif len(message.content.split(" ")) >= 2 and message.content.startswith("?w "):
-                pass
-            else:
+        elif message.content.startswith("?w") and message.guild.id == RC_ID:
+            if not message.content.startswith("?w ") and len(message.content.split(" ")) > 1:
                 return
             await self.user_info(message)
-            return
 
 def setup(bot):
     bot.add_cog(utility(bot))
