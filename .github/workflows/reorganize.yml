@@ -20,6 +20,7 @@ jobs:
           cd compass
           mkdir cogs
           mkdir utils
+          cd
           find . -type f -name "*.py" ! -name "bot.py" ! -name "mongo_connection.py" ! -path "./compass/*" -exec cp {} compass/cogs/ \;
           find . -type f -name "bot.py" ! -path "./compass/*" -exec cp {} compass/ \;
           find . -type f -name "mongo_connection.py" ! -path "./compass/*" -exec cp {} compass/utils/ \;
