@@ -10,32 +10,31 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       
       - name: Create organized structure
         run: |
+          echo "Current directory contents:"
+          ls -la
+          
           # Create new directory structure
           mkdir -p compass/cogs
           
           # Move all Python files except bot.py to cogs folder
+          shopt -s nullglob  # Handle case when no .py files exist
           for file in *.py; do
-            if [ "$file" != "bot.py" ]; then
+            if [ "$file" != "bot.py" ] && [ -f "$file" ]; then
               mv "$file" compass/cogs/
             fi
           done
           
           # Move bot.py and json files to compass folder
-          mv bot.py compass/ || true
-          mv *.json compass/ || true
-          
-          # Move any remaining relevant files
-          mv README.md compass/ || true
-          mv requirements.txt compass/ || true
-          
-          # Clean up and prepare for commit
-          find . -maxdepth 1 -not -name '.*' -not -name 'compass' -exec rm -rf {} +
+          mv bot.py compass/ 2>/dev/null || true
+          mv *.json compass/ 2>/dev/null || true
+          mv README.md compass/ 2>/dev/null || true
+          mv requirements.txt compass/ 2>/dev/null || true
 
       - name: Push to compass-official repository
         run: |
