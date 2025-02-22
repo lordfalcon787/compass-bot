@@ -13,11 +13,17 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
-      - name: Create organized structure
+
+      - name: Fetch file from compass-config repository
         run: |
           mkdir -p compass/cogs
           mkdir -p compass/utils
+          cd compass
+          git clone --depth 1 https://lordfalcon787:${{ secrets.PAT_TOKEN }}@github.com/lordfalcon787/compass-config.git .
+      
+      - name: Create organized structure
+        run: |
+          cd ..
           find . -type f -name "*.py" ! -name "bot.py" ! -name "mongo_connection.py" ! -path "./compass/*" -exec cp {} compass/cogs/ \;
           find . -type f -name "bot.py" ! -path "./compass/*" -exec cp {} compass/ \;
           find . -type f -name "mongo_connection.py" ! -path "./compass/*" -exec cp {} compass/utils/ \;
@@ -25,11 +31,6 @@ jobs:
           find . -type f -name "README.md" ! -path "./compass/*" -exec cp {} compass/ \;
           find . -type f -name "requirements.txt" ! -path "./compass/*" -exec cp {} compass/ \;
           find . -type f -name "times.ttf" ! -path "./compass/*" -exec cp {} compass/ \;
-      
-      - name: Fetch file from compass-config repository
-        run: |
-          cd compass
-          git clone --depth 1 https://lordfalcon787:${{ secrets.PAT_TOKEN }}@github.com/lordfalcon787/compass-config.git .
           
       - name: List files in compass directory
         run: |
