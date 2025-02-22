@@ -1,0 +1,49 @@
+name: Reorganize Files
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  reorganize:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      
+      - name: Create organized structure
+        run: |
+          # Create new directory structure
+          mkdir -p compass/cogs
+          
+          # Move all Python files except bot.py to cogs folder
+          for file in *.py; do
+            if [ "$file" != "bot.py" ]; then
+              mv "$file" compass/cogs/
+            fi
+          done
+          
+          # Move bot.py and json files to compass folder
+          mv bot.py compass/ || true
+          mv *.json compass/ || true
+          
+          # Move any remaining relevant files
+          mv README.md compass/ || true
+          mv requirements.txt compass/ || true
+          
+          # Clean up and prepare for commit
+          find . -maxdepth 1 -not -name '.*' -not -name 'compass' -exec rm -rf {} +
+
+      - name: Push to compass-official repository
+        run: |
+          cd compass
+          git init
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Update from main repository"
+          git remote add official https://${{ secrets.PAT_TOKEN }}@github.com/lordfalcon787/compass-official.git
+          git push -f official main
