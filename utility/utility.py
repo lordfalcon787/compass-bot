@@ -51,19 +51,39 @@ class utility(commands.Cog):
         self.bot.add_view(View())
 
     def get_best_match(self, members, args):
-        best_match = None
-        highest_ratio = 0
+        name_dict = {}
+        display_name_dict = {}
         for member in members:
-            ratios = [
-                fuzz.ratio(args.lower(), member.name.lower()),
-                fuzz.ratio(args.lower(), member.display_name.lower()),
-                fuzz.ratio(args.lower(), member.nick.lower() if member.nick else "")
-            ]
-            max_ratio = max(ratios)
-            if max_ratio > highest_ratio:
-                highest_ratio = max_ratio
-                best_match = member
-        return best_match
+            try:
+                if args.lower() in member.name.lower():
+                    name_dict[member] = fuzz.ratio(args.lower(), member.name.lower())
+            except:
+                pass
+            try:
+                if args.lower() in member.display_name.lower():
+                    display_name_dict[member] = fuzz.ratio(args.lower(), member.display_name.lower())
+            except:
+                pass
+        try:
+            best_name = max(name_dict, key=name_dict.get)
+        except:
+            best_name = None
+        try:
+            best_display_name = max(display_name_dict, key=display_name_dict.get)
+        except:
+            best_display_name = None
+        if best_name and best_display_name:
+            dict = {
+                best_name: name_dict[best_name],
+                best_display_name: display_name_dict[best_display_name]
+            }
+            return max(dict, key=dict.get)
+        elif best_name:
+            return best_name
+        elif best_display_name:
+            return best_display_name
+        else:
+            return None
     
     async def user_info(self, message):
         if len(message.content.split(" ")) == 1:
