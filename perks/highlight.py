@@ -1,3 +1,4 @@
+from datetime import datetime
 import nextcord
 import asyncio
 from nextcord.ext import commands
@@ -282,7 +283,7 @@ class Highlight(commands.Cog):
             doc = collection.find_one({"_id": f"highlights.{message.guild.id}"})
             times = doc["recent"]
             dm_times = doc["dm_times"]
-            current_time = int(message.created_at.timestamp())
+            current_time = int(datetime.now().timestamp())
             if not doc:
                 return
             doc.pop("_id")
@@ -344,12 +345,13 @@ class Highlight(commands.Cog):
                 content = f"{message.author.mention} ({message.author.name}) referenced your highlighted words {words_list} in <#{message.channel.id}>"
                 
                 user = self.bot.get_user(int(owner))
+                time = int(datetime.now().timestamp())
                 if user:
                     try:
                         await user.send(content=content, embed=embed)
                         collection.update_one(
                             {"_id": f"highlights.{message.guild.id}"}, 
-                            {"$set": {f"dm_times.{owner}": int(message.created_at.timestamp())}},
+                            {"$set": {f"dm_times.{owner}": time}},
                             upsert=True
                         )
                     except:
