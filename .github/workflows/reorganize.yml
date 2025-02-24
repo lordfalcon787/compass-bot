@@ -31,11 +31,6 @@ jobs:
           find . -type f -name "times.ttf" ! -path "./compass/*" -exec cp {} compass/ \;
           find . -type f -name "config.json" ! -path "./compass-config/*" -exec cp {} compass/ \;
           find . -type f -name "update.sh" ! -path "./compass-config/*" -exec cp {} compass/ \;
-          
-      - name: List files in compass directory
-        run: |
-          cd compass
-          ls -R
 
       - name: Push to compass-official repository
         run: |
