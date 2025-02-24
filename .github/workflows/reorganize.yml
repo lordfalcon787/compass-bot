@@ -25,7 +25,7 @@ jobs:
           find . -type f -name "*.py" ! -name "bot.py" ! -name "mongo_connection.py" ! -path "./compass/*" -exec cp {} compass/cogs/ \;
           find . -type f -name "bot.py" ! -path "./compass/*" -exec cp {} compass/ \;
           find . -type f -name "mongo_connection.py" ! -path "./compass/*" -exec cp {} compass/utils/ \;
-          find . -type f -name "*.json" ! -name "items.json" ! -name "settings.json" ! -path "./compass/*" ! -path "./.git/*" -exec cp {} compass/ \;
+          find . -type f -name "*.json" ! -name "items.json" ! -name "settings.json" ! -name "prefixes.json" ! -path "./compass/*" ! -path "./.git/*" -exec cp {} compass/ \;
           find . -type f -name "README.md" ! -path "./compass/*" -exec cp {} compass/ \;
           find . -type f -name "requirements.txt" ! -path "./compass/*" -exec cp {} compass/ \;
           find . -type f -name "times.ttf" ! -path "./compass/*" -exec cp {} compass/ \;
