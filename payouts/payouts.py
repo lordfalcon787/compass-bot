@@ -945,20 +945,29 @@ class payouts(commands.Cog):
     async def get_message(self, interaction, message_id):
         msg = None
         if message_id:
+            print("1")
             if "https://discord.com/channels/" in message_id:
+                print("2")
                 message_id = message_id.split("/")[-1]
             try:
+                print("3")
                 async with aiohttp.ClientSession() as session:
                     async with session.get(f"https://google.com") as response:
+                        print("4")
                         if response.status == 200:
+                            print("5")
                             msg = await interaction.channel.fetch_message(int(message_id))
                         else:
+                            print("6")
                             await interaction.send(content="Unable to find a message ID, make sure it is correct.", ephemeral=True)
                             return
             except:
+                print("7")
                 await interaction.send(content="Unable to find a message ID, make sure it is correct.", ephemeral=True)
                 return
+            print("8")
             if loading_emoji in [str(reaction.emoji) for reaction in msg.reactions if reaction.me]:
+                print("9")
                 await interaction.send(content="That message has already been used for a payout.", ephemeral=True)
                 return
         else:

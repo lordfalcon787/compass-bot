@@ -316,10 +316,16 @@ class Highlight(commands.Cog):
             try:
                 async with asyncio.timeout(120):
                     async for msg in message.channel.history(limit=5, before=message):
-                        messages = f"\n**{msg.author.name}:** {msg.content}{messages}"
+                        try:
+                            messages = f"\n**{msg.author.name}:** {msg.content}{messages}"
+                        except:
+                            pass
             except asyncio.TimeoutError:
                 message = "**Unable to find Context**"
-            messages = f"{messages}\n**{message.author.name}:** {message.content}"
+            try:
+                messages = f"{messages}\n**{message.author.name}:** {message.content}"
+            except:
+                return
             blacklist_doc = collection.find_one({"_id": f"blacklists.{message.guild.id}"})
 
             for owner, triggered_words in owner_words.items():
