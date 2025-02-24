@@ -112,6 +112,7 @@ class stafflist(commands.Cog):
 
     async def rc_staff_list(self, ctx):
         staff_roles = {
+            "1217704162889044038": "Owners",
             "1205270486519517204": "Server Head",
             "1209676873949257899": "Head Admin",
             "1205270486502867030": "Administrator",
@@ -125,20 +126,17 @@ class stafflist(commands.Cog):
         embed = nextcord.Embed(title = "Staff List", description = f"The Robbing Central and all its activities are made possible by the [donations](https://discord.com/channels/1205270486230110330/1205270487454974055) of our members and the dedication of our staff committed to creating a place to stay. This is a list of all our staff as of <t:{current_time}:f>.", color = 65280)
         guild = ctx.guild
         added_members = set()
-        honored = guild.get_role(1205270486439952442)
         for role_id, role_name in staff_roles.items():
             role = guild.get_role(int(role_id))
             if role:
                 members = []
                 for member in role.members:
-                    if role.id == 1206635433170313336:
-                        if honored not in member.roles:
-                            continue
-                        elif member.id == 939307545019969536:
-                            continue
-                    if member.id not in added_members:
+                    if member.id not in added_members or member.id == 939307545019969536:
                         members.append(f"`{member.name}` | {member.mention}")
                         added_members.add(member.id)
+                if role_id == "1217704162889044038":
+                    taco = guild.get_member(939307545019969536)
+                    members.append(f"`{taco.name}` | {taco.mention}")
                 if members:
                     embed.add_field(name=role_name, value="\n".join(members), inline=False)
         embed.set_footer(text = f"Username | Mention - Total Staff: {len(added_members)}")
