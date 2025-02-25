@@ -343,15 +343,13 @@ class Highlight(commands.Cog):
             embed.timestamp = message.created_at
             content = f"{message.author.mention} ({message.author.name}) referenced your highlighted words {words_list} in <#{message.channel.id}>"
             
-            user = self.bot.get_user(int(owner))
             time = int(datetime.now().timestamp())
             async with self.lock:
                 if str(owner) in dm_times:
                     if time - dm_times[str(owner)] < 120:
                         continue
-                user = self.bot.get_user(int(owner))
                 try:
-                    await user.send(content=content, embed=embed)
+                    await member.send(content=content, embed=embed)
                     collection.update_one(
                         {"_id": f"highlights.{message.guild.id}"}, 
                         {"$set": {f"dm_times.{owner}": time}},
