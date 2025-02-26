@@ -18,7 +18,6 @@ class Donosticky(commands.Cog):
         await self.clean_old_messages()
 
     async def clean_old_messages(self):
-        time_threshold = int(datetime.now().timestamp()) - 43200
         for channel_id in AUTO:
                 channel = self.bot.get_channel(int(channel_id))
                 if channel:
@@ -27,12 +26,11 @@ class Donosticky(commands.Cog):
                         try:
                             async with asyncio.timeout(900):
                                 print("Getting messages")
-                                messages = [msg async for msg in channel.history(limit=None) 
-                                          if int(msg.edited_at.timestamp()) < time_threshold and not msg.pinned]
+                                messages = [msg async for msg in channel.history(limit=None)]
                         except asyncio.TimeoutError:
                             print("Timeout error")
                             messages = []
-                        print(f"Found {len(messages)} messages to clean")
+                        print(f"Found {len(messages)} messages to potentially clean")
                         await self.check_old_messages(messages)
                         print(f"Cleaned {len(messages)} messages from {channel.name}")
                     except Exception as e:
@@ -40,15 +38,20 @@ class Donosticky(commands.Cog):
         print("Done cleaning messages")
 
     async def check_old_messages(self, messages):
+        time_threshold = int(datetime.now().timestamp()) - 43200
         for message in messages:
             try:
                 if message.author.id != self.bot.user.id:
                     pass
                 elif not message.embeds:
-                    pass
+                    continue
                 elif not message.embeds[0].title:
-                    pass
-                if "completed" in message.embeds[0].title.lower() or "denied" in message.embeds[0].title.lower():
+                    continue
+                elif not message.edited_at:
+                    continue
+                elif message.edited_at < time_threshold:
+                    continue
+                elif "completed" in message.embeds[0].title.lower() or "denied" in message.embeds[0].title.lower():
                     print(f"Deleting message {message.id} from {message.channel.name}")
                     await message.delete()
                     await asyncio.sleep(1)
