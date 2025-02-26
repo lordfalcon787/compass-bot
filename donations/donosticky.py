@@ -35,6 +35,7 @@ class Donosticky(commands.Cog):
                         print(f"Cleaned {len(messages)} messages from {channel.name}")
                     except Exception as e:
                         print(f"Error cleaning {channel.name}: {str(e)}")
+        print("Done cleaning messages")
 
     async def check_old_messages(self, messages):
         for message in messages:
@@ -49,8 +50,8 @@ class Donosticky(commands.Cog):
                     print(f"Deleting message {message.id} from {message.channel.name}")
                     await message.delete()
                     await asyncio.sleep(1)
-            except:
-                pass
+            except Exception as e:
+                print(f"Error checking message {message.id}: {str(e)}")
 
     @commands.Cog.listener()
     async def on_message(self, message):
