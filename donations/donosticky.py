@@ -18,7 +18,7 @@ class Donosticky(commands.Cog):
         await self.clean_old_messages()
 
     async def clean_old_messages(self):
-        time_threshold = datetime.now(nextcord.utils.utc) - timedelta(hours=12)
+        time_threshold = int(datetime.now().timestamp()) - 43200
         for channel_id in AUTO:
                 channel = self.bot.get_channel(int(channel_id))
                 if channel:
@@ -27,7 +27,7 @@ class Donosticky(commands.Cog):
                         try:
                             async with asyncio.timeout(120):
                                 messages = [msg async for msg in channel.history(limit=None) 
-                                          if msg.created_at < time_threshold and not msg.pinned]
+                                          if int(msg.created_at.timestamp()) < time_threshold and not msg.pinned]
                         except asyncio.TimeoutError:
                             messages = []
                         print(f"Found {len(messages)} messages to clean")
