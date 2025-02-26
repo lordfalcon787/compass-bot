@@ -33,8 +33,8 @@ class Donosticky(commands.Cog):
                         print(f"Found {len(messages)} messages to clean")
                         await self.check_old_messages(messages)
                         print(f"Cleaned {len(messages)} messages from {channel.name}")
-                    except:
-                        pass
+                    except Exception as e:
+                        print(f"Error cleaning {channel.name}: {str(e)}")
 
     async def check_old_messages(self, messages):
         for message in messages:
