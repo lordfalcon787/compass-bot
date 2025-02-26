@@ -25,11 +25,12 @@ class Donosticky(commands.Cog):
                     print(f"Cleaning old messages from {channel.name}")
                     try:                        
                         try:
-                            async with asyncio.timeout(120):
+                            async with asyncio.timeout(900):
                                 print("Getting messages")
                                 messages = [msg async for msg in channel.history(limit=None) 
-                                          if int(msg.created_at.timestamp()) < time_threshold and not msg.pinned]
+                                          if int(msg.edited_at.timestamp()) < time_threshold and not msg.pinned]
                         except asyncio.TimeoutError:
+                            print("Timeout error")
                             messages = []
                         print(f"Found {len(messages)} messages to clean")
                         await self.check_old_messages(messages)
@@ -47,7 +48,7 @@ class Donosticky(commands.Cog):
                     pass
                 elif not message.embeds[0].title:
                     pass
-                if "completed" in message.embeds[0].title.lower():
+                if "completed" in message.embeds[0].title.lower() or "denied" in message.embeds[0].title.lower():
                     print(f"Deleting message {message.id} from {message.channel.name}")
                     await message.delete()
                     await asyncio.sleep(1)
