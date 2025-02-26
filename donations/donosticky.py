@@ -18,7 +18,7 @@ class Donosticky(commands.Cog):
         await self.clean_old_messages()
 
     async def clean_old_messages(self):
-        time_threshold = datetime.now() - timedelta(hours=12)
+        time_threshold = datetime.now(nextcord.utils.utc) - timedelta(hours=12)
         for channel_id in AUTO:
                 channel = self.bot.get_channel(int(channel_id))
                 if channel:
