@@ -12,7 +12,7 @@ class Donosticky(commands.Cog):
     async def on_ready(self):
         print("Donosticky cog loaded.")
         self.messages_task.start()
-        
+
     @tasks.loop(hours=3)
     async def messages_task(self):
         await self.clean_old_messages()
@@ -22,6 +22,7 @@ class Donosticky(commands.Cog):
         for channel_id in AUTO:
                 channel = self.bot.get_channel(int(channel_id))
                 if channel:
+                    print(f"Cleaning old messages from {channel.name}")
                     try:                        
                         try:
                             async with asyncio.timeout(120):
@@ -29,7 +30,9 @@ class Donosticky(commands.Cog):
                                           if msg.created_at < time_threshold and not msg.pinned]
                         except asyncio.TimeoutError:
                             messages = []
+                        print(f"Found {len(messages)} messages to clean")
                         await self.check_old_messages(messages)
+                        print(f"Cleaned {len(messages)} messages from {channel.name}")
                     except:
                         pass
 
@@ -43,6 +46,7 @@ class Donosticky(commands.Cog):
                 elif not message.embeds[0].title:
                     pass
                 if "completed" in message.embeds[0].title.lower():
+                    print(f"Deleting message {message.id} from {message.channel.name}")
                     await message.delete()
                     await asyncio.sleep(1)
             except:
