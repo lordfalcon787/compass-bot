@@ -26,6 +26,7 @@ class Donosticky(commands.Cog):
                     try:                        
                         try:
                             async with asyncio.timeout(120):
+                                print("Getting messages")
                                 messages = [msg async for msg in channel.history(limit=None) 
                                           if int(msg.created_at.timestamp()) < time_threshold and not msg.pinned]
                         except asyncio.TimeoutError:
