@@ -279,85 +279,84 @@ class Highlight(commands.Cog):
         collection.update_one({"_id": f"highlights.{message.guild.id}"}, {"$set": {f"recent.{message.author.id}": int(message.created_at.timestamp())}}, upsert=True)
         
     async def highlighter(self, message: nextcord.Message):
-        doc = collection.find_one({"_id": f"highlights.{message.guild.id}"})
-        if not doc:
+        highlights = collection.find_one({"_id": f"highlights.{message.guild.id}"})
+        if not highlights:
             return
-        times = doc.get("recent", {})
-        dm_times = doc.get("dm_times", {})
+
+        times = highlights.get("recent", {})
+        dm_times = highlights.get("dm_times", {})
         current_time = int(datetime.now().timestamp())
-        
-        doc.pop("_id", None)
-        doc.pop("recent", None)
-        doc.pop("dm_times", None)
-        
+        message_time = int(message.created_at.timestamp())
         owner_words = {}
+        msg_content_lower = message.content.lower()
 
-        for item, value in doc.items():
-            if not isinstance(value, list):
+        highlights.pop("_id")
+        highlights.pop("recent")
+        highlights.pop("dm_times")
+        
+        for item, users in highlights.items():
+            if not isinstance(users, list) or item in ['_id', 'recent', 'dm_times']:
                 continue
-            if message.author.id in value:
+            if message.author.id in users:
                 continue
-            if item.lower() in message.content.lower():
-                for owner in value:
-                    if str(owner) in times:
-                        last_active = times[str(owner)]
-                        if current_time - last_active < 180:
-                            continue
-                    if owner not in owner_words:
-                        owner_words[owner] = []
-                    owner_words[owner].append(item)
+            if item.lower() in msg_content_lower:
+                for owner in users:
+                    if str(owner) in times and message_time - times[str(owner)] < 180:
+                        continue
+                    if str(owner) in dm_times and current_time - dm_times[str(owner)] < 120:
+                        continue
+                    owner_words.setdefault(owner, []).append(item)
 
-        messages = ""
+        if not owner_words:
+            return
+
+        messages = []
         try:
             async with asyncio.timeout(120):
                 async for msg in message.channel.history(limit=5, before=message):
                     try:
-                        messages = f"\n**{msg.author.name}:** {msg.content}{messages}"
+                        messages.append(f"\n**{msg.author.name}:** {msg.content}")
                     except:
-                        pass
+                        continue
         except asyncio.TimeoutError:
-            message = "**Unable to find Context**"
-        try:
-            messages = f"{messages}\n**{message.author.name}:** {message.content}"
-        except:
-            return
-        blacklist_doc = collection.find_one({"_id": f"blacklists.{message.guild.id}"})
-        dm_times = collection.find_one({"_id": f"highlights.{message.guild.id}"})["dm_times"]
+            messages = ["**Unable to find Context**"]
 
+        messages.append(f"\n**{message.author.name}:** {message.content}")
+        context = "".join(messages)
+
+        blacklist_doc = collection.find_one(
+            {"_id": f"blacklists.{message.guild.id}"},
+            {"_id": 0}
+        )
+
+        embed = nextcord.Embed(
+            title="Context:", 
+            description=context, 
+            color=nextcord.Color.blurple()
+        )
+        embed.add_field(name="Jump", value=f"[Jump to Message]({message.jump_url})")
+        embed.timestamp = message.created_at
+        
         for owner, triggered_words in owner_words.items():
             member = message.guild.get_member(int(owner))
-            if not member:
+            if not member or member not in message.channel.members:
                 continue
-            if member not in message.channel.members:
+            if blacklist_doc and str(owner) in blacklist_doc and message.author.id in blacklist_doc[str(owner)]:
                 continue
-            
-            try:
-                more = blacklist_doc[str(owner)]
-            except:
-                more = None
-            if more and message.author.id in more:
-                continue
+
             words_list = ", ".join(f"`{word}`" for word in triggered_words)
-            embed = nextcord.Embed(title="Context:", description=f"{messages}", color=nextcord.Color.blurple())
-            embed.add_field(name="Jump", value=f"[Jump to Message]({message.jump_url})")
-            embed.timestamp = message.created_at
             content = f"{message.author.mention} ({message.author.name}) referenced your highlighted words {words_list} in <#{message.channel.id}>"
             
-            time = int(datetime.now().timestamp())
-            async with self.lock:
-                if str(owner) in dm_times:
-                    if time - dm_times[str(owner)] < 120:
-                        continue
-                try:
+            try:
+                async with self.lock:
                     await member.send(content=content, embed=embed)
                     collection.update_one(
                         {"_id": f"highlights.{message.guild.id}"}, 
-                        {"$set": {f"dm_times.{owner}": time}},
+                        {"$set": {f"dm_times.{owner}": message_time}},
                         upsert=True
                     )
-                except:
-                    pass
-        
+            except:
+                continue
 
 def setup(bot):
     bot.add_cog(Highlight(bot))
