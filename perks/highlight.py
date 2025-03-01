@@ -1,4 +1,5 @@
 from datetime import datetime
+import aiohttp
 import nextcord
 import asyncio
 from nextcord.ext import commands
@@ -312,13 +313,19 @@ class Highlight(commands.Cog):
 
         messages = []
         try:
-            async with asyncio.timeout(120):
-                async for msg in message.channel.history(limit=5, before=message):
-                    try:
-                        messages.append(f"\n**{msg.author.name}:** {msg.content}")
-                    except:
-                        continue
-        except asyncio.TimeoutError:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"https://google.com") as response:
+                    if response.status == 200:
+                        try:
+                            async with asyncio.timeout(180):
+                                async for msg in message.channel.history(limit=5, before=message):
+                                    try:
+                                        messages.append(f"\n**{msg.author.name}:** {msg.content}")
+                                    except:
+                                        continue
+                        except asyncio.TimeoutError:
+                            messages = ["**Unable to find Context**"]
+        except Exception:
             messages = ["**Unable to find Context**"]
 
         messages.append(f"\n**{message.author.name}:** {message.content}")
