@@ -114,7 +114,6 @@ class stafflist(commands.Cog):
         staff_roles = {
             "1217704162889044038": "Owners",
             "1205270486519517204": "Server Head",
-            "1209676873949257899": "Head Admin",
             "1205270486502867030": "Administrator",
             "1205270486490292251": "Head Moderator",
             "1205270486490292246": "Moderator",
