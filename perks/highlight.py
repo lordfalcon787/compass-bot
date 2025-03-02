@@ -285,8 +285,6 @@ class Highlight(commands.Cog):
             return
 
         times = highlights.get("recent", {})
-        dm_times = highlights.get("dm_times", {})
-        current_time = int(datetime.now().timestamp())
         message_time = int(message.created_at.timestamp())
         owner_words = {}
         msg_content_lower = message.content.lower()
@@ -303,8 +301,6 @@ class Highlight(commands.Cog):
             if item.lower() in msg_content_lower:
                 for owner in users:
                     if str(owner) in times and message_time - times[str(owner)] < 180:
-                        continue
-                    if str(owner) in dm_times and current_time - dm_times[str(owner)] < 120:
                         continue
                     owner_words.setdefault(owner, []).append(item)
 
@@ -356,6 +352,11 @@ class Highlight(commands.Cog):
             
             try:
                 async with self.lock:
+                    highlights = collection.find_one({"_id": f"highlights.{message.guild.id}"})
+                    dm_times = highlights.get("dm_times", {})
+                    current_time = int(datetime.now().timestamp())
+                    if str(owner) in dm_times and current_time - dm_times[str(owner)] < 120:
+                        continue
                     await member.send(content=content, embed=embed)
                     collection.update_one(
                         {"_id": f"highlights.{message.guild.id}"}, 
