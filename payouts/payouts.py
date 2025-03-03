@@ -5,6 +5,7 @@ import re
 import aiohttp
 
 from fuzzywuzzy import process
+from fuzzywuzzy import fuzz
 from nextcord.ext import commands, tasks, application_checks
 from nextcord import SlashOption
 from typing import Optional, List
@@ -1255,7 +1256,7 @@ class payouts(commands.Cog):
             return items["_id"]
         else:
             item_names = [item_name["_id"] for item_name in itemcollection.find({})]
-            item = process.extractOne(item, item_names)
+            item = process.extractOne(item, item_names, scorer=fuzz.partial_ratio)
             if item:
                 return item[0]
             else:
