@@ -3,12 +3,12 @@ import time
 import asyncio
 import re
 import aiohttp
+
+from fuzzywuzzy import process
 from nextcord.ext import commands, tasks, application_checks
 from nextcord import SlashOption
-
 from typing import Optional, List
 from datetime import datetime
-
 from utils.mongo_connection import MongoConnection
 
 
@@ -1248,6 +1248,23 @@ class payouts(commands.Cog):
         except:
             return
         return str(quantity)
+    
+    async def get_item(self, item):
+        item = item.lower()
+        item = item.replace(" ", "_")
+        item = item.replace("'", "")
+        item = item.replace(".", "")
+        item = item.replace("-", "")
+        item = itemcollection.find_one({"_id": item})
+        if item:
+            return item["_id"]
+        else:
+            item_names = [item["_id"] for item in itemcollection.find({})]
+            item = process.extractOne(item, item_names)
+            if item:
+                return item[0]
+            else:
+                return "error"
         
     @payout.subcommand(description="Queue a payout.", name="create")
     @application_checks.guild_only()
@@ -1293,6 +1310,7 @@ class payouts(commands.Cog):
         
         if item:
             try:
+                item = await self.get_item(item)
                 itemcollection.find_one({"_id": item})["price"]
             except:
                 await interaction.send(content="Item not found in database. Please make sure to use the autocomplete options and not enter the item name manually.", ephemeral=True)
