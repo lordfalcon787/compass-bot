@@ -1254,7 +1254,8 @@ class payouts(commands.Cog):
         if item is not None:
             return item["_id"]
         else:
-            item_names = [item["_id"] for item in itemcollection.find({})]
+            item_names = [item_name["_id"] for item_name in itemcollection.find({})]
+            print(item_names)
             item = process.extractOne(item, item_names)
             if item:
                 return item[0]
