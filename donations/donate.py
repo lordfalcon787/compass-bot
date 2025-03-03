@@ -311,7 +311,10 @@ class Donate(commands.Cog):
         descp = f"┊ 💰 ┊ **AUCTION**\n┊ 🏆 ┊ **Info:** {arg}\n┊ 🔗 ┊ [Message Link]({ctx.message.jump_url})\n┊ 🙂 ┊ **Donor:** {ctx.author.mention}"
         embed = nextcord.Embed(title="┊ 💰 ┊ Auction Pending", description=descp, color=nextcord.Color.blurple())
         con = f"{EMAN} - {ctx.author.mention} would like to donate for an auction."
-        embed.set_footer(text=f"{ctx.message.id}", icon_url=ctx.author.avatar.url)
+        try:
+            embed.set_footer(text=f"{ctx.message.id}", icon_url=ctx.author.avatar.url)
+        except:
+            embed.set_footer(text=f"{ctx.message.id}")
         await self.bot.get_channel(AUCTION_QUEUE).send(content=con, embed=embed, view=View(self.bot))
         await ctx.message.add_reaction(GREEN_CHECK)
         await ctx.reply(content=f"Thank you for your donation {ctx.author.mention}, an event manager will be here shortly to host your auction. __**Please DO NOT donate your item(s) here.**__", mention_author=False)
