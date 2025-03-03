@@ -1250,17 +1250,13 @@ class payouts(commands.Cog):
         return str(quantity)
     
     async def get_item(self, item):
-        item = item.lower()
-        item = item.replace(" ", "_")
-        item = item.replace("'", "")
-        item = item.replace(".", "")
-        item = item.replace("-", "")
         item = itemcollection.find_one({"_id": item})
         if item:
             return item["_id"]
         else:
             item_names = [item["_id"] for item in itemcollection.find({})]
             item = process.extractOne(item, item_names)
+            print(item)
             if item:
                 return item[0]
             else:
