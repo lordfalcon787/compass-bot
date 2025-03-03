@@ -236,10 +236,6 @@ class Donate(commands.Cog):
         await self.sticky()
         await ctx.message.delete()
 
-    async def cog_load(self):
-        self.bot.add_view(View(self.bot))
-        self.bot.add_view(View2())
-
     @tasks.loop(minutes=10)
     async def sticky_loop(self):
         channel = self.bot.get_channel(DONATE)
