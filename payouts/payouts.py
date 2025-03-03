@@ -1253,11 +1253,14 @@ class payouts(commands.Cog):
         print(f"0:{item}")
         item = itemcollection.find_one({"_id": item})
         print(f"1:{item}")
-        if item:
+        if item is not None:
             return item["_id"]
         else:
+            print("e")
             item_names = [item["_id"] for item in itemcollection.find({})]
+            print("x")
             item = process.extractOne(item, item_names)
+            print("y")
             print(f"2:{item}")
             if item:
                 return item[0]
