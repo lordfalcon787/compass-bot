@@ -26,7 +26,7 @@ class Donosticky(commands.Cog):
                         try:
                             async with asyncio.timeout(900):
                                 print("Getting messages")
-                                messages = [msg async for msg in channel.history(limit=50)]
+                                messages = [msg async for msg in channel.history(limit=100)]
                         except asyncio.TimeoutError:
                             print("Timeout error")
                             messages = []
@@ -53,7 +53,7 @@ class Donosticky(commands.Cog):
                 elif not message.edited_at:
                     print("4")
                     continue
-                elif message.edited_at.timestamp() < time_threshold:
+                elif message.edited_at.timestamp() > time_threshold:
                     print("5")
                     continue
                 elif "completed" in message.embeds[0].title.lower() or "denied" in message.embeds[0].title.lower():
