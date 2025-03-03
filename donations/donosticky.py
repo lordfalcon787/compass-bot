@@ -54,7 +54,7 @@ class Donosticky(commands.Cog):
                 elif "completed" in message.embeds[0].title.lower() or "denied" in message.embeds[0].title.lower():
                     print(f"Deleting message {message.id} from {message.channel.name}")
                     await message.delete()
-                    await asyncio.sleep(1)
+                    await asyncio.sleep(5)
             except Exception as e:
                 print(f"Error checking message {message.id}: {str(e)}")
 
