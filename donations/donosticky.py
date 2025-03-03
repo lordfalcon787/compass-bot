@@ -42,19 +42,26 @@ class Donosticky(commands.Cog):
         for message in messages:
             try:
                 if message.author.id != self.bot.user.id:
-                    pass
+                    print("1")
+                    continue
                 elif not message.embeds:
+                    print("2")
                     continue
                 elif not message.embeds[0].title:
+                    print("3")
                     continue
                 elif not message.edited_at:
+                    print("4")
                     continue
                 elif message.edited_at.timestamp() < time_threshold:
+                    print("5")
                     continue
                 elif "completed" in message.embeds[0].title.lower() or "denied" in message.embeds[0].title.lower():
                     print(f"Deleting message {message.id} from {message.channel.name}")
+                    print("6")
                     await message.delete()
                     await asyncio.sleep(1)
+                print("7")
             except Exception as e:
                 print(f"Error checking message {message.id}: {str(e)}")
 
