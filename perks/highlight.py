@@ -285,6 +285,7 @@ class Highlight(commands.Cog):
             return
 
         times = highlights.get("recent", {})
+        dm_times = highlights.get("dm_times", {})
         message_time = int(message.created_at.timestamp())
         owner_words = {}
         msg_content_lower = message.content.lower()
@@ -302,12 +303,14 @@ class Highlight(commands.Cog):
                 for owner in users:
                     if str(owner) in times and message_time - times[str(owner)] < 180:
                         continue
+                    if str(owner) in dm_times and message_time - dm_times[str(owner)] < 120:
+                        continue
                     owner_words.setdefault(owner, []).append(item)
 
         if not owner_words:
             return
 
-        messages = []
+        messages = f"**{message.author.name}:** {message.content}"
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(f"https://google.com") as response:
@@ -316,7 +319,7 @@ class Highlight(commands.Cog):
                             async with asyncio.timeout(180):
                                 async for msg in message.channel.history(limit=5, before=message):
                                     try:
-                                        messages.append(f"\n**{msg.author.name}:** {msg.content}")
+                                        messages = f"**{msg.author.name}:** {msg.content}\n{messages}"
                                     except:
                                         continue
                         except asyncio.TimeoutError:
@@ -324,9 +327,7 @@ class Highlight(commands.Cog):
         except Exception:
             messages = ["**Unable to find Context**"]
 
-        messages.append(f"\n**{message.author.name}:** {message.content}")
-        context = "".join(messages)
-
+        context = messages
         blacklist_doc = collection.find_one(
             {"_id": f"blacklists.{message.guild.id}"},
             {"_id": 0}
@@ -354,8 +355,7 @@ class Highlight(commands.Cog):
                 async with self.lock:
                     highlights = collection.find_one({"_id": f"highlights.{message.guild.id}"})
                     dm_times = highlights.get("dm_times", {})
-                    current_time = int(datetime.now().timestamp())
-                    if str(owner) in dm_times and current_time - dm_times[str(owner)] < 120:
+                    if str(owner) in dm_times and message_time - dm_times[str(owner)] < 120:
                         continue
                     await member.send(content=content, embed=embed)
                     collection.update_one(
