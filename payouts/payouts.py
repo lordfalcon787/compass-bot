@@ -1250,12 +1250,11 @@ class payouts(commands.Cog):
         return str(quantity)
     
     async def get_item(self, item):
-        item = itemcollection.find_one({"_id": item})
-        if item is not None:
-            return item["_id"]
+        items = itemcollection.find_one({"_id": item})
+        if items is not None:
+            return items["_id"]
         else:
             item_names = [item_name["_id"] for item_name in itemcollection.find({})]
-            print(item_names)
             item = process.extractOne(item, item_names)
             if item:
                 return item[0]
