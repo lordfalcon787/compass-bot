@@ -1250,18 +1250,12 @@ class payouts(commands.Cog):
         return str(quantity)
     
     async def get_item(self, item):
-        print(f"0:{item}")
         item = itemcollection.find_one({"_id": item})
-        print(f"1:{item}")
         if item is not None:
             return item["_id"]
         else:
-            print("e")
             item_names = [item["_id"] for item in itemcollection.find({})]
-            print("x")
             item = process.extractOne(item, item_names)
-            print("y")
-            print(f"2:{item}")
             if item:
                 return item[0]
             else:
@@ -1313,7 +1307,8 @@ class payouts(commands.Cog):
             try:
                 item = await self.get_item(item)
                 itemcollection.find_one({"_id": item})["price"]
-            except:
+            except Exception as e:
+                print(e)
                 await interaction.send(content="Item not found in database. Please make sure to use the autocomplete options and not enter the item name manually.", ephemeral=True)
                 return
         
