@@ -188,6 +188,34 @@ async def version_cmd(ctx):
         misccollection.update_one({"_id": "bot_version"}, {"$set": {"version": version}})
         await ctx.reply(content=f"Set version to {old_version}", mention_author=False)
 
+@bot.command(name="addextension")
+async def addextension_cmd(ctx, extension: str):
+    if ctx.author.id != BOT_OWNER:
+        return
+    extension = extension.lower()
+    current_extensions = misccollection.find_one({"_id": "extensions"})["extensions"]
+    if extension in current_extensions:
+        await ctx.reply(content=f"Extension already exists.", mention_author=False)
+        return
+    current_extensions.append(extension)
+    current_extensions.sort()
+    misccollection.update_one({"_id": "extensions"}, {"$set": {"extensions": current_extensions}})
+    await ctx.message.add_reaction(GREEN_CHECK)
+
+@bot.command(name="removeextension")
+async def removeextension_cmd(ctx, extension: str):
+    if ctx.author.id != BOT_OWNER:
+        return
+    extension = extension.lower()
+    current_extensions = misccollection.find_one({"_id": "extensions"})["extensions"]
+    if extension not in current_extensions:
+        await ctx.reply(content=f"Extension not found.", mention_author=False)
+        return
+    current_extensions.remove(extension)
+    current_extensions.sort()
+    misccollection.update_one({"_id": "extensions"}, {"$set": {"extensions": current_extensions}})
+    await ctx.message.add_reaction(GREEN_CHECK)
+
 @bot.command(name="transcript")
 async def transcript_cmd(ctx):
     if not ctx.author.guild_permissions.administrator:
