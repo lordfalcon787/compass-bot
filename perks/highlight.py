@@ -319,7 +319,10 @@ class Highlight(commands.Cog):
                             async with asyncio.timeout(180):
                                 async for msg in message.channel.history(limit=5, before=message):
                                     try:
-                                        messages = f"**{msg.author.name}:** {msg.content}\n{messages}"
+                                        msg_con = msg.content
+                                        if msg_con == "":
+                                            msg_con = "Message omitted due to embed or too large."
+                                        messages = f"**{msg.author.name}:** {msg_con}\n{messages}"
                                     except:
                                         continue
                         except asyncio.TimeoutError:
