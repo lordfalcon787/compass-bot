@@ -168,8 +168,8 @@ async def version_cmd(ctx):
         return
     split = ctx.message.content.split(" ")
     if len(split) == 1:
-        version = misccollection.find_one({"_id": "bot_version"})["version"]
-        version = version.split("")
+        version = str(misccollection.find_one({"_id": "bot_version"})["version"])
+        version = version.split(".")
         num = len(version)
         num2 = 1
         new_version = ""
