@@ -122,7 +122,9 @@ class Role(commands.Cog):
                 things_edited.append("icon")
             if emoji_icon:
                 try:
-                    await custom_role.edit(icon=emoji_icon)
+                    emoji_id = emoji_icon.split(":")[2].split(">")[0]
+                    url = f"https://cdn.discordapp.com/emojis/{emoji_id}.png"
+                    await custom_role.edit(icon=url)
                     things_edited.append("emoji icon")
                 except Exception as e:
                     await interaction.response.send_message(f"Failed to set emoji as role icon: {str(e)}", ephemeral=True)
