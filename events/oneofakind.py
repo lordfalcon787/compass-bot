@@ -182,7 +182,8 @@ class OneOfAKind(commands.Cog):
             except:
                 pass
         embed = nextcord.Embed(title="One of a Kind Results", description=descp)
-        await msg.channel.send(embed=embed)
+        player_mentions.append(interaction.user.mention)
+        await msg.channel.send(content=f"{' '.join(player_mentions)}", embed=embed)
         collection.delete_one({"_id": interaction.channel.id})
         
         
