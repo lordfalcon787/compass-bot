@@ -192,16 +192,18 @@ async def version_cmd(ctx):
 async def transcript_cmd(ctx):
     if not ctx.author.guild_permissions.administrator:
         return
+    print("1")
     async with aiohttp.ClientSession() as session:
+        print("2")
         async with session.get(f"https://google.com") as response:
-            async with asyncio.timeout(300):
-                try:
-                    if response.status == 200:
-                        await chat_exporter.quick_export(ctx.channel)
-                    else:
-                        await ctx.reply("Failed to export transcript. Please try again later.", mention_author=False)
-                except asyncio.TimeoutError:
-                    await ctx.reply("Failed to export transcript. Please try again later.", mention_author=False)
+            print("3")
+            if response.status == 200:
+                print("4")
+                await chat_exporter.quick_export(ctx.channel)
+                print("5")
+            else:
+                print("6")
+                await ctx.reply("Failed to export transcript. Please try again later.", mention_author=False)
 
 @bot.command(name="getprefixes")
 async def getprefixes_cmd(ctx):
