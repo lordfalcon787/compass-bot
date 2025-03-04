@@ -27,7 +27,7 @@ class Donosticky(commands.Cog):
                         try:
                             async with asyncio.timeout(900):
                                 print("Getting messages")
-                                messages = [msg async for msg in channel.history(limit=100) if msg.edited_at.timestamp() < time_threshold]
+                                messages = [msg async for msg in channel.history(limit=100) if msg.edited_at and msg.edited_at.timestamp() < time_threshold]
                         except asyncio.TimeoutError:
                             print("Timeout error")
                             messages = []
