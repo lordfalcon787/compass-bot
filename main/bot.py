@@ -1,3 +1,5 @@
+import asyncio
+import aiohttp
 import nextcord
 from datetime import datetime
 from nextcord.ext import commands
@@ -190,7 +192,16 @@ async def version_cmd(ctx):
 async def transcript_cmd(ctx):
     if not ctx.author.guild_permissions.administrator:
         return
-    await chat_exporter.quick_export(ctx.channel)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"https://google.com") as response:
+            async with asyncio.timeout(300):
+                try:
+                    if response.status == 200:
+                        await chat_exporter.quick_export(ctx.channel)
+                    else:
+                        await ctx.reply("Failed to export transcript. Please try again later.", mention_author=False)
+                except asyncio.TimeoutError:
+                    await ctx.reply("Failed to export transcript. Please try again later.", mention_author=False)
 
 @bot.command(name="getprefixes")
 async def getprefixes_cmd(ctx):
