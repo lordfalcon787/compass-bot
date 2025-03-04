@@ -155,10 +155,11 @@ class OneOfAKind(commands.Cog):
             collection.delete_one({"_id": interaction.channel.id})
             return
         players = random.sample(players, 5)
+        collection.update_one({"_id": interaction.channel.id}, {"$set": {"players": players}})
         for player in players:
             member = interaction.guild.get_member(player)
             try:
-                member.add_roles(player_role)
+                await member.add_roles(player_role)
             except:
                 pass
         player_mentions = [f"<@{player}>" for player in players]
@@ -179,7 +180,7 @@ class OneOfAKind(commands.Cog):
                 descp == f"{descp}\n<@{player}>'s Choice: `None`"
             try:
                 member = interaction.guild.get_member(player)
-                member.remove_roles(player_role)
+                await member.remove_roles(player_role)
             except:
                 pass
         embed = nextcord.Embed(title="One of a Kind Results", description=descp)
