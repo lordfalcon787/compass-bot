@@ -112,8 +112,9 @@ class DonationCounter(commands.Cog):
                     value = f"⏣ {value:,}"
                 else:
                     value = "Unknown"
-                current_desc = f"{current_desc}\n`{items_dict[item]['amount']}x` {item} - {value}"
-                items_added += 1
+                if items_dict[item]["amount"] > 0:
+                    current_desc = f"{current_desc}\n`{items_dict[item]['amount']}x` {item} - {value}"
+                    items_added += 1
 
                 if items_added >= 15:
                     desc_pages.append(current_desc)
