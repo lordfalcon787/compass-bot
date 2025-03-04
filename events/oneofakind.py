@@ -141,7 +141,7 @@ class OneOfAKind(commands.Cog):
         embed = nextcord.Embed(title="One of a Kind", description="This a new event, so please follow the rules and guidelines provided below.\n\nFive players will be selected. Each one of those players can choose a number between 1 and 5. If another player chooses the same number, they will both be eliminated. The person with the lowest __unique__ number will be the winner. The prize will be based on the number the winner chose - e.g., the winner chose 2, so the prize will be 2 of item chosen by the player. \n\nTo join the game, please click the button below.")
         embed.set_footer(text="You have 90 seconds to join the game.", icon_url=self.bot.user.avatar.url)
         view = JoinView()
-        await interaction.defer(ephemeral=True)
+        await interaction.response.defer(ephemeral=True)
         msg = await interaction.channel.send(embed=embed, view=view)
         await asyncio.sleep(90)
         await msg.edit(view=None)
