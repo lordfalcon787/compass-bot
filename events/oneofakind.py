@@ -131,6 +131,7 @@ class OneOfAKind(commands.Cog):
             button = nextcord.ui.Button(label="Override", style=nextcord.ButtonStyle.danger)
             async def button_callback(interaction: nextcord.Interaction):
                 collection.delete_one({"_id": interaction.channel.id})
+                await interaction.message.edit(view=None)
                 await interaction.response.send_message("One of a Kind game overridden in this channel.")
             button.callback = button_callback
             view = nextcord.ui.View()
