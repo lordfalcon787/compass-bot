@@ -357,6 +357,8 @@ class utility(commands.Cog):
                 pass
             return
         elif "cumpass" in message.content.lower():
+            if message.author.id == 1149719763388477481:
+                return
             array = [
                 "I don't like you.",
                 "Did you know it's disrespectful to not call people by their proper name?",
