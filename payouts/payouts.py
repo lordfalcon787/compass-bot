@@ -768,17 +768,6 @@ class payouts(commands.Cog):
         await ctx.message.add_reaction(GREEN_CHECK)
         await ctx.reply(content="All false payout documents have been purged.", mention_author=False)
 
-    @commands.command(name="rstatsreset", aliases=["rstatsr"])
-    async def rstatsreset(self, ctx):
-        if ctx.guild.id != RC_ID:
-            return
-        if not ctx.author.guild_permissions.administrator:
-            return
-        collec.delete_one({"_id": "rc_root"})
-        collec.insert_one({"_id": "rc_root"})
-        await ctx.message.add_reaction(GREEN_CHECK)
-        await ctx.reply(content="Root payout stats have been reset.", mention_author=False)
-
     @commands.command(name="rootstats", aliases=["rstats"])
     async def rootstats(self, ctx):
         if ctx.guild.id != RC_ID:
@@ -801,7 +790,7 @@ class payouts(commands.Cog):
                 title="Root Payout Stats",
                 description=descp,
                 color=nextcord.Color.yellow())
-            embed.set_footer(text=f"Page {page + 1}/{total_pages} | Logged since 1/03/2024", icon_url=ctx.guild.icon.url)
+            embed.set_footer(text=f"Page {page + 1}/{total_pages} | Logged since 2/26/2025", icon_url=ctx.guild.icon.url)
             return embed
 
         class PaginatorView(nextcord.ui.View):
