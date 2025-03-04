@@ -80,7 +80,8 @@ class Role(commands.Cog):
     async def customrole(self, interaction: nextcord.Interaction,
                          name: Optional[str] = SlashOption(description="The new name of the role.", required=False),
                          color: Optional[str] = SlashOption(description="The new color of the role.", required=False),
-                         icon: Optional[nextcord.Attachment] = SlashOption(description="The new icon of the role.", required=False)):
+                         image_icon: Optional[nextcord.Attachment] = SlashOption(description="The new icon of the role.", required=False),
+                         emoji_icon: Optional[str] = SlashOption(description="The new emoji icon of the role.", required=False)):
         custom_roles = [role for role in interaction.guild.roles if role.position < interaction.guild.get_role(1216541713489723452).position and role.position > interaction.guild.get_role(1215914992352628858).position]
         member = interaction.guild.get_member(interaction.user.id)
         custom_role = None
@@ -109,16 +110,23 @@ class Role(commands.Cog):
 
             await custom_role.edit(**role_kwargs)
 
-            if icon:
-                if icon.size > 2 * 1024 * 1024:
+            if image_icon:
+                if image_icon.size > 2 * 1024 * 1024:
                     await interaction.response.send_message("The icon file must be under 2MB in size.", ephemeral=True)
                     return
-                if not any(icon.filename.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif']):
+                if not any(image_icon.filename.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif']):
                     await interaction.response.send_message("The icon file must be a PNG, JPG, or GIF image.", ephemeral=True)
                     return
-                icon_bytes = await icon.read()
-                await role.edit(icon=icon_bytes)
+                icon_bytes = await image_icon.read()
+                await custom_role.edit(icon=icon_bytes)
                 things_edited.append("icon")
+            if emoji_icon:
+                try:
+                    await custom_role.edit(icon=emoji_icon)
+                    things_edited.append("emoji icon")
+                except Exception as e:
+                    await interaction.response.send_message(f"Failed to set emoji as role icon: {str(e)}", ephemeral=True)
+                    return
             await interaction.response.send_message(f"Successfully edited role {custom_role.mention}. Changed: {', '.join(things_edited)}", ephemeral=True)
         except nextcord.Forbidden:
             await interaction.response.send_message("I don't have permission to edit roles.", ephemeral=True)
