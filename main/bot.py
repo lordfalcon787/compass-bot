@@ -194,6 +194,15 @@ async def addextension_cmd(ctx, extension: str):
     misccollection.update_one({"_id": "extensions"}, {"$set": {"extensions": current_extensions}})
     await ctx.message.add_reaction(GREEN_CHECK)
 
+@bot.command(name="sortextensions")
+async def sortextensions_cmd(ctx):
+    if ctx.author.id != BOT_OWNER:
+        return
+    current_extensions = misccollection.find_one({"_id": "extensions"})["extensions"]
+    current_extensions.sort()
+    misccollection.update_one({"_id": "extensions"}, {"$set": {"extensions": current_extensions}})
+    await ctx.message.add_reaction(GREEN_CHECK)
+
 @bot.command(name="removeextension")
 async def removeextension_cmd(ctx, extension: str):
     if ctx.author.id != BOT_OWNER:
