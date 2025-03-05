@@ -156,6 +156,7 @@ class OneOfAKind(commands.Cog):
             collection.delete_one({"_id": interaction.channel.id})
             return
         players = random.sample(players, 5)
+        official_players = players
         collection.update_one({"_id": interaction.channel.id}, {"$set": {"players": players}})
         for player in players:
             member = interaction.guild.get_member(player)
@@ -175,19 +176,19 @@ class OneOfAKind(commands.Cog):
         doc = collection.find_one({"_id": interaction.channel.id})
         players = doc["players"]
         descp = ""
-        for player in players:
-            if str(player) in doc:
-                descp == f"{descp}\n<@{player}>'s Choice: `{doc[str(player)]}`"
+        for player_1 in official_players:
+            if str(player_1) in doc:
+                descp = f"{descp}\n<@{player_1}>'s Choice: `{doc[str(player_1)]}`"
             else:
-                descp == f"{descp}\n<@{player}>'s Choice: `None`"
+                descp = f"{descp}\n<@{player_1}>'s Choice: `None`"
             try:
-                member = interaction.guild.get_member(player)
+                member = interaction.guild.get_member(player_1)
                 await member.remove_roles(player_role)
             except:
                 pass
-        embed = nextcord.Embed(title="One of a Kind Results", description=descp)
+        embed_1 = nextcord.Embed(title="One of a Kind Results", description=descp)
         player_mentions.append(interaction.user.mention)
-        await msg.channel.send(content=f"{' '.join(player_mentions)}", embed=embed)
+        await msg.channel.send(content=f"{' '.join(player_mentions)}", embed=embed_1)
         collection.delete_one({"_id": interaction.channel.id})
         
         
