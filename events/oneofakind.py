@@ -8,6 +8,7 @@ from utils.mongo_connection import MongoConnection
 mongo = MongoConnection.get_instance()
 db = mongo.get_db()
 collection = db["One Of A Kind"]
+configuration = db["Configuration"]
 
 class NumbersView(nextcord.ui.View):
     def __init__(self):
@@ -125,7 +126,7 @@ class OneOfAKind(commands.Cog):
         print("One of a Kind Cog loaded")
 
     @nextcord.slash_command(name="oneofakind", description="Start the One of a Kind game.")
-    async def oneofakind(self, interaction: nextcord.Interaction, player_role: nextcord.Role = SlashOption(description="The role to assign to players participating in the game")):
+    async def oneofakind(self, interaction: nextcord.Interaction):
         doc = collection.find_one({"_id": interaction.channel.id})
         if doc:
             button = nextcord.ui.Button(label="Override", style=nextcord.ButtonStyle.danger)
@@ -138,6 +139,12 @@ class OneOfAKind(commands.Cog):
             view.add_item(button)
             await interaction.response.send_message("One of a Kind game already started in this channel.", view=view)
             return
+        player_role = configuration.find_one({"_id": "config"})["player_role"]
+        if str(interaction.guild.id) not in player_role:
+            player_role = 111
+        else:
+            player_role = player_role[str(interaction.guild.id)]
+            player_role = interaction.guild.get_role(player_role)
         collection.insert_one({"_id": interaction.channel.id, "players": []})
         embed = nextcord.Embed(title="One of a Kind", description="This a new event, so please follow the rules and guidelines provided below.\n\nFive players will be selected. Each one of those players can choose a number between 1 and 5. If another player chooses the same number, they will both be eliminated. The person with the lowest __unique__ number will be the winner. The prize will be based on the number the winner chose - e.g., the winner chose 2, so the prize will be 2 of item. \n\nTo join the game, please click the button below.")
         embed.set_footer(text="You have 90 seconds to join the game.", icon_url=self.bot.user.avatar.url)
