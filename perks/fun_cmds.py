@@ -1,3 +1,4 @@
+import asyncio
 import nextcord
 from nextcord.ext import commands
 import random
@@ -19,7 +20,7 @@ acollection = db["Admin"]
 class FunCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
+        self.cooldowns = {}
     @commands.Cog.listener()
     async def on_ready(self):
         print("Fun Commands cog is ready")
@@ -126,6 +127,12 @@ class FunCommands(commands.Cog):
 
     @commands.command(name="spamping")
     async def spamping(self, ctx: commands.Context):
+        cooldowns = self.cooldowns
+        if ctx.author.id in cooldowns:
+            if cooldowns[ctx.author.id] + 15 > int(datetime.now().timestamp()):
+                await ctx.reply(f"You are on cooldown, you can use this command again <t:{cooldowns[ctx.author.id] + 15}:R>", mention_author=False)
+                await ctx.message.add_reaction(RED_X)
+                return
         bot_admins = acollection.find_one({"_id": "bot_admins"})
         if not ctx.author.guild_permissions.administrator and ctx.author.id not in bot_admins["admins"]:
             await ctx.message.add_reaction(RED_X)
@@ -139,6 +146,7 @@ class FunCommands(commands.Cog):
         message = split[1]
         message = message.replace("<", "").replace("@", "").replace(">", "")
         message = int(message)
+        cooldowns[ctx.author.id] = int(datetime.now().timestamp())
         user = self.bot.get_user(message)
         if user is None:
             await ctx.message.add_reaction(RED_X)
@@ -148,6 +156,7 @@ class FunCommands(commands.Cog):
         await ctx.channel.send(f"{user.mention}")
         await ctx.channel.send(f"{user.mention}")
         await ctx.channel.send(f"{user.mention}")
+        await asyncio.sleep(2)
         await ctx.channel.send(f"{user.mention}")
         await ctx.channel.send(f"{user.mention}")
         await ctx.channel.send(f"{user.mention}")
