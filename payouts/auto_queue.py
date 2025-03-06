@@ -674,6 +674,8 @@ class auto_queue(commands.Cog):
                 return
             elif "winner" not in message.embeds[0].title.lower():
                 return
+            elif message.embeds[0].fields and "Dank Memer" in message.embeds[0].fields[0].name:
+                return
             config = configuration.find_one({"_id": "config"})
             guild_id = str(message.guild.id)
             claim = config[f"claim"]
