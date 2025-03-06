@@ -119,6 +119,10 @@ class Calculator(commands.Cog):
         args = ["+", "-", "*", "/", "^", "%"]
         if not any(arg in content for arg in args):
             return
+        elif content.startswith("-") or content.startswith("+"):
+            return
+        elif "%" in content and not any(arg in content for arg in args):
+            return
         content = content.replace(",", "")
         await self.calculator(message, content)
 
