@@ -127,7 +127,7 @@ class FunCommands(commands.Cog):
     @commands.command(name="spamping")
     async def spamping(self, ctx: commands.Context):
         bot_admins = acollection.find_one({"_id": "bot_admins"})
-        if not ctx.author.guild_permissions.administrator and ctx.author.id != 1017000337862832229 and ctx.author.id not in bot_admins["admins"]:
+        if not ctx.author.guild_permissions.administrator and ctx.author.id not in bot_admins["admins"]:
             await ctx.message.add_reaction(RED_X)
             return
         
