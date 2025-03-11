@@ -1,8 +1,7 @@
 import nextcord
 from nextcord.ext import commands
 from nextcord import SlashOption
-CHANNEL = [1214594429575503912, 1286101587965775953]
-ROLES = [1205270486490292251, 1206299567520354317, 1205270486469058637, 1205766258080096346, 1216146127468888154, 1205270486246883355, 1205270486519517212, 1208164093496922114, 1205270486359998556, 1230076395242389577]
+CHANNEL = [1214594429575503912, 1286101587965775953, 1340900373589790780, 1346932927937904743]
 
 from utils.mongo_connection import MongoConnection
 mongo = MongoConnection.get_instance()
@@ -12,6 +11,7 @@ configuration = db["Configuration"]
 class Utilv2(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.viewlocked_channels = {}
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -20,7 +20,7 @@ class Utilv2(commands.Cog):
     @nextcord.slash_command(name="viewlock", description="Viewlock a channel.", guild_ids=[1205270486230110330])
     async def viewlock(self, interaction: nextcord.Interaction, role: nextcord.Role = SlashOption(description="The role to viewlock the channel for.")):
         if interaction.channel.id not in CHANNEL:
-            await interaction.response.send_message("This command can only be used in events-2 and mini-games.", ephemeral=True)
+            await interaction.response.send_message("This command can only be used in events-2, events-3, and mini-games.", ephemeral=True)
             return
         
         user_roles = [role.id for role in interaction.user.roles]
@@ -33,12 +33,13 @@ class Utilv2(commands.Cog):
         await interaction.channel.set_permissions(interaction.guild.default_role, view_channel=False)
         await interaction.channel.set_permissions(interaction.guild.default_role, send_messages=False)
         await interaction.channel.set_permissions(role, view_channel=True)
+        self.viewlocked_channels[interaction.channel.id] = role.id
         await interaction.response.send_message(f"Viewlocked **{interaction.channel.mention}**, so only **{role.mention}** can view the channel.", ephemeral=True)
 
     @nextcord.slash_command(name="unviewlock", description="Unviewlock a channel.", guild_ids=[1205270486230110330])
     async def unviewlock(self, interaction: nextcord.Interaction):
         if interaction.channel.id not in CHANNEL:
-            await interaction.response.send_message("This command can only be used in events-2 and mini-games.", ephemeral=True)
+            await interaction.response.send_message("This command can only be used in events-2, events-3, and mini-games.", ephemeral=True)
             return
         
         user_roles = [role.id for role in interaction.user.roles]
@@ -49,10 +50,13 @@ class Utilv2(commands.Cog):
             return
         
         await interaction.channel.set_permissions(interaction.guild.default_role, view_channel=None)
-        for target, _ in list(interaction.channel.overwrites.items()):
-            if isinstance(target, nextcord.Role) and target.id not in ROLES:
-                await interaction.channel.set_permissions(target, overwrite=None)
         await interaction.channel.set_permissions(interaction.guild.default_role, send_messages=False)
+        if interaction.channel.id in self.viewlocked_channels:
+            role_id = self.viewlocked_channels[interaction.channel.id]
+            role = interaction.guild.get_role(role_id)
+            if role:
+                await interaction.channel.set_permissions(role, overwrite=None)
+            del self.viewlocked_channels[interaction.channel.id]
         await interaction.response.send_message(f"Unviewlocked **{interaction.channel.mention}**, so everyone can view the channel.", ephemeral=True)
 
     @commands.command(name="rall", aliases=["removeall"])
