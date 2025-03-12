@@ -632,12 +632,34 @@ class auto_queue(commands.Cog):
                         winners_list.append(mention)
                 if not winners_list:
                     return None
-                
+            if message.channel.id == 1346932927937904743:
+                asyncio.create_task(self.check_eligibility(message, winners_list))
             return winners_list
         except Exception as e:
             print(f"Error in mafia_queue: {e}")
             return
         
+    async def check_eligibility(self, message, winners_list):        
+        wrongwinners = []
+
+        for winner_ in winners_list:
+            winner_ = winner_.replace("<@", "").replace(">", "")
+            if winner_.isdigit():
+                user = message.guild.get_member(int(winner_))
+                if not user:
+                    continue
+                try:
+                    user_roles = [role.id for role in user.roles]
+                    if 1346933199925674086 not in user_roles and 1205270486469058637 not in user_roles:
+                        wrongwinners.append(user.id)
+                except AttributeError:
+                    continue
+
+        if wrongwinners:
+            descp = "\n".join(f"{i+1}. <@{winner}>" for i, winner in enumerate(wrongwinners))
+            embed = nextcord.Embed(title="Invalid Winners Detected", description=descp, color=nextcord.Color.red())
+            await message.reply(embed=embed)
+
     async def mafia_reminder(self, message):
         msg = None
         try:
