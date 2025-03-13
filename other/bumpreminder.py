@@ -82,7 +82,7 @@ class BumpReminder(commands.Cog):
         if not message.embeds[0].description:
             return
         if "bump done" in message.embeds[0].description.lower():
-            await message.channel.send(f"Thank you for bumping the server {message.author.mention}!")
+            await message.channel.send(f"Thank you for bumping the server {message.interaction.user.mention}!")
             await message.channel.set_permissions(message.guild.default_role, send_messages=False, use_slash_commands=False)
             collection.update_one({"_id": "data"}, {"$set": {f"channels.{guild_id}": int(datetime.datetime.now().timestamp())}}, upsert=True)
 
