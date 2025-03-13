@@ -37,12 +37,16 @@ class BumpReminder(commands.Cog):
         for guild_id in guilds.keys():
             guild = self.bot.get_guild(int(guild_id))
             if guild:
+                print(guild.name)
                 channel = guild.get_channel(int(guilds[guild_id]))
                 if channel:
+                    print(channel.name)
                     channel_time = channels.get(guild_id)
                     if channel_time:
+                        print(channel_time)
                         current_time = int(datetime.datetime.now().timestamp())
                         if current_time - channel_time >= 7200:
+                            print("Sending message")
                             try:
                                 await channel.send(f"{pings[guild_id]} - It is time to bump the server, please bump by running </bump:947088344167366698>.")
                                 await channel.set_permissions(guild.default_role, send_messages=None)
