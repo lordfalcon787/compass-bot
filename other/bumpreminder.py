@@ -32,6 +32,8 @@ class BumpReminder(commands.Cog):
         guilds = self.cache.get("guilds")
         pings = self.cache.get("pings")
         channels = self.cache.get("channels")
+        if not guilds:
+            return
         for guild_id in guilds.keys():
             guild = self.bot.get_guild(int(guild_id))
             if guild:
