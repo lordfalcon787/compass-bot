@@ -18,10 +18,13 @@ class Translate(commands.Cog):
             
             if ctx.message.reference and ctx.message.reference.resolved:
                 message_to_translate = ctx.message.reference.resolved.content
+                if message_to_translate == "":
+                    await ctx.send("Please provide a valid message to translate.")
+                    return
             else:
                 message_to_translate = ctx.message.content.replace(f"{ctx.prefix}translate", "", 1).strip()
-                if not message_to_translate:
-                    await ctx.send("Please provide a message to translate or reply to a message.")
+                if message_to_translate == "":
+                    await ctx.send("Please provide a valid message to translate.")
                     return
             
             detection = await self.bot.loop.run_in_executor(
