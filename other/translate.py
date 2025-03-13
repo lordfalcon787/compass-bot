@@ -76,12 +76,13 @@ class Translate(commands.Cog):
                            default="English"
                        )):
         try:
+            await interaction.response.defer(ephemeral=True)
             translator = Translator()
-            lang_code = to_language.lower()
-            translation = await self.bot.loop.run_in_executor(
-                None, 
-                lambda: translator.translate(message, dest=lang_code)
-            )
+            
+            def do_translation():
+                return translator.translate(message, dest=to_language)
+            
+            translation = await self.bot.loop.run_in_executor(None, do_translation)
             
             embed = nextcord.Embed(title="Translation", color=0x3498db)
             embed.add_field(
@@ -94,10 +95,10 @@ class Translate(commands.Cog):
                 value=translation.text, 
                 inline=False
             )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await interaction.followup.send(embed=embed, ephemeral=True)
             
         except Exception as e:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"An error occurred while translating: {str(e)}", 
                 ephemeral=True
             )
