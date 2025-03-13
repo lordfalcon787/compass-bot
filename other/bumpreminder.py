@@ -28,7 +28,7 @@ class BumpReminder(commands.Cog):
         if doc:
             self.cache = doc
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=2)
     async def bump_reminder(self):
         guilds = self.cache.get("guilds")
         pings = self.cache.get("pings")
