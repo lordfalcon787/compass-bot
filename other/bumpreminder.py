@@ -60,6 +60,8 @@ class BumpReminder(commands.Cog):
                             try:
                                 await channel.send(f"{pings[guild_id]} - It is time to bump the server, please bump by running </bump:947088344167366698>.")
                                 await channel.set_permissions(guild.default_role, send_messages=None)
+                                collection.update_one({"_id": "data"}, {"$set": {f"channels.{guild_id}": 999999999999999999}}, upsert=True)
+                                self.cache["channels"][guild_id] = 999999999999999999
                             except:
                                 pass
 
