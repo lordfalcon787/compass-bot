@@ -50,9 +50,9 @@ class Translate(commands.Cog):
 
             detection_lang = LANG_CODES.get(english.src, english.src.capitalize())
             
-            embed = nextcord.Embed(title="Translation", color=0x3498db)
+            embed = nextcord.Embed(title="Translation Requested", color=0x3498db)
             embed.add_field(
-                name=f"Original ({detection_lang})",
+                name=f"Original Message ({detection_lang})",
                 value=message_to_translate,
                 inline=False
             )
@@ -71,6 +71,7 @@ class Translate(commands.Cog):
                 value=chinese.text,
                 inline=False
             )
+            embed.set_footer(text=f"Translation provided by Google Translate", icon_url="https://cdn4.iconfinder.com/data/icons/logos-brands-7/512/google_logo-google_icongoogle-512.png")
             await ctx.send(embed=embed)
 
         except Exception as e:
