@@ -1,5 +1,5 @@
+import asyncio
 import nextcord
-import time
 import datetime
 from nextcord.ext import commands, tasks
 from nextcord import SlashOption
@@ -18,8 +18,9 @@ class BumpReminder(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print("BumpReminder cog loaded")
-        self.bump_reminder.start()
         self.cache_update.start()
+        await asyncio.sleep(5)
+        self.bump_reminder.start()
 
     @tasks.loop(minutes=5)
     async def cache_update(self):
