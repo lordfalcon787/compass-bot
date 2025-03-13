@@ -17,15 +17,15 @@ LANG_CODES = {
     }
 
 class Translate(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.Cog.listener()
     async def on_ready(self):
         print("Translate cog loaded")
 
-    @commands.command(name="translate")
-    async def translate(self, ctx):
+    @commands.command(name="translatecmd")
+    async def translate_cmd(self, ctx):
         print("-1")
         try:
             print("0")
@@ -90,7 +90,7 @@ class Translate(commands.Cog):
             await ctx.send(f"An error occurred while translating: {str(e)}")
 
     @nextcord.slash_command(name="translate", description="Translate a message to a different language.")
-    async def translate(self, interaction: nextcord.Interaction, 
+    async def translate_slash(self, interaction: nextcord.Interaction, 
                        message: str, 
                        to_language: str = SlashOption(
                            description="The language to translate the message to.", 
