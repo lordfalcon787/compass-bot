@@ -34,7 +34,7 @@ class Translate(commands.Cog):
                 if lang_code != detection.lang:
                     translation = await self.bot.loop.run_in_executor(
                         None,
-                        lambda: translator.translate(message_to_translate, dest=lang_code)
+                        lambda: await translator.translate(message_to_translate, dest=lang_code)
                     )
                     translations[lang_name] = translation.text
             
@@ -79,10 +79,7 @@ class Translate(commands.Cog):
             await interaction.response.defer(ephemeral=True)
             translator = Translator()
             
-            def do_translation():
-                return translator.translate(message, dest=to_language)
-            
-            translation = await self.bot.loop.run_in_executor(None, do_translation)
+            translation = await translator.translate(message, dest=to_language)
             
             embed = nextcord.Embed(title="Translation", color=0x3498db)
             embed.add_field(
