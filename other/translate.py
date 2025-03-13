@@ -34,7 +34,7 @@ class Translate(commands.Cog):
                 if lang_code != detection.lang:
                     translation = await self.bot.loop.run_in_executor(
                         None,
-                        lambda: await translator.translate(message_to_translate, dest=lang_code)
+                        lambda: translator.translate(message_to_translate, dest=lang_code)
                     )
                     translations[lang_name] = translation.text
             
