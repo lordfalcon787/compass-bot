@@ -50,7 +50,7 @@ class BumpReminder(commands.Cog):
                         if current_time - channel_time >= 7200:
                             try:
                                 await channel.send(f"{pings[guild_id]} - It is time to bump the server, please bump by running </bump:947088344167366698>.")
-                                await channel.set_permissions(guild.default_role, send_messages=None)
+                                await channel.set_permissions(guild.default_role, send_messages=None, use_slash_commands=True)
                                 collection.update_one({"_id": "data"}, {"$set": {f"channels.{guild_id}": 999999999999999999}}, upsert=True)
                                 self.cache["channels"][guild_id] = 999999999999999999
                             except:
@@ -83,7 +83,7 @@ class BumpReminder(commands.Cog):
             return
         if "bump done" in message.embeds[0].description.lower():
             await message.channel.send(f"Thank you for bumping the server {message.author.mention}!")
-            await message.channel.set_permissions(message.guild.default_role, send_messages=False)
+            await message.channel.set_permissions(message.guild.default_role, send_messages=False, use_slash_commands=False)
             collection.update_one({"_id": "data"}, {"$set": {f"channels.{guild_id}": int(datetime.datetime.now().timestamp())}}, upsert=True)
 
 def setup(bot: commands.Bot):
