@@ -38,7 +38,7 @@ class Translate(commands.Cog):
                     )
                     translations[lang_name] = translation.text
             
-            detection_lang = self.LANG_CODES.get(detection.lang, detection.lang.upper())
+            detection_lang = self.LANG_CODES.get(detection.lang, detection.lang.capitalize())
             embed = nextcord.Embed(title="Translation", color=0x3498db)
             embed.add_field(
                 name=f"Original ({detection_lang})",
