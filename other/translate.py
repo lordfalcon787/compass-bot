@@ -38,9 +38,10 @@ class Translate(commands.Cog):
                     )
                     translations[lang_name] = translation.text
             
+            detection_lang = self.LANG_CODES.get(detection.lang, detection.lang.upper())
             embed = nextcord.Embed(title="Translation", color=0x3498db)
             embed.add_field(
-                name=f"Original ({detection.lang.upper()})",
+                name=f"Original ({detection_lang})",
                 value=message_to_translate,
                 inline=False
             )
@@ -57,6 +58,18 @@ class Translate(commands.Cog):
         except Exception as e:
             await ctx.send(f"An error occurred while translating: {str(e)}")
         
+
+    LANG_CODES = {
+        "en": "English", "es": "Spanish", "zh-cn": "Chinese", 
+        "hi": "Hindi", "ar": "Arabic", "pt": "Portuguese",
+        "ru": "Russian", "ja": "Japanese", "de": "German", 
+        "fr": "French", "tr": "Turkish", "ko": "Korean",
+        "it": "Italian", "vi": "Vietnamese", "pl": "Polish",
+        "nl": "Dutch", "th": "Thai", "id": "Indonesian",
+        "fa": "Persian", "ms": "Malay", "sv": "Swedish",
+        "el": "Greek", "ro": "Romanian", "cs": "Czech",
+        "he": "Hebrew"
+    }
 
     @nextcord.slash_command(name="translate", description="Translate a message to a different language.")
     async def translate(self, interaction: nextcord.Interaction, 
@@ -81,14 +94,17 @@ class Translate(commands.Cog):
             
             translation = await translator.translate(message, dest=to_language)
             
+            from_lang = self.LANG_CODES.get(translation.src, translation.src.upper())
+            to_lang = self.LANG_CODES.get(to_language, to_language.upper())
+            
             embed = nextcord.Embed(title="Translation", color=0x3498db)
             embed.add_field(
-                name=f"Original ({translation.src.upper()})", 
+                name=f"Original ({from_lang})", 
                 value=message, 
                 inline=False
             )
             embed.add_field(
-                name=f"Translation ({to_language})", 
+                name=f"Translation ({to_lang})", 
                 value=translation.text, 
                 inline=False
             )
