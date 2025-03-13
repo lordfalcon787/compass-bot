@@ -25,7 +25,7 @@ class Translate(commands.Cog):
         print("Translate cog loaded")
 
     @commands.command(name="translate")
-    async def translate(self, ctx: commands.Context):
+    async def translate(self, ctx):
         try:
             translator = Translator()
             message_to_translate = ""
