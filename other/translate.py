@@ -26,53 +26,67 @@ class Translate(commands.Cog):
 
     @commands.command(name="translate")
     async def translate(self, ctx):
+        print("-1")
         try:
+            print("0")
             translator = Translator()
+            print("1")
             message_to_translate = ""
             if ctx.message.reference and ctx.message.reference.resolved:
+                print("2")
                 message_to_translate = ctx.message.reference.resolved.content
                 if message_to_translate == "":
                     await ctx.reply("Please provide a valid message to translate.", mention_author=False)
                     return
             else:
+                print("3")
                 message_to_translate = ctx.message.content.replace(f"{ctx.prefix}translate", "", 1).strip()
                 if message_to_translate == "":
                     await ctx.reply("Please provide a valid message to translate.", mention_author=False)
                     return
-
+            print("4")
             if message_to_translate == "":
                 await ctx.reply("Please provide a valid message to translate.", mention_author=False)
                 return
-            
+            print("5")
             english = translator.translate(message_to_translate, dest="en")
+            print("6")
             spanish = translator.translate(message_to_translate, dest="es")
+            print("7")
             chinese = translator.translate(message_to_translate, dest="zh-cn")
+            print("8")
             detection_lang = LANG_CODES.get(english.src, english.src.capitalize())
-            
+            print("9")
             embed = nextcord.Embed(title="Translation", color=0x3498db)
+            print("10")
             embed.add_field(
                 name=f"Original ({detection_lang})",
                 value=message_to_translate,
                 inline=False
             )
+            print("11")
             embed.add_field(
                 name="Translation (English)",
                 value=english.text,
                 inline=False
             )
+            print("12")
             embed.add_field(
                 name="Translation (Spanish)",
                 value=spanish.text,
                 inline=False
             )
+            print("13")
             embed.add_field(
                 name="Translation (Chinese)",
                 value=chinese.text,
                 inline=False
             )
+            print("14")
             await ctx.send(embed=embed)
-            
+            print("15")
         except Exception as e:
+            print("16")
             await ctx.send(f"An error occurred while translating: {str(e)}")
 
     @nextcord.slash_command(name="translate", description="Translate a message to a different language.")
