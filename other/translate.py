@@ -1,7 +1,20 @@
 import nextcord
+
 from nextcord import SlashOption
 from nextcord.ext import commands
 from googletrans import Translator
+
+LANG_CODES = {
+        "en": "English", "es": "Spanish", "zh-cn": "Chinese", 
+        "hi": "Hindi", "ar": "Arabic", "pt": "Portuguese",
+        "ru": "Russian", "ja": "Japanese", "de": "German", 
+        "fr": "French", "tr": "Turkish", "ko": "Korean",
+        "it": "Italian", "vi": "Vietnamese", "pl": "Polish",
+        "nl": "Dutch", "th": "Thai", "id": "Indonesian",
+        "fa": "Persian", "ms": "Malay", "sv": "Swedish",
+        "el": "Greek", "ro": "Romanian", "cs": "Czech",
+        "he": "Hebrew"
+    }
 
 class Translate(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -15,64 +28,52 @@ class Translate(commands.Cog):
     async def translate(self, ctx: commands.Context):
         try:
             translator = Translator()
-            
+            message_to_translate = ""
             if ctx.message.reference and ctx.message.reference.resolved:
                 message_to_translate = ctx.message.reference.resolved.content
                 if message_to_translate == "":
-                    await ctx.send("Please provide a valid message to translate.")
+                    await ctx.reply("Please provide a valid message to translate.", mention_author=False)
                     return
             else:
                 message_to_translate = ctx.message.content.replace(f"{ctx.prefix}translate", "", 1).strip()
                 if message_to_translate == "":
-                    await ctx.send("Please provide a valid message to translate.")
+                    await ctx.reply("Please provide a valid message to translate.", mention_author=False)
                     return
+
+            if message_to_translate == "":
+                await ctx.reply("Please provide a valid message to translate.", mention_author=False)
+                return
             
-            detection = await self.bot.loop.run_in_executor(
-                None,
-                lambda: translator.detect(message_to_translate)
-            )
+            english = translator.translate(message_to_translate, dest="en")
+            spanish = translator.translate(message_to_translate, dest="es")
+            chinese = translator.translate(message_to_translate, dest="zh-cn")
+            detection_lang = LANG_CODES.get(english.src, english.src.capitalize())
             
-            translations = {}
-            for lang_code, lang_name in [("en", "English"), ("es", "Spanish"), ("zh-cn", "Chinese")]:
-                if lang_code != detection.lang:
-                    translation = await self.bot.loop.run_in_executor(
-                        None,
-                        lambda: translator.translate(message_to_translate, dest=lang_code)
-                    )
-                    translations[lang_name] = translation.text
-            
-            detection_lang = self.LANG_CODES.get(detection.lang, detection.lang.capitalize())
             embed = nextcord.Embed(title="Translation", color=0x3498db)
             embed.add_field(
                 name=f"Original ({detection_lang})",
                 value=message_to_translate,
                 inline=False
             )
-            
-            for lang_name, translated_text in translations.items():
-                embed.add_field(
-                    name=f"Translation ({lang_name})",
-                    value=translated_text,
-                    inline=False
-                )
-            
+            embed.add_field(
+                name="Translation (English)",
+                value=english.text,
+                inline=False
+            )
+            embed.add_field(
+                name="Translation (Spanish)",
+                value=spanish.text,
+                inline=False
+            )
+            embed.add_field(
+                name="Translation (Chinese)",
+                value=chinese.text,
+                inline=False
+            )
             await ctx.send(embed=embed)
             
         except Exception as e:
             await ctx.send(f"An error occurred while translating: {str(e)}")
-        
-
-    LANG_CODES = {
-        "en": "English", "es": "Spanish", "zh-cn": "Chinese", 
-        "hi": "Hindi", "ar": "Arabic", "pt": "Portuguese",
-        "ru": "Russian", "ja": "Japanese", "de": "German", 
-        "fr": "French", "tr": "Turkish", "ko": "Korean",
-        "it": "Italian", "vi": "Vietnamese", "pl": "Polish",
-        "nl": "Dutch", "th": "Thai", "id": "Indonesian",
-        "fa": "Persian", "ms": "Malay", "sv": "Swedish",
-        "el": "Greek", "ro": "Romanian", "cs": "Czech",
-        "he": "Hebrew"
-    }
 
     @nextcord.slash_command(name="translate", description="Translate a message to a different language.")
     async def translate(self, interaction: nextcord.Interaction, 
@@ -97,8 +98,8 @@ class Translate(commands.Cog):
             
             translation = await translator.translate(message, dest=to_language)
             
-            from_lang = self.LANG_CODES.get(translation.src, translation.src.capitalize())
-            to_lang = self.LANG_CODES.get(to_language, to_language.capitalize())
+            from_lang = LANG_CODES.get(translation.src, translation.src.capitalize())
+            to_lang = LANG_CODES.get(to_language, to_language.capitalize())
             
             embed = nextcord.Embed(title="Translation", color=0x3498db)
             embed.add_field(
