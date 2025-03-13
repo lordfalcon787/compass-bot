@@ -37,6 +37,12 @@ class BumpReminder(commands.Cog):
         if not guilds:
             print("No guilds found")
             return
+        if not channels:
+            print("No channels found")
+            return
+        if not pings:
+            print("No pings found")
+            return
         for guild_id in guilds.keys():
             print(guild_id)
             guild = self.bot.get_guild(int(guild_id))
