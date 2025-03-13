@@ -39,7 +39,7 @@ class BumpReminder(commands.Cog):
             if guild:
                 channel = guild.get_channel(int(guilds[guild_id]))
                 if channel:
-                    channel_time = channels[guild_id]
+                    channel_time = channels.get(guild_id)
                     if channel_time:
                         current_time = int(datetime.datetime.now().timestamp())
                         if current_time - channel_time >= 7200:
