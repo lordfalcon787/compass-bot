@@ -94,8 +94,8 @@ class Translate(commands.Cog):
             
             translation = await translator.translate(message, dest=to_language)
             
-            from_lang = self.LANG_CODES.get(translation.src, translation.src.upper())
-            to_lang = self.LANG_CODES.get(to_language, to_language.upper())
+            from_lang = self.LANG_CODES.get(translation.src, translation.src.capitalize())
+            to_lang = self.LANG_CODES.get(to_language, to_language.capitalize())
             
             embed = nextcord.Embed(title="Translation", color=0x3498db)
             embed.add_field(
