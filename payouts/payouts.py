@@ -738,6 +738,14 @@ class payouts(commands.Cog):
         else:
             return True
         
+    def cog_unload(self):
+        if self.check_queue.is_running():
+            self.check_queue.cancel()
+        if self.check_payouts.is_running():
+            self.check_payouts.cancel()
+        if self.cache_payouts.is_running():
+            self.cache_payouts.cancel()
+        
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Payouts cog loaded.")
@@ -745,9 +753,12 @@ class payouts(commands.Cog):
         self.bot.add_view(QueuedPayoutsView())
         self.bot.add_view(QueueView())
         self.bot.add_view(QueuedView(self.bot))
-        self.check_queue.start()
-        self.check_payouts.start()
-        self.cache_payouts.start()
+        if not self.check_queue.is_running():
+            self.check_queue.start()
+        if not self.check_payouts.is_running():
+            self.check_payouts.start()
+        if not self.cache_payouts.is_running():
+            self.cache_payouts.start()
 
     @commands.command(name="payoutstats", aliases=["pstats"])
     async def payoutstats(self, ctx):

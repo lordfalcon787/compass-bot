@@ -21,11 +21,19 @@ class AR(commands.Cog):
         self.bot = bot
         self.cache = {}
 
+    def cog_unload(self):
+        if self.update_cached_words.is_running():
+            self.update_cached_words.cancel()
+        if self.check_ar.is_running():
+            self.check_ar.cancel()
+
     @commands.Cog.listener()
     async def on_ready(self):
         print("AR cog is ready.")
-        self.update_cached_words.start()
-        self.check_ar.start()
+        if not self.update_cached_words.is_running():
+            self.update_cached_words.start()
+        if not self.check_ar.is_running():
+            self.check_ar.start()
 
     async def ban_check(interaction: nextcord.Interaction):
         banned_users = misc.find_one({"_id": "bot_banned"})

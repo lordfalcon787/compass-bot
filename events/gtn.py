@@ -21,11 +21,19 @@ class Gtn(commands.Cog):
         self.gtn_lock = asyncio.Lock()
         self.cache = {}
 
+    def cog_unload(self):
+        if self.rc_gtn.is_running():
+            self.rc_gtn.cancel()
+        if self.cache_update.is_running():
+            self.cache_update.cancel()
+
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Guess the number cog loaded.")
-        self.rc_gtn.start()
-        self.cache_update.start()
+        if not self.rc_gtn.is_running():
+            self.rc_gtn.start()
+        if not self.cache_update.is_running():
+            self.cache_update.start()
 
     @tasks.loop(seconds=30)
     async def cache_update(self):

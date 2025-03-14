@@ -26,10 +26,15 @@ class Counting(commands.Cog):
         for key in config.keys():
             self.cache[key] = config[key]
 
+    def cog_unload(self):
+        if self.update_cache.is_running():
+            self.update_cache.cancel()
+
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Counting cog loaded.")
-        self.update_cache.start()
+        if not self.update_cache.is_running():
+            self.update_cache.start()
 
     @commands.Cog.listener()
     async def on_message(self, message):

@@ -8,10 +8,15 @@ class Donosticky(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    def cog_unload(self):
+        if self.messages_task.is_running():
+            self.messages_task.cancel()
+
     @commands.Cog.listener()
     async def on_ready(self):
         print("Donosticky cog loaded.")
-        self.messages_task.start()
+        if not self.messages_task.is_running():
+            self.messages_task.start()
 
     @tasks.loop(hours=3)
     async def messages_task(self):

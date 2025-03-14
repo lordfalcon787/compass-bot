@@ -15,10 +15,15 @@ class Timer(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    def cog_unload(self):
+        if self.check_timers.is_running():
+            self.check_timers.cancel()
+
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Timer cog loaded.")
-        self.check_timers.start()
+        if not self.check_timers.is_running():
+            self.check_timers.start()
 
     @tasks.loop(seconds=2)
     async def check_timers(self):

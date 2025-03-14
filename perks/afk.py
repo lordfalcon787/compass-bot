@@ -17,10 +17,18 @@ class AFK(commands.Cog):
         self.cache = {}
         self.ignore_cache = {}
 
+    def cog_unload(self):
+        if self.afk_check.is_running():
+            self.afk_check.cancel()
+        if self.ignore_check.is_running():
+            self.ignore_check.cancel()
+
     @commands.Cog.listener()
     async def on_ready(self):
-        self.afk_check.start()
-        self.ignore_check.start()
+        if not self.afk_check.is_running():
+            self.afk_check.start()
+        if not self.ignore_check.is_running():
+            self.ignore_check.start()
         print("AFK cog loaded")
 
     @tasks.loop(seconds=10)

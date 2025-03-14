@@ -224,9 +224,14 @@ class Donate(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    def cog_unload(self):
+        if self.sticky_loop.is_running():
+            self.sticky_loop.cancel()
+
     @commands.Cog.listener()
     async def on_ready(self):
-        self.sticky_loop.start()
+        if not self.sticky_loop.is_running():
+            self.sticky_loop.start()
         self.bot.add_view(View(self.bot))
         self.bot.add_view(View2())
         print("Donate cog loaded")

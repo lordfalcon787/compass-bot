@@ -36,10 +36,15 @@ class Auction(commands.Cog):
         if guild_id not in lock_dict:
             lock_dict[guild_id] = asyncio.Lock()
         return lock_dict[guild_id]
+    
+    def cog_unload(self):
+        if self.cache_auction.is_running():
+            self.cache_auction.cancel()
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.cache_auction.start()
+        if not self.cache_auction.is_running():
+            self.cache_auction.start()
         self.bot.add_view(Use())
         print("Auction cog loaded.")
 

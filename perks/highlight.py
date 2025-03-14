@@ -21,13 +21,21 @@ class Highlight(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.cache = {}
+
+    def cog_unload(self):
+        if self.loop.is_running():
+            self.loop.cancel()
+        if self.update_cache.is_running():
+            self.update_cache.cancel()
     
     @commands.Cog.listener()
     async def on_ready(self):
         print("Highlight cog loaded")
-        self.loop.start()
+        if not self.loop.is_running():
+            self.loop.start()
         self.lock = asyncio.Lock()
-        self.update_cache.start()
+        if not self.update_cache.is_running():
+            self.update_cache.start()
     
     @tasks.loop(minutes=3)
     async def update_cache(self):

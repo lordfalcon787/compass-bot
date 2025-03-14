@@ -15,12 +15,20 @@ class BumpReminder(commands.Cog):
         self.bot = bot
         self.cache = {}
 
+    def cog_unload(self):
+        if self.cache_update.is_running():
+            self.cache_update.cancel()
+        if self.bump_reminder.is_running():
+            self.bump_reminder.cancel()
+
     @commands.Cog.listener()
     async def on_ready(self):
         print("BumpReminder cog loaded")
-        self.cache_update.start()
+        if not self.cache_update.is_running():
+            self.cache_update.start()
         await asyncio.sleep(5)
-        self.bump_reminder.start()
+        if not self.bump_reminder.is_running():
+            self.bump_reminder.start()
 
     @tasks.loop(minutes=5)
     async def cache_update(self):
@@ -64,6 +72,8 @@ class BumpReminder(commands.Cog):
         collection.update_one({"_id": "data"}, {"$set": {f"guilds.{interaction.guild.id}": channel.id, f"pings.{interaction.guild.id}": ping_role.mention}}, upsert=True)
         await interaction.response.send_message(f"Bump reminder channel set to {channel.mention}", ephemeral=True)
         self.cache[f"{interaction.guild.id}"] = channel.id
+
+    
 
     @commands.Cog.listener()
     async def on_message(self, message: nextcord.Message):
