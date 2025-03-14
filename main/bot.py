@@ -1,11 +1,10 @@
-import asyncio
-import aiohttp
 import nextcord
+import json
+import psutil
+
 from datetime import datetime
 from nextcord.ext import commands
-import json
-import chat_exporter
-import psutil
+from utils.mongo_connection import MongoConnection
 
 with open("config.json", "r") as file:
     config = json.load(file)
@@ -18,8 +17,6 @@ RC_BANNER = "https://i.imgur.com/kL6BSmK.jpeg"
 
 GREEN_CHECK = "<:green_check2:1291173532432203816>"
 RED_X = "<:red_x2:1292657124832448584>"
-
-from utils.mongo_connection import MongoConnection
 
 mongo = MongoConnection.get_instance()
 client = mongo.get_client()
@@ -59,8 +56,6 @@ class UnfilteredBot(commands.Bot):
 
 
 intents = nextcord.Intents.all()
-intents.message_content = True
-intents.reactions = True
 bot = UnfilteredBot(
     command_prefix=get_prefix, 
     owner_id = 1166134423146729563, 
@@ -96,10 +91,10 @@ async def on_ready():
         print("Pinged your deployment. You successfully connected to MongoDB!")
     except Exception as e:
         print(f"An error occurred: {e}")
-    channel = bot.get_channel(1325673670202359850)
-    embed = nextcord.Embed(title="Bot Startup", description=f"Bot startup has initiated successfully. \n Current Time: <t:{int(datetime.now().timestamp())}:f> \n Current Guilds: {len(bot.guilds)}", color=65280)
-    embed.set_thumbnail(url=bot.user.avatar.url)
-    embed.set_image(url=RC_BANNER)
+    version = await get_version()
+    print(f"Bot Version: {version}")
+
+async def get_version():
     bot_version = misccollection.find_one({"_id": "bot_version"})["version"]
     bot_version = list(str(bot_version))
     version = ""
@@ -111,8 +106,7 @@ async def on_ready():
         else:
             version = f"{version}{letter}"
         num += 1
-    embed.set_footer(text=f"Bot Version: {version}", icon_url=bot.user.avatar.url)
-    await channel.send(embed=embed)
+    return version
 
 @bot.event
 async def on_guild_join(guild):
@@ -122,7 +116,6 @@ async def on_guild_join(guild):
         prefixes[str(guild.id)] = ["-"]
     with open("prefixes.json", "w") as file:
         json.dump(prefixes, file, indent=4)
-
 
 @bot.command(name="stats", aliases=["statistics", "status"])
 async def stats_cmd(ctx):
@@ -216,23 +209,6 @@ async def removeextension_cmd(ctx, extension: str):
     current_extensions.sort()
     misccollection.update_one({"_id": "extensions"}, {"$set": {"extensions": current_extensions}})
     await ctx.message.add_reaction(GREEN_CHECK)
-
-@bot.command(name="transcript")
-async def transcript_cmd(ctx):
-    if not ctx.author.guild_permissions.administrator:
-        return
-    print("1")
-    async with aiohttp.ClientSession() as session:
-        print("2")
-        async with session.get(f"https://google.com") as response:
-            print("3")
-            if response.status == 200:
-                print("4")
-                await chat_exporter.quick_export(ctx.channel)
-                print("5")
-            else:
-                print("6")
-                await ctx.reply("Failed to export transcript. Please try again later.", mention_author=False)
 
 @bot.command(name="getprefixes")
 async def getprefixes_cmd(ctx):
