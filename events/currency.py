@@ -42,10 +42,15 @@ class Currency(commands.Cog):
     async def update_cache(self):
         self.cache = [doc["_id"] for doc in collection.find({})]
 
+    def cog_unload(self):
+        if self.update_cache.is_running():
+            self.update_cache.cancel()
+
     @commands.Cog.listener()
     async def on_ready(self):
         print("Currency cog loaded.")
-        self.update_cache.start()
+        if not self.update_cache.is_running():
+            self.update_cache.start()
 
     async def get_quantity(self, quantity):
         multipliers = {'k': 1000, 'm': 1000000, 'b': 1000000000, 't': 1000000000000}
