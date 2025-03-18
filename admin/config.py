@@ -411,7 +411,6 @@ class Config(commands.Cog):
         disable_logs_button = nextcord.ui.Button(label="Disable Logs", style=nextcord.ButtonStyle.danger)
         
         async def update_config_embed(interaction: nextcord.Interaction):
-            await interaction.response.defer(ephemeral=True)
             doc = configuration.find_one({"_id": "config"})
             moderation_roles = doc["moderation"]
             warn = moderation_roles["warn"]
@@ -426,46 +425,25 @@ class Config(commands.Cog):
                 color=nextcord.Color.blue()
             )
             
-            if warn:
-                warn_roles = warn.get(guild, "None")
-                if warn_roles != "None":
-                    warn_roles = ", ".join(f"<@&{role}>" for role in warn_roles)
-                embed.add_field(name="Warn Roles", value=warn_roles, inline=True)
-            else:
-                embed.add_field(name="Warn Roles", value="None", inline=True)
+            warn_roles = warn.get(guild, "None")
+            warn_roles = ", ".join(f"<@&{role}>" for role in warn_roles) if warn_roles != "None" else "None"
+            embed.add_field(name="Warn Roles", value=warn_roles, inline=True)
                 
-            if timeout:
-                timeout_roles = timeout.get(guild, "None")
-                if timeout_roles != "None":
-                    timeout_roles = ", ".join(f"<@&{role}>" for role in timeout_roles)
-                embed.add_field(name="Timeout Roles", value=timeout_roles, inline=True)
-            else:
-                embed.add_field(name="Timeout Roles", value="None", inline=True)
+            timeout_roles = timeout.get(guild, "None")
+            timeout_roles = ", ".join(f"<@&{role}>" for role in timeout_roles) if timeout_roles != "None" else "None"
+            embed.add_field(name="Timeout Roles", value=timeout_roles, inline=True)
                 
-            if kick:
-                kick_roles = kick.get(guild, "None")
-                if kick_roles != "None":
-                    kick_roles = ", ".join(f"<@&{role}>" for role in kick_roles)
-                embed.add_field(name="Kick Roles", value=kick_roles, inline=True)
-            else:
-                embed.add_field(name="Kick Roles", value="None", inline=True)
+            kick_roles = kick.get(guild, "None")
+            kick_roles = ", ".join(f"<@&{role}>" for role in kick_roles) if kick_roles != "None" else "None"
+            embed.add_field(name="Kick Roles", value=kick_roles, inline=True)
                 
-            if ban:
-                ban_roles = ban.get(guild, "None")
-                if ban_roles != "None":
-                    ban_roles = ", ".join(f"<@&{role}>" for role in ban_roles)
-                embed.add_field(name="Ban Roles", value=ban_roles, inline=True)
-            else:
-                embed.add_field(name="Ban Roles", value="None", inline=True)
+            ban_roles = ban.get(guild, "None")
+            ban_roles = ", ".join(f"<@&{role}>" for role in ban_roles) if ban_roles != "None" else "None"
+            embed.add_field(name="Ban Roles", value=ban_roles, inline=True)
                 
-            if logs:
-                logs_channel = logs.get(guild, "None")
-                if logs_channel != "None":
-                    logs_channel = f"<#{logs_channel}>"
-                embed.add_field(name="Logs Channel", value=logs_channel, inline=True)
-            else:
-                embed.add_field(name="Logs Channel", value="None", inline=True)
-                
+            logs_channel = logs.get(guild, "None")
+            logs_channel = f"<#{logs_channel}>" if logs_channel != "None" else "None"
+            embed.add_field(name="Logs Channel", value=logs_channel, inline=True)  
             await original_interaction.message.edit(embed=embed)
         
         async def modify_warn_roles(interaction: nextcord.Interaction):
