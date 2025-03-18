@@ -350,13 +350,7 @@ class utility(commands.Cog):
         if message.author.id == RUMBLE_ROYALE:
             await self.rumble(message)
 
-        if "haha" in message.content.lower():
-            try:
-                await message.add_reaction("😆")
-            except:
-                pass
-            return
-        elif "cumpass" in message.content.lower():
+        if "cumpass" in message.content.lower():
             if message.author.id == 1149719763388477481:
                 return
             array = [
