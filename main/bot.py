@@ -3,8 +3,7 @@ import json
 import psutil
 import asyncio
 
-from datetime import datetime
-from pytz import timezone
+from datetime import datetime, timedelta
 from nextcord.ext import commands
 from utils.mongo_connection import MongoConnection
 
@@ -102,8 +101,9 @@ async def on_ready():
         print(f"An error occurred: {e}")
     version = await get_version()
     print(f"Bot Version: {version}")
-    pst = timezone('America/Los_Angeles')
-    print(f"Logged in at {datetime.now(pst).strftime('%B %d %Y, %I:%M%p')} with {len(bot.guilds)} guilds.")
+    time = datetime.now()
+    time = time - timedelta(hours=7)
+    print(f"Logged in at {time.strftime('%B %d %Y, %I:%M%p')} with {len(bot.guilds)} guilds.")
 
 async def get_version():
     bot_version = misccollection.find_one({"_id": "bot_version"})["version"]
