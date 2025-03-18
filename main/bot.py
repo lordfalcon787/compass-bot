@@ -93,6 +93,7 @@ async def on_ready():
         print(f"An error occurred: {e}")
     version = await get_version()
     print(f"Bot Version: {version}")
+    print(f"Logged in at {datetime.now().strftime('%B %d%S, %I:%M%p')} with {len(bot.guilds)} guilds.")
 
 async def get_version():
     bot_version = misccollection.find_one({"_id": "bot_version"})["version"]
