@@ -21,6 +21,7 @@ class Moderation(commands.Cog):
 
     @commands.command(name="warn")
     async def warn_cmd(self, ctx, member: nextcord.Member, *, reason: str):
+        return
         user_roles = [role.id for role in ctx.author.roles]
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
@@ -253,6 +254,7 @@ class Moderation(commands.Cog):
     
     @commands.command(name="removewarn", aliases=["rwarn", "deletewarn", "delwarn"])
     async def removewarn_cmd(self, ctx, member: nextcord.Member, amount: int):
+        return
         user_roles = [role.id for role in ctx.author.roles]
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
