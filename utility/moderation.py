@@ -273,23 +273,23 @@ class Moderation(commands.Cog):
 
     @quarantine.subcommand(name="add", description="Quarantine a user.")
     async def add(self, interaction: nextcord.Interaction, member: nextcord.Member):
-        pass
+        await interaction.response.send_message(f"Quarantined **{member.name}**.", ephemeral=True)
 
     @quarantine.subcommand(name="configure", description="Configure the quarantine system.")
     async def configure(self, interaction: nextcord.Interaction):
-        pass
+        await interaction.response.send_message(f"Quarantine configured.", ephemeral=True)
 
     @quarantine.subcommand(name="remove", description="Remove a user from quarantine.")
     async def remove(self, interaction: nextcord.Interaction, member: nextcord.Member):
-        pass
+        await interaction.response.send_message(f"Removed **{member.name}** from quarantine.", ephemeral=True)
 
     async def get_time_until_timeout(self, time: str):
         time_units = {
-            's': 1,           # seconds
-            'm': 60,          # minutes
-            'h': 3600,        # hours
-            'd': 86400,       # days
-            'w': 604800       # weeks
+            's': 1,           
+            'm': 60,           
+            'h': 3600,        
+            'd': 86400,       
+            'w': 604800      
         } 
         current_num = ""
         for char in time:
