@@ -35,6 +35,7 @@ class View(nextcord.ui.View):
         view = nextcord.ui.View()
         original_interaction = interaction
         
+        moderation_button = nextcord.ui.Button(label="Moderation", style=nextcord.ButtonStyle.primary, emoji="🛑")
         payout_button = nextcord.ui.Button(label="Payout System", style=nextcord.ButtonStyle.primary, emoji="💵")
         ar_button = nextcord.ui.Button(label="Auto-Responder", style=nextcord.ButtonStyle.primary, emoji="💬") 
         highlight_button = nextcord.ui.Button(label="Highlight", style=nextcord.ButtonStyle.primary, emoji="🔍")
@@ -48,6 +49,12 @@ class View(nextcord.ui.View):
         staff_list_button = nextcord.ui.Button(label="Staff List", style=nextcord.ButtonStyle.primary, emoji="🪄")
         pcms_button = nextcord.ui.Button(label="PCMS", style=nextcord.ButtonStyle.primary, emoji="💳")
         afk_button = nextcord.ui.Button(label="AFK", style=nextcord.ButtonStyle.primary, emoji="💤")
+
+        async def moderation_callback(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+            await self.bot.get_cog("Config").moderation_config(original_interaction)
 
         async def payout_callback(interaction: nextcord.Interaction):
             if interaction.user.id != original_interaction.user.id:
@@ -127,6 +134,7 @@ class View(nextcord.ui.View):
                 return
             await self.bot.get_cog("Config").afk_config(original_interaction)
 
+        moderation_button.callback = moderation_callback
         payout_button.callback = payout_callback
         ar_button.callback = ar_callback
         highlight_button.callback = highlight_callback
@@ -140,6 +148,7 @@ class View(nextcord.ui.View):
         staff_list_button.callback = staff_list_callback
         pcms_button.callback = pcms_callback
         afk_button.callback = afk_callback
+        view.add_item(moderation_button)
         view.add_item(payout_button)
         view.add_item(ar_button)
         view.add_item(highlight_button)
@@ -224,6 +233,7 @@ class Config(commands.Cog):
         view = nextcord.ui.View()
         original_interaction = interaction
         
+        moderation_button = nextcord.ui.Button(label="Moderation", style=nextcord.ButtonStyle.primary, emoji="🛑")
         payout_button = nextcord.ui.Button(label="Payout System", style=nextcord.ButtonStyle.primary, emoji="💵")
         ar_button = nextcord.ui.Button(label="Auto-Responder", style=nextcord.ButtonStyle.primary, emoji="💬") 
         highlight_button = nextcord.ui.Button(label="Highlight", style=nextcord.ButtonStyle.primary, emoji="🔍")
@@ -237,6 +247,12 @@ class Config(commands.Cog):
         staff_list_button = nextcord.ui.Button(label="Staff List", style=nextcord.ButtonStyle.primary, emoji="🪄")
         pcms_button = nextcord.ui.Button(label="PCMS", style=nextcord.ButtonStyle.primary, emoji="💳")
         afk_button = nextcord.ui.Button(label="AFK", style=nextcord.ButtonStyle.primary, emoji="💤")
+
+        async def moderation_callback(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+            await self.moderation_config(interaction)
 
         async def payout_callback(interaction: nextcord.Interaction):
             if interaction.user.id != original_interaction.user.id:
@@ -316,6 +332,7 @@ class Config(commands.Cog):
                 return
             await self.afk_config(interaction)
 
+        moderation_button.callback = moderation_callback
         payout_button.callback = payout_callback
         ar_button.callback = ar_callback
         highlight_button.callback = highlight_callback
@@ -329,6 +346,7 @@ class Config(commands.Cog):
         staff_list_button.callback = staff_list_callback
         pcms_button.callback = pcms_callback
         afk_button.callback = afk_callback
+        view.add_item(moderation_button)
         view.add_item(payout_button)
         view.add_item(ar_button)
         view.add_item(highlight_button)
@@ -343,6 +361,404 @@ class Config(commands.Cog):
         view.add_item(pcms_button)
         view.add_item(afk_button)
         await interaction.send(embed=embed, view=view, ephemeral=False)
+
+    async def moderation_config(self, interaction: nextcord.Interaction):
+        embed = nextcord.Embed(
+            title="Moderation Configuration",
+            description="Configure the moderation system for the server.",
+            color=nextcord.Color.blue()
+        )
+        guild = str(interaction.guild.id)
+        original_interaction = interaction
+        doc = configuration.find_one({"_id": "config"})
+        moderation_roles = doc["moderation"]
+        warn = moderation_roles["warn"]
+        timeout = moderation_roles["timeout"]
+        kick = moderation_roles["kick"]
+        ban = moderation_roles["ban"]
+        logs = moderation_roles["logs"]
+        if warn:
+            warn = warn.get(guild, "None")
+            if warn != "None":
+                warn = ", ".join(f"<@&{role}>" for role in warn)
+            embed.add_field(name="Warn Roles", value=warn, inline=True)
+        if timeout:
+            timeout = timeout.get(guild, "None")
+            if timeout != "None":
+                timeout = ", ".join(f"<@&{role}>" for role in timeout)
+            embed.add_field(name="Timeout Roles", value=timeout, inline=True)
+        if kick:
+            kick = kick.get(guild, "None")
+            if kick != "None":
+                kick = ", ".join(f"<@&{role}>" for role in kick)
+            embed.add_field(name="Kick Roles", value=kick, inline=True)
+        if ban:
+            ban = ban.get(guild, "None")
+            if ban != "None":
+                ban = ", ".join(f"<@&{role}>" for role in ban)
+            embed.add_field(name="Ban Roles", value=ban, inline=True)
+        if logs:
+            logs = logs.get(guild, "None")
+            if logs != "None":
+                logs = f"<#{logs}>"
+            embed.add_field(name="Logs Channel", value=logs, inline=True)
+        view = View(self.bot)
+
+        warn_button = nextcord.ui.Button(label="Modify Warn Roles", style=nextcord.ButtonStyle.primary)
+        timeout_button = nextcord.ui.Button(label="Modify Timeout Roles", style=nextcord.ButtonStyle.primary)
+        kick_button = nextcord.ui.Button(label="Modify Kick Roles", style=nextcord.ButtonStyle.primary)
+        ban_button = nextcord.ui.Button(label="Modify Ban Roles", style=nextcord.ButtonStyle.primary)
+        logs_button = nextcord.ui.Button(label="Set Logs Channel", style=nextcord.ButtonStyle.primary)
+        
+        disable_warn_button = nextcord.ui.Button(label="Disable Warn", style=nextcord.ButtonStyle.danger)
+        disable_timeout_button = nextcord.ui.Button(label="Disable Timeout", style=nextcord.ButtonStyle.danger)
+        disable_kick_button = nextcord.ui.Button(label="Disable Kick", style=nextcord.ButtonStyle.danger)
+        disable_ban_button = nextcord.ui.Button(label="Disable Ban", style=nextcord.ButtonStyle.danger)
+        disable_logs_button = nextcord.ui.Button(label="Disable Logs", style=nextcord.ButtonStyle.danger)
+        
+        async def update_config_embed(interaction: nextcord.Interaction):
+            await interaction.response.defer(ephemeral=True)
+            doc = configuration.find_one({"_id": "config"})
+            moderation_roles = doc["moderation"]
+            warn = moderation_roles["warn"]
+            timeout = moderation_roles["timeout"]
+            kick = moderation_roles["kick"]
+            ban = moderation_roles["ban"]
+            logs = moderation_roles["logs"]
+            
+            embed = nextcord.Embed(
+                title="Moderation Configuration",
+                description="Configure the moderation system for the server.",
+                color=nextcord.Color.blue()
+            )
+            
+            if warn:
+                warn_roles = warn.get(guild, "None")
+                if warn_roles != "None":
+                    warn_roles = ", ".join(f"<@&{role}>" for role in warn_roles)
+                embed.add_field(name="Warn Roles", value=warn_roles, inline=True)
+            else:
+                embed.add_field(name="Warn Roles", value="None", inline=True)
+                
+            if timeout:
+                timeout_roles = timeout.get(guild, "None")
+                if timeout_roles != "None":
+                    timeout_roles = ", ".join(f"<@&{role}>" for role in timeout_roles)
+                embed.add_field(name="Timeout Roles", value=timeout_roles, inline=True)
+            else:
+                embed.add_field(name="Timeout Roles", value="None", inline=True)
+                
+            if kick:
+                kick_roles = kick.get(guild, "None")
+                if kick_roles != "None":
+                    kick_roles = ", ".join(f"<@&{role}>" for role in kick_roles)
+                embed.add_field(name="Kick Roles", value=kick_roles, inline=True)
+            else:
+                embed.add_field(name="Kick Roles", value="None", inline=True)
+                
+            if ban:
+                ban_roles = ban.get(guild, "None")
+                if ban_roles != "None":
+                    ban_roles = ", ".join(f"<@&{role}>" for role in ban_roles)
+                embed.add_field(name="Ban Roles", value=ban_roles, inline=True)
+            else:
+                embed.add_field(name="Ban Roles", value="None", inline=True)
+                
+            if logs:
+                logs_channel = logs.get(guild, "None")
+                if logs_channel != "None":
+                    logs_channel = f"<#{logs_channel}>"
+                embed.add_field(name="Logs Channel", value=logs_channel, inline=True)
+            else:
+                embed.add_field(name="Logs Channel", value="None", inline=True)
+                
+            await original_interaction.message.edit(embed=embed)
+        
+        async def modify_warn_roles(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+                
+            role_select = nextcord.ui.RoleSelect(
+                placeholder="Select roles to add/remove",
+                min_values=1,
+                max_values=25
+            )
+            
+            view = nextcord.ui.View()
+            
+            async def role_select_callback(interaction: nextcord.Interaction):
+                selected_roles = [role.id for role in role_select.values]
+                doc = configuration.find_one({"_id": "config"})
+                warn_roles = doc["moderation"]["warn"]
+                
+                if guild not in warn_roles:
+                    warn_roles[guild] = []
+                
+                for role_id in selected_roles:
+                    if role_id in warn_roles[guild]:
+                        warn_roles[guild].remove(role_id)
+                    else:
+                        warn_roles[guild].append(role_id)
+                
+                if not warn_roles[guild]:
+                    warn_roles.pop(guild, None)
+                
+                configuration.update_one({"_id": "config"}, {"$set": {"moderation.warn": warn_roles}})
+                await interaction.response.send_message("Warn roles updated successfully!", ephemeral=True)
+                await update_config_embed(interaction)
+            
+            role_select.callback = role_select_callback
+            view.add_item(role_select)
+            await interaction.response.send_message("Select roles to add or remove from warn permissions:", view=view, ephemeral=True)
+        
+        async def modify_timeout_roles(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+                
+            role_select = nextcord.ui.RoleSelect(
+                placeholder="Select roles to add/remove",
+                min_values=1,
+                max_values=25
+            )
+            
+            view = nextcord.ui.View()
+            
+            async def role_select_callback(interaction: nextcord.Interaction):
+                selected_roles = [role.id for role in role_select.values]
+                doc = configuration.find_one({"_id": "config"})
+                timeout_roles = doc["moderation"]["timeout"]
+                
+                if guild not in timeout_roles:
+                    timeout_roles[guild] = []
+                
+                for role_id in selected_roles:
+                    if role_id in timeout_roles[guild]:
+                        timeout_roles[guild].remove(role_id)
+                    else:
+                        timeout_roles[guild].append(role_id)
+                
+                if not timeout_roles[guild]:
+                    timeout_roles.pop(guild, None)
+                
+                configuration.update_one({"_id": "config"}, {"$set": {"moderation.timeout": timeout_roles}})
+                await interaction.response.send_message("Timeout roles updated successfully!", ephemeral=True)
+                await update_config_embed(interaction)
+            
+            role_select.callback = role_select_callback
+            view.add_item(role_select)
+            await interaction.response.send_message("Select roles to add or remove from timeout permissions:", view=view, ephemeral=True)
+        
+        async def modify_kick_roles(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+                
+            role_select = nextcord.ui.RoleSelect(
+                placeholder="Select roles to add/remove",
+                min_values=1,
+                max_values=25
+            )
+            
+            view = nextcord.ui.View()
+            
+            async def role_select_callback(interaction: nextcord.Interaction):
+                selected_roles = [role.id for role in role_select.values]
+                doc = configuration.find_one({"_id": "config"})
+                kick_roles = doc["moderation"]["kick"]
+                
+                if guild not in kick_roles:
+                    kick_roles[guild] = []
+                
+                for role_id in selected_roles:
+                    if role_id in kick_roles[guild]:
+                        kick_roles[guild].remove(role_id)
+                    else:
+                        kick_roles[guild].append(role_id)
+                
+                if not kick_roles[guild]:
+                    kick_roles.pop(guild, None)
+                
+                configuration.update_one({"_id": "config"}, {"$set": {"moderation.kick": kick_roles}})
+                await interaction.response.send_message("Kick roles updated successfully!", ephemeral=True)
+                await update_config_embed(interaction)
+            
+            role_select.callback = role_select_callback
+            view.add_item(role_select)
+            await interaction.response.send_message("Select roles to add or remove from kick permissions:", view=view, ephemeral=True)
+        
+        async def modify_ban_roles(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+                
+            role_select = nextcord.ui.RoleSelect(
+                placeholder="Select roles to add/remove",
+                min_values=1,
+                max_values=25
+            )
+            
+            view = nextcord.ui.View()
+            
+            async def role_select_callback(interaction: nextcord.Interaction):
+                selected_roles = [role.id for role in role_select.values]
+                doc = configuration.find_one({"_id": "config"})
+                ban_roles = doc["moderation"]["ban"]
+                
+                if guild not in ban_roles:
+                    ban_roles[guild] = []
+                
+                for role_id in selected_roles:
+                    if role_id in ban_roles[guild]:
+                        ban_roles[guild].remove(role_id)
+                    else:
+                        ban_roles[guild].append(role_id)
+                
+                if not ban_roles[guild]:
+                    ban_roles.pop(guild, None)
+                
+                configuration.update_one({"_id": "config"}, {"$set": {"moderation.ban": ban_roles}})
+                await interaction.response.send_message("Ban roles updated successfully!", ephemeral=True)
+                await update_config_embed(interaction)
+            
+            role_select.callback = role_select_callback
+            view.add_item(role_select)
+            await interaction.response.send_message("Select roles to add or remove from ban permissions:", view=view, ephemeral=True)
+        
+        async def set_logs_channel(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+                
+            channel_select = nextcord.ui.ChannelSelect(
+                placeholder="Select logs channel",
+                channel_types=[nextcord.ChannelType.text],
+                min_values=1,
+                max_values=1
+            )
+            
+            view = nextcord.ui.View()
+            
+            async def channel_select_callback(interaction: nextcord.Interaction):
+                selected_channel = channel_select.values[0].id
+                doc = configuration.find_one({"_id": "config"})
+                logs_channels = doc["moderation"]["logs"]
+                
+                logs_channels[guild] = selected_channel
+                
+                configuration.update_one({"_id": "config"}, {"$set": {"moderation.logs": logs_channels}})
+                await interaction.response.send_message("Logs channel updated successfully!", ephemeral=True)
+                await update_config_embed(interaction)
+            
+            channel_select.callback = channel_select_callback
+            view.add_item(channel_select)
+            await interaction.response.send_message("Select the channel for moderation logs:", view=view, ephemeral=True)
+        
+        async def disable_warn(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+                
+            doc = configuration.find_one({"_id": "config"})
+            warn_roles = doc["moderation"]["warn"]
+            
+            if guild in warn_roles:
+                warn_roles.pop(guild, None)
+                configuration.update_one({"_id": "config"}, {"$set": {"moderation.warn": warn_roles}})
+                await interaction.response.send_message("Warn roles disabled for this server.", ephemeral=True)
+                await update_config_embed(interaction)
+            else:
+                await interaction.response.send_message("Warn roles are already disabled for this server.", ephemeral=True)
+        
+        async def disable_timeout(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+                
+            doc = configuration.find_one({"_id": "config"})
+            timeout_roles = doc["moderation"]["timeout"]
+            
+            if guild in timeout_roles:
+                timeout_roles.pop(guild, None)
+                configuration.update_one({"_id": "config"}, {"$set": {"moderation.timeout": timeout_roles}})
+                await interaction.response.send_message("Timeout roles disabled for this server.", ephemeral=True)
+                await update_config_embed(interaction)
+            else:
+                await interaction.response.send_message("Timeout roles are already disabled for this server.", ephemeral=True)
+        
+        async def disable_kick(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+                
+            doc = configuration.find_one({"_id": "config"})
+            kick_roles = doc["moderation"]["kick"]
+            
+            if guild in kick_roles:
+                kick_roles.pop(guild, None)
+                configuration.update_one({"_id": "config"}, {"$set": {"moderation.kick": kick_roles}})
+                await interaction.response.send_message("Kick roles disabled for this server.", ephemeral=True)
+                await update_config_embed(interaction)
+            else:
+                await interaction.response.send_message("Kick roles are already disabled for this server.", ephemeral=True)
+        
+        async def disable_ban(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+                
+            doc = configuration.find_one({"_id": "config"})
+            ban_roles = doc["moderation"]["ban"]
+            
+            if guild in ban_roles:
+                ban_roles.pop(guild, None)
+                configuration.update_one({"_id": "config"}, {"$set": {"moderation.ban": ban_roles}})
+                await interaction.response.send_message("Ban roles disabled for this server.", ephemeral=True)
+                await update_config_embed(interaction)
+            else:
+                await interaction.response.send_message("Ban roles are already disabled for this server.", ephemeral=True)
+        
+        async def disable_logs(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+                
+            doc = configuration.find_one({"_id": "config"})
+            logs_channels = doc["moderation"]["logs"]
+            
+            if guild in logs_channels:
+                logs_channels.pop(guild, None)
+                configuration.update_one({"_id": "config"}, {"$set": {"moderation.logs": logs_channels}})
+                await interaction.response.send_message("Logs channel disabled for this server.", ephemeral=True)
+                await update_config_embed(interaction)
+            else:
+                await interaction.response.send_message("Logs channel is already disabled for this server.", ephemeral=True)
+        
+        warn_button.callback = modify_warn_roles
+        timeout_button.callback = modify_timeout_roles
+        kick_button.callback = modify_kick_roles
+        ban_button.callback = modify_ban_roles
+        logs_button.callback = set_logs_channel
+        
+        disable_warn_button.callback = disable_warn
+        disable_timeout_button.callback = disable_timeout
+        disable_kick_button.callback = disable_kick
+        disable_ban_button.callback = disable_ban
+        disable_logs_button.callback = disable_logs
+        
+        view.add_item(warn_button)
+        view.add_item(timeout_button)
+        view.add_item(kick_button)
+        view.add_item(ban_button)
+        view.add_item(logs_button)
+        view.add_item(disable_warn_button)
+        view.add_item(disable_timeout_button)
+        view.add_item(disable_kick_button)
+        view.add_item(disable_ban_button)
+        view.add_item(disable_logs_button)
+        
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
 
     async def afk_config(self, interaction: nextcord.Interaction):
         embed = nextcord.Embed(
