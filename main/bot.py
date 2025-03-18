@@ -4,6 +4,7 @@ import psutil
 import asyncio
 
 from datetime import datetime
+from pytz import timezone
 from nextcord.ext import commands
 from utils.mongo_connection import MongoConnection
 
@@ -101,7 +102,8 @@ async def on_ready():
         print(f"An error occurred: {e}")
     version = await get_version()
     print(f"Bot Version: {version}")
-    print(f"Logged in at {datetime.now().strftime('%B %d%S, %I:%M%p')} with {len(bot.guilds)} guilds.")
+    pst = timezone('America/Los_Angeles')
+    print(f"Logged in at {datetime.now(pst).strftime('%B %d %Y, %I:%M%p')} with {len(bot.guilds)} guilds.")
 
 async def get_version():
     bot_version = misccollection.find_one({"_id": "bot_version"})["version"]
@@ -308,9 +310,20 @@ async def latency_cmd(ctx):
     latency = bot.latency * 1000
     await ctx.send(f"Pong! {latency} milliseconds.")
 
+async def main():
+    async with bot:
+        try:
+            await bot.start(BOT_TOKEN)
+        except KeyboardInterrupt:
+            print("Bot is shutting down...")
+            await bot.close()
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            await bot.close()
+
 if __name__ == "__main__":
     try:
-        bot.run(BOT_TOKEN)
+        asyncio.run(main())
     except KeyboardInterrupt:
         print("Bot shutdown complete.")
     except Exception as e:
