@@ -54,6 +54,13 @@ class UnfilteredBot(commands.Bot):
         if ctx.command is None:
             return
         await super().invoke(ctx)
+        
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if not self.is_closed():
+            await self.close()
 
 
 intents = nextcord.Intents.all()
@@ -301,20 +308,9 @@ async def latency_cmd(ctx):
     latency = bot.latency * 1000
     await ctx.send(f"Pong! {latency} milliseconds.")
 
-async def main():
-    async with bot:
-        try:
-            await bot.start(BOT_TOKEN)
-        except KeyboardInterrupt:
-            print("Bot is shutting down...")
-            await bot.close()
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            await bot.close()
-
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        bot.run(BOT_TOKEN)
     except KeyboardInterrupt:
         print("Bot shutdown complete.")
     except Exception as e:
