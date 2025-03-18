@@ -377,31 +377,25 @@ class Config(commands.Cog):
         kick = moderation_roles["kick"]
         ban = moderation_roles["ban"]
         logs = moderation_roles["logs"]
-        if warn:
-            warn = warn.get(guild, "None")
-            if warn != "None":
-                warn = ", ".join(f"<@&{role}>" for role in warn)
-            embed.add_field(name="Warn Roles", value=warn, inline=True)
-        if timeout:
-            timeout = timeout.get(guild, "None")
-            if timeout != "None":
-                timeout = ", ".join(f"<@&{role}>" for role in timeout)
-            embed.add_field(name="Timeout Roles", value=timeout, inline=True)
-        if kick:
-            kick = kick.get(guild, "None")
-            if kick != "None":
-                kick = ", ".join(f"<@&{role}>" for role in kick)
-            embed.add_field(name="Kick Roles", value=kick, inline=True)
-        if ban:
-            ban = ban.get(guild, "None")
-            if ban != "None":
-                ban = ", ".join(f"<@&{role}>" for role in ban)
-            embed.add_field(name="Ban Roles", value=ban, inline=True)
-        if logs:
-            logs = logs.get(guild, "None")
-            if logs != "None":
-                logs = f"<#{logs}>"
-            embed.add_field(name="Logs Channel", value=logs, inline=True)
+        warn = warn.get(guild, "None")
+        warn = ", ".join(f"<@&{role}>" for role in warn) if warn != "None" else warn
+        embed.add_field(name="Warn Roles", value=warn, inline=True)
+
+        timeout = timeout.get(guild, "None")
+        timeout = ", ".join(f"<@&{role}>" for role in timeout) if timeout != "None" else timeout
+        embed.add_field(name="Timeout Roles", value=timeout, inline=True)
+
+        kick = kick.get(guild, "None")
+        kick = ", ".join(f"<@&{role}>" for role in kick) if kick != "None" else kick
+        embed.add_field(name="Kick Roles", value=kick, inline=True)
+
+        ban = ban.get(guild, "None")
+        ban = ", ".join(f"<@&{role}>" for role in ban) if ban != "None" else ban
+        embed.add_field(name="Ban Roles", value=ban, inline=True)
+
+        logs = logs.get(guild, "None")
+        logs = f"<#{logs}>" if logs != "None" else logs
+        embed.add_field(name="Logs Channel", value=logs, inline=True)
         view = View(self.bot)
 
         warn_button = nextcord.ui.Button(label="Modify Warn Roles", style=nextcord.ButtonStyle.primary)
@@ -758,7 +752,7 @@ class Config(commands.Cog):
         view.add_item(disable_ban_button)
         view.add_item(disable_logs_button)
         
-        await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
+        await interaction.message.edit(embed=embed, view=view)
 
     async def afk_config(self, interaction: nextcord.Interaction):
         embed = nextcord.Embed(
