@@ -20,8 +20,7 @@ class Moderation(commands.Cog):
         print(f"Moderation cog loaded.")
 
     @commands.command(name="warn")
-    async def warn_cmd(self, ctx, member: nextcord.Member, *, reason: str):
-        return
+    async def warn_cmd(self, ctx, member: nextcord.Member, *, reason: str = "No reason provided"):
         user_roles = [role.id for role in ctx.author.roles]
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
@@ -33,8 +32,31 @@ class Moderation(commands.Cog):
             return
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.administrator:
             return
+        if member.top_role >= ctx.author.top_role:
+            await ctx.reply("You cannot warn this user.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        await member.send(f"You have been warned in **{ctx.guild.name}** for reason: {reason}")
+        await ctx.reply(f"Warned **{member.name}** for reason: {reason}", mention_author=False)
+        await ctx.message.add_reaction(GREEN_CHECK)
+        doc = collection.find_one({"_id": f"warn_logs_{ctx.guild.id}"})
+        if not doc:
+            doc = 0
+        else:
+            doc = doc.get("current_case")
+        doc += 1
+        collection.update_one({"_id": f"warn_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "warn", "date": datetime.now().strftime("%m/%d/%Y")}}}, upsert=True)
+        if logs:
+            embed = nextcord.Embed(title=f"Member Warn | Case #{doc}", description=f"**User Warned:** {member.name} ({member.id})\n**Moderator:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
+            embed.set_footer(text=f"ID: {member.id}")
+            embed.timestamp = datetime.now()
+            logs = self.bot.get_channel(int(logs))
+            try:
+                await logs.send(embed=embed)
+            except:
+                pass
 
-    @commands.command(name="timeout")
+    @commands.command(name="timeout", aliases=["mute", "to"])
     async def timeout_cmd(self, ctx, member: nextcord.Member, time: str, *, reason: str = "No reason provided"):
         user_roles = [role.id for role in ctx.author.roles]
         config = configuration.find_one({"_id": "config"})
@@ -279,11 +301,9 @@ class Moderation(commands.Cog):
                 await logs.send(embed=embed)
             except:
                 pass
-    
-    @commands.command(name="removewarn", aliases=["rwarn", "deletewarn", "delwarn"])
-    async def removewarn_cmd(self, ctx, member: nextcord.Member, amount: int):
-        return
-        user_roles = [role.id for role in ctx.author.roles]
+
+    @commands.command(name="clearwarns", aliases=["clearwarnings", "clw"])
+    async def clearwarns_cmd(self, ctx, member: nextcord.Member, *, reason: str = "No reason provided"):
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
         logs = config["logs"]
@@ -292,8 +312,72 @@ class Moderation(commands.Cog):
         config = config.get(str(ctx.guild.id))
         if not config:
             return
-        if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.administrator:
+        if not ctx.author.guild_permissions.administrator:
             return
+        doc = collection.find_one({"_id": f"warn_logs_{ctx.guild.id}"})
+        doc.pop("_id")
+        doc.pop("current_case")
+        if not doc:
+            await ctx.reply("No warns found for this user.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        num = 0
+        for case in doc.keys():
+            data = doc.get(case)
+            member_doc = doc.get(data.get("member"))
+            if member_doc == member.id:
+                num += 1
+                collection.update_one({"_id": f"warn_logs_{ctx.guild.id}"}, {"$unset": {str(case): 1}})   
+        await ctx.reply(f"Cleared {num} warns for **{member.name}**.", mention_author=False)
+        await ctx.message.add_reaction(GREEN_CHECK)
+        if logs:
+            embed = nextcord.Embed(title=f"Member Warns Cleared", description=f"**User Warned:** {member.name} ({member.id})\n**Moderator:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
+            embed.set_footer(text=f"ID: {member.id}")
+            embed.timestamp = datetime.now()
+            logs = self.bot.get_channel(int(logs))
+            try:
+                await logs.send(embed=embed)
+            except:
+                pass
+    
+    @commands.command(name="removewarn", aliases=["rwarn", "deletewarn", "delwarn"])
+    async def removewarn_cmd(self, ctx, member: nextcord.Member, warn_id: str = None, *, reason: str = "No reason provided"):
+        config = configuration.find_one({"_id": "config"})
+        config = config["moderation"]
+        logs = config["logs"]
+        config = config["warn"]
+        logs = logs.get(str(ctx.guild.id))
+        config = config.get(str(ctx.guild.id))
+        if not config:
+            return
+        if not ctx.author.guild_permissions.administrator:
+            return
+        if not warn_id:
+            await ctx.reply("Please provide a valid warn ID.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        doc = collection.find_one({"_id": f"warn_logs_{ctx.guild.id}"})
+        if not doc:
+            await ctx.reply("No warns found for this user.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        if warn_id not in doc:
+            await ctx.reply("Invalid warn ID.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        doc = doc.get(str(warn_id))
+        await ctx.reply(f"Removed warn **{warn_id}** from **{member.name}** for reason: {reason}", mention_author=False)
+        await ctx.message.add_reaction(GREEN_CHECK)
+        collection.update_one({"_id": f"warn_logs_{ctx.guild.id}"}, {"$unset": {str(warn_id): 1}})
+        if logs:
+            embed = nextcord.Embed(title=f"Member Warn Removed | Warn ID #{warn_id}", description=f"**User Warned:** {member.name} ({member.id})\n**Moderator:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
+            embed.set_footer(text=f"ID: {member.id}")
+            embed.timestamp = datetime.now()
+            logs = self.bot.get_channel(int(logs))
+            try:
+                await logs.send(embed=embed)
+            except:
+                pass
         
     @nextcord.slash_command(name="quarantine", description="Quarantine a user")
     async def quarantine(self, interaction: nextcord.Interaction):
