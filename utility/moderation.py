@@ -74,7 +74,7 @@ class Moderation(commands.Cog):
             collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "timeout", "date": timeout_until.strftime("%d/%m/%Y")}}}, upsert=True)
             
             if logs:
-                embed = nextcord.Embed(title="Member Timeout", description=f"User Timed out: **{member.name}** ({member.id})\nTimed out by: **{ctx.author.name}** ({ctx.author.id})\nDuration: {readable}\nReason: {reason}")
+                embed = nextcord.Embed(title="Member Timeout", description=f"**User Timed Out:** {member.name} ({member.id})\n**Timed Out By:** {ctx.author.name} ({ctx.author.id})\n**Duration:** {readable}\n**Reason:** {reason}")
                 try:
                     logs = self.bot.get_channel(int(logs))
                     await logs.send(embed=embed)
@@ -122,7 +122,7 @@ class Moderation(commands.Cog):
         doc += 1
         collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "kick", "date": datetime.now().strftime("%d/%m/%Y")}}}, upsert=True)
         if logs:
-            embed = nextcord.Embed(title="Member Kick", description=f"User Kicked: **{member.name}** ({member.id})\nKicked by: **{ctx.author.name}** ({ctx.author.id})\nReason: {reason}")
+            embed = nextcord.Embed(title="Member Kick", description=f"**User Kicked:** {member.name} ({member.id})\n**Kicked By:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}")
             try:
                 await logs.send(embed=embed)
             except:
@@ -165,7 +165,7 @@ class Moderation(commands.Cog):
         doc += 1
         collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "ban", "date": datetime.now().strftime("%d/%m/%Y")}}}, upsert=True)
         if logs:
-            embed = nextcord.Embed(title="Member Ban", description=f"User Banned: **{member.name}** ({member.id})\nBanned by: **{ctx.author.name}** ({ctx.author.id})\nReason: {reason}")
+            embed = nextcord.Embed(title="Member Ban", description=f"**User Banned:** {member.name} ({member.id})\n**Banned By:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}")
             try:
                 await logs.send(embed=embed)
             except:
@@ -200,7 +200,7 @@ class Moderation(commands.Cog):
         doc += 1
         collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "unban", "date": datetime.now().strftime("%d/%m/%Y")}}}, upsert=True)
         if logs:
-            embed = nextcord.Embed(title="Member Unban", description=f"User Unbanned: **{member.name}** ({member.id})\nUnbanned by: **{ctx.author.name}** ({ctx.author.id})\nReason: {reason}")
+            embed = nextcord.Embed(title="Member Unban", description=f"**User Unbanned:** {member.name} ({member.id})\n**Unbanned By:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}")
             try:
                 await logs.send(embed=embed)
             except:
@@ -247,7 +247,7 @@ class Moderation(commands.Cog):
         doc += 1
         collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "untimeout", "date": datetime.now().strftime("%d/%m/%Y")}}}, upsert=True)
         if logs:
-            embed = nextcord.Embed(title="Member Timeout Removed", description=f"User Timed Out: **{member.name}** ({member.id})\nTimed Out by: **{ctx.author.name}** ({ctx.author.id})")
+            embed = nextcord.Embed(title="Member Timeout Removed", description=f"**User Timed Out:** {member.name} ({member.id})\n**Timed Out By:** {ctx.author.name} ({ctx.author.id})")
             try:
                 await logs.send(embed=embed)
             except:
