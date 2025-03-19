@@ -30,6 +30,7 @@ class UnoReminder(commands.Cog):
                 break
         
         if player_name:
+            print(player_name)
             member = nextcord.utils.get(message.guild.members, name=player_name)
             if member:
                 await message.reply(f'{member.mention} - it is your turn!')
