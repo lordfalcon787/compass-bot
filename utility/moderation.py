@@ -291,6 +291,7 @@ class Moderation(commands.Cog):
             'd': 86400,       
             'w': 604800      
         } 
+        seconds = 0
         current_num = ""
         for char in time:
             if char.isdigit():
