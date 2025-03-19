@@ -314,24 +314,43 @@ class Moderation(commands.Cog):
             return
         if not ctx.author.guild_permissions.administrator:
             return
+            
         doc = collection.find_one({"_id": f"warn_logs_{ctx.guild.id}"})
-        doc.pop("_id")
-        doc.pop("current_case")
         if not doc:
             await ctx.reply("No warns found for this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
+            
+        doc.pop("_id")
+        doc.pop("current_case")
         num = 0
-        for case in doc.keys():
-            data = doc.get(case)
-            member_doc = doc.get(data.get("member"))
-            if member_doc == member.id:
+        warns_to_remove = []
+        
+        for case, data in doc.items():
+            if int(data.get("member", 0)) == member.id:
                 num += 1
-                collection.update_one({"_id": f"warn_logs_{ctx.guild.id}"}, {"$unset": {str(case): 1}})   
+                warns_to_remove.append(case)
+                
+        if num == 0:
+            await ctx.reply("No warns found for this user.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        
+        update_dict = {case: "" for case in warns_to_remove}
+        collection.update_one(
+            {"_id": f"warn_logs_{ctx.guild.id}"}, 
+            {"$unset": update_dict}
+        )
+            
         await ctx.reply(f"Cleared {num} warns for **{member.name}**.", mention_author=False)
         await ctx.message.add_reaction(GREEN_CHECK)
+        
         if logs:
-            embed = nextcord.Embed(title=f"Member Warns Cleared", description=f"**User Warned:** {member.name} ({member.id})\n**Moderator:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
+            embed = nextcord.Embed(
+                title=f"Member Warns Cleared", 
+                description=f"**User Warned:** {member.name} ({member.id})\n**Moderator:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", 
+                color=nextcord.Color.blurple()
+            )
             embed.set_footer(text=f"ID: {member.id}")
             embed.timestamp = datetime.now()
             logs = self.bot.get_channel(int(logs))
