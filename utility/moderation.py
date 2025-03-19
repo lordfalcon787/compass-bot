@@ -43,11 +43,12 @@ class Moderation(commands.Cog):
         config = config["timeout"]
         logs = logs.get(str(ctx.guild.id))
         config = config.get(str(ctx.guild.id))
+        bot_member = ctx.guild.get_member(self.bot.user.id)
         if not config:
             return
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.administrator:
             return
-        if member.top_role >= ctx.author.top_role or member.top_role >= self.bot.user.top_role:
+        if member.top_role >= ctx.author.top_role or member.top_role >= bot_member.top_role:
             await ctx.reply("You cannot timeout this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
@@ -94,11 +95,12 @@ class Moderation(commands.Cog):
         config = config["kick"]
         logs = logs.get(str(ctx.guild.id))
         config = config.get(str(ctx.guild.id))
+        bot_member = ctx.guild.get_member(self.bot.user.id)
         if not config:
             return
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.kick_members:
             return
-        if member.top_role >= ctx.author.top_role or member.top_role >= self.bot.user.top_role:
+        if member.top_role >= ctx.author.top_role or member.top_role >= bot_member.top_role:
             await ctx.reply("You cannot kick this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
@@ -136,12 +138,13 @@ class Moderation(commands.Cog):
         logs = config["logs"]
         config = config["ban"]
         logs = logs.get(str(ctx.guild.id))
+        bot_member = ctx.guild.get_member(self.bot.user.id)
         config = config.get(str(ctx.guild.id))
         if not config:
             return
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.ban_members:
             return
-        if member.top_role >= ctx.author.top_role or member.top_role >= self.bot.user.top_role:
+        if member.top_role >= ctx.author.top_role or member.top_role >= bot_member.top_role:
             await ctx.reply("You cannot ban this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
@@ -180,12 +183,21 @@ class Moderation(commands.Cog):
         config = config["ban"]
         logs = logs.get(str(ctx.guild.id))
         config = config.get(str(ctx.guild.id))
+        banned_users = await ctx.guild.bans()
         if not config:
             return
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.ban_members:
-            return  
+            return
+        if member not in banned_users:
+            await ctx.reply("This user is not banned.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
         try:
             await ctx.guild.unban(member)
+        except nextcord.Forbidden:
+            await ctx.reply("I do not have permission to unban this user.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
         except:
             await ctx.reply("I was unable to unban the user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
@@ -219,11 +231,12 @@ class Moderation(commands.Cog):
         config = config["timeout"]
         logs = logs.get(str(ctx.guild.id))
         config = config.get(str(ctx.guild.id))
+        bot_member = ctx.guild.get_member(self.bot.user.id)
         if not config:
             return
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.moderate_members:
             return
-        if member.top_role >= ctx.author.top_role or member.top_role >= self.bot.user.top_role:
+        if member.top_role >= ctx.author.top_role or member.top_role >= bot_member.top_role:
             await ctx.reply("You cannot modify the timeout of this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
