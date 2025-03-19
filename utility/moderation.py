@@ -227,7 +227,7 @@ class Moderation(commands.Cog):
             await ctx.reply("You cannot modify the timeout of this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
-        if not member.current_timeout:
+        if not member.communication_disabled_until or member.communication_disabled_until <= datetime.now():
             await ctx.reply("This user is not timed out.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
