@@ -76,6 +76,7 @@ class Moderation(commands.Cog):
             if logs:
                 embed = nextcord.Embed(title="Member Timeout", description=f"User Timed out: **{member.name}** ({member.id})\nTimed out by: **{ctx.author.name}** ({ctx.author.id})\nDuration: {time_to_timeout}\nReason: {reason}")
                 try:
+                    logs = self.bot.get_channel(int(logs))
                     await logs.send(embed=embed)
                 except:
                     pass
