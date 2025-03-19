@@ -523,9 +523,10 @@ class Moderation(commands.Cog):
             start = page * page_size
             end = start + page_size
             for warning in warnings[start:end]:
+                moderator = ctx.guild.get_member(warning['moderator'])
                 embed.add_field(
-                    name=f"Case ID: {warning['case_id']}",
-                    value=f"**Moderator:** {warning['moderator']}\n**Reason:** {warning['reason']}\n**Date:** {warning['date']}",
+                    name=f"#{warning['case_id']}",
+                    value=f"**Moderator:** {moderator.name if moderator else str(warning['moderator'])} ({warning['moderator']})\n**Reason:** {warning['reason']}\n**Date:** {warning['date']}",
                     inline=False
                 )
             embed.set_footer(text=f"Page {page + 1}/{total_pages}")
