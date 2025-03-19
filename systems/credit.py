@@ -16,6 +16,7 @@ MINIPING = "<@&1286097140942377032>"
 APING = "<@&1241563195731349504>" 
 HPING = "<@&1205270486263795719>"
 EPING = "<@&1205270486263795720>"
+RPING = "<@&1273737523042189372>"
 GPING = ["<@&1205270486276251689>", "<@&1218714110502506586>", "<@&1205270486276251688>", "<@&1205270486246883349>", "<@&1207242044502835231>"]
 GRAY = 8421504
 PINGSLICE = ["<@&1205270486263795712>", "<@&1286097140942377032>", "<@&1241563195731349504>", "<@&1205270486263795720>", "<@&1205270486276251689>", "<@&1218714110502506586>", "<@&1205270486276251688>", "<@&1205270486246883349>", "<@&1207242044502835231>"]
@@ -257,6 +258,8 @@ class Credit(commands.Cog):
             type = "Heist"
         elif any(ping in message.content for ping in GPING):
             type = "Giveaway"
+        elif EPING in message.content and RPING in message.content:
+            type = "Rumble Royale"
         else:
             type = "event"
             ping = message.content.split("<@&")[1].split(">")[0]
@@ -274,6 +277,21 @@ class Credit(commands.Cog):
                 collection.update_one(
                     {"_id": "total_credit"},
                     {"$inc": {f"Points.{message.author.id}": points_to_add, f"{str(message.author.id)}.{type}": 1}}
+                )
+                embed = nextcord.Embed(title="Credit Increment", description=f"**Target:** {message.author.mention}\n**Reward:** {points_to_add} Points\n**Reason:** Event Host\n**Type:** [{type}]({message.jump_url})", color=65280)
+                embed.set_footer(text="All systems operational.")
+                embed.set_thumbnail(url="https://i.imgur.com/tTpRLgK.png")
+                await self.bot.get_channel(LOG).send(embed=embed)
+        if type == "Rumble Royale":
+            points_to_add = POINTS["Rumble Royale"]
+            if points_to_add:
+                collection.update_one(
+                    {"_id": "credit_score"},
+                    {"$inc": {f"Points.{message.author.id}": points_to_add, f"{str(message.author.id)}.Rumble Royale": 1}}
+                )
+                collection.update_one(
+                    {"_id": "total_credit"},
+                    {"$inc": {f"Points.{message.author.id}": points_to_add, f"{str(message.author.id)}.Rumble Royale": 1}}
                 )
                 embed = nextcord.Embed(title="Credit Increment", description=f"**Target:** {message.author.mention}\n**Reward:** {points_to_add} Points\n**Reason:** Event Host\n**Type:** [{type}]({message.jump_url})", color=65280)
                 embed.set_footer(text="All systems operational.")
