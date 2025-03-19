@@ -47,7 +47,7 @@ class Moderation(commands.Cog):
             return
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.administrator:
             return
-        if member.top_role >= ctx.author.top_role:
+        if member.top_role >= ctx.author.top_role or member.top_role >= self.bot.user.top_role:
             await ctx.reply("You cannot timeout this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
@@ -98,7 +98,7 @@ class Moderation(commands.Cog):
             return
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.kick_members:
             return
-        if member.top_role >= ctx.author.top_role:
+        if member.top_role >= ctx.author.top_role or member.top_role >= self.bot.user.top_role:
             await ctx.reply("You cannot kick this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
@@ -141,7 +141,7 @@ class Moderation(commands.Cog):
             return
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.ban_members:
             return
-        if member.top_role >= ctx.author.top_role:
+        if member.top_role >= ctx.author.top_role or member.top_role >= self.bot.user.top_role:
             await ctx.reply("You cannot ban this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
@@ -223,7 +223,7 @@ class Moderation(commands.Cog):
             return
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.moderate_members:
             return
-        if member.top_role >= ctx.author.top_role:
+        if member.top_role >= ctx.author.top_role or member.top_role >= self.bot.user.top_role:
             await ctx.reply("You cannot modify the timeout of this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
