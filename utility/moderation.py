@@ -52,7 +52,7 @@ class Moderation(commands.Cog):
             await ctx.message.add_reaction(RED_X)
             return
         time_to_timeout = time.lower()
-        time_to_timeout = await self.get_time_until_timeout(time_to_timeout)
+        time_to_timeout, readable = await self.get_time_until_timeout(time_to_timeout)
             
         if time_to_timeout <= 0:
             await ctx.reply("Invalid time format. Please use a format like 1d, 3h, 30m, etc.", mention_author=False)
@@ -64,7 +64,7 @@ class Moderation(commands.Cog):
         try:
             await member.timeout(timeout_until, reason=reason)
             await ctx.message.add_reaction(GREEN_CHECK)
-            await ctx.reply(f"Timed out **{member.name}** for {time_to_timeout} with reason: {reason}", mention_author=False)
+            await ctx.reply(f"Timed out **{member.name}** for {readable} with reason: {reason}", mention_author=False)
             doc = collection.find_one({"_id": f"mod_logs_{ctx.guild.id}"})
             if not doc:
                 doc = 0
@@ -74,7 +74,7 @@ class Moderation(commands.Cog):
             collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "timeout", "date": timeout_until.strftime("%d/%m/%Y")}}}, upsert=True)
             
             if logs:
-                embed = nextcord.Embed(title="Member Timeout", description=f"User Timed out: **{member.name}** ({member.id})\nTimed out by: **{ctx.author.name}** ({ctx.author.id})\nDuration: {time_to_timeout}\nReason: {reason}")
+                embed = nextcord.Embed(title="Member Timeout", description=f"User Timed out: **{member.name}** ({member.id})\nTimed out by: **{ctx.author.name}** ({ctx.author.id})\nDuration: {readable}\nReason: {reason}")
                 try:
                     logs = self.bot.get_channel(int(logs))
                     await logs.send(embed=embed)
@@ -227,7 +227,7 @@ class Moderation(commands.Cog):
             await ctx.reply("You cannot modify the timeout of this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
-        if not member.communication_disabled_until or member.communication_disabled_until <= datetime.now():
+        if not member.communication_disabled_until or member.communication_disabled_until <= datetime.now(nextcord.utils.utc):
             await ctx.reply("This user is not timed out.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
@@ -286,24 +286,38 @@ class Moderation(commands.Cog):
 
     async def get_time_until_timeout(self, time: str):
         time_units = {
-            's': 1,           
-            'm': 60,           
-            'h': 3600,        
-            'd': 86400,       
-            'w': 604800      
+            's': ('seconds', 1),           
+            'm': ('minutes', 60),           
+            'h': ('hours', 3600),        
+            'd': ('days', 86400),       
+            'w': ('weeks', 604800)      
         } 
         seconds = 0
         current_num = ""
+        last_unit = None
+        
         for char in time:
             if char.isdigit():
                 current_num += char
             elif char in time_units:
                 if current_num:
-                    seconds += int(current_num) * time_units[char]
+                    amount = int(current_num)
+                    seconds += amount * time_units[char][1]
+                    last_unit = (amount, time_units[char][0])
                     current_num = ""
+                    
         if current_num:
             seconds += int(current_num)
-        return seconds
+
+        if last_unit:
+            amount, unit = last_unit
+            if amount == 1:
+                unit = unit[:-1]
+            readable = f"{amount} {unit}"
+        else:
+            readable = f"{seconds} seconds"
+            
+        return seconds, readable
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
