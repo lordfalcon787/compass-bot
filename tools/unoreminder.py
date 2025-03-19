@@ -20,12 +20,12 @@ class UnoReminder(commands.Cog):
         
         descp = message.embeds[0].description
 
-        if "It is currently" not in descp and "turn!" not in descp:
+        if "It is now" not in descp and "turn!" not in descp:
             return
         
         descp_split = descp.split("\n")
         for line in descp_split:
-            if "It is currently" in line:
+            if "It is now" in line:
                 player_name = line.split(" ")[2].strip("'s")
                 break
         
