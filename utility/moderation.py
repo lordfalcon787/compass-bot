@@ -1,6 +1,6 @@
 import nextcord
 from nextcord.ext import commands
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from utils.mongo_connection import MongoConnection
 
 mongo = MongoConnection.get_instance()
@@ -227,7 +227,7 @@ class Moderation(commands.Cog):
             await ctx.reply("You cannot modify the timeout of this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
-        if not member.communication_disabled_until or member.communication_disabled_until <= datetime.now(nextcord.utils.utc):
+        if not member.communication_disabled_until or member.communication_disabled_until <= datetime.now(timezone.utc):
             await ctx.reply("This user is not timed out.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
