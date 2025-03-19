@@ -23,6 +23,7 @@ class UnoReminder(commands.Cog):
         if "It is now" not in descp and "turn!" not in descp:
             return
         
+        player_name = None
         descp_split = descp.split("\n")
         for line in descp_split:
             if "It is now" in line:
