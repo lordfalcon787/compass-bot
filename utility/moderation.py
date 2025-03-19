@@ -35,7 +35,7 @@ class Moderation(commands.Cog):
             return
 
     @commands.command(name="timeout")
-    async def timeout_cmd(self, ctx, member: nextcord.Member, time: str, *, reason: str):
+    async def timeout_cmd(self, ctx, member: nextcord.Member, time: str, *, reason: str = "No reason provided"):
         user_roles = [role.id for role in ctx.author.roles]
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
