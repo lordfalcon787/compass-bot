@@ -424,9 +424,9 @@ class Moderation(commands.Cog):
             for i in range(start, end):
                 case = all_cases[i]
                 entry = (
-                    f"#{case['case_num']} | {case['action_type']} | {case['date']}\n"
-                    f"Moderator: {case['mod_name']}\n"
-                    f"Reason: {case['reason']}\n\n"
+                    f"**#{case['case_num']} | {case['action_type']} | {case['date']}**\n"
+                    f"**Moderator:** {case['mod_name']}\n"
+                    f"**Reason:** {case['reason']}\n\n"
                 )
                 description += entry
                 
@@ -493,6 +493,8 @@ class Moderation(commands.Cog):
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.administrator:
             return
         doc = collection.find_one({"_id": f"warn_logs_{ctx.guild.id}"})
+        doc.pop("_id")
+        doc.pop("current_case")
         if not doc:
             await ctx.reply("No warns found for this guild.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
