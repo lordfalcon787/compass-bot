@@ -525,7 +525,7 @@ class Moderation(commands.Cog):
             for warning in warnings[start:end]:
                 moderator = ctx.guild.get_member(warning['moderator'])
                 embed.add_field(
-                    name=f"#{warning['case_id']}",
+                    name=f"Case #{warning['case_id']}",
                     value=f"**Moderator:** {moderator.name if moderator else str(warning['moderator'])} ({warning['moderator']})\n**Reason:** {warning['reason']}\n**Date:** {warning['date']}",
                     inline=False
                 )
@@ -533,7 +533,7 @@ class Moderation(commands.Cog):
             return embed
 
         embed = create_embed(current_page)
-        message = await ctx.reply(embed=embed)
+        message = await ctx.reply(embed=embed, mention_author=False)
 
         if total_pages > 1:
             view = nextcord.ui.View()
