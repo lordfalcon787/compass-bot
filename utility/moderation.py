@@ -232,7 +232,7 @@ class Moderation(commands.Cog):
             await ctx.message.add_reaction(RED_X)
             return
         try:
-            await member.remove_timeout()
+            await member.timeout(None, reason=reason)
         except:
             await ctx.reply("I was unable to remove the timeout.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
