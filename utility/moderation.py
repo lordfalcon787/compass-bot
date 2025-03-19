@@ -325,7 +325,7 @@ class Moderation(commands.Cog):
         doc.pop("current_case")
         num = 0
         warns_to_remove = []
-        
+
         for case, data in doc.items():
             if int(data.get("member", 0)) == member.id:
                 num += 1
@@ -358,7 +358,213 @@ class Moderation(commands.Cog):
                 await logs.send(embed=embed)
             except:
                 pass
-    
+
+    @commands.command(name="modlogs", aliases=["modlog", "moderationlogs", "moderationlog"])
+    async def modlogs_cmd(self, ctx, member: nextcord.Member = None):
+        if not ctx.author.guild_permissions.manage_messages:
+            return
+        if not member:
+            member = ctx.author
+            
+        doc = collection.find_one({"_id": f"mod_logs_{ctx.guild.id}"})
+        if not doc:
+            await ctx.reply("No moderation logs found for this guild.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+            
+        total_cases = doc.get("current_case", 0)
+        doc.pop("_id")
+        doc.pop("current_case")
+        all_cases = []
+        
+        for case_num in range(total_cases, 0, -1):
+            case = doc.get(str(case_num))
+            if not case:
+                continue
+                
+            if case.get("member") != member.id:
+                continue
+                
+            try:
+                date = datetime.strptime(case.get("date", ""), "%m/%d/%Y")
+                formatted_date = date.strftime("%m/%d/%Y")
+            except:
+                formatted_date = "Unknown date"
+                
+            action_type = case.get("type", "unknown")
+            mod_id = case.get("moderator")
+            moderator = ctx.guild.get_member(mod_id)
+            mod_name = moderator.name if moderator else str(mod_id)
+            reason = case.get("reason", "no reason given")
+            
+            entry = {
+                "case_num": case_num,
+                "action_type": action_type,
+                "date": formatted_date,
+                "mod_name": mod_name,
+                "reason": reason
+            }
+            
+            all_cases.append(entry)
+            
+        if not all_cases:
+            await ctx.reply("No moderation logs found for this user.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+            
+        page_size = 10
+        total_pages = (len(all_cases) + page_size - 1) // page_size
+        current_page = 0
+        
+        def create_embed(page):
+            description = ""
+            start = page * page_size
+            end = min(start + page_size, len(all_cases))
+            
+            for i in range(start, end):
+                case = all_cases[i]
+                entry = (
+                    f"#{case['case_num']} | {case['action_type']} | {case['date']}\n"
+                    f"Moderator: {case['mod_name']}\n"
+                    f"Reason: {case['reason']}\n\n"
+                )
+                description += entry
+                
+            embed = nextcord.Embed(
+                title="Mod logs",
+                description=description,
+                color=0x2F3136
+            )
+            
+            footer_text = f"Page {page + 1}/{total_pages} • {len(all_cases)} cases shown"
+            embed.set_footer(text=footer_text)
+            if member:
+                embed.set_author(name=f"Logs for {member.name}", icon_url=member.display_avatar.url)
+            return embed
+        
+        embed = create_embed(current_page)
+        
+        if total_pages > 1:
+            view = nextcord.ui.View()
+            
+            prev_button = nextcord.ui.Button(emoji="<a:arrow_left:1316079524710191156>", style=nextcord.ButtonStyle.gray)
+            next_button = nextcord.ui.Button(emoji="<a:arrow_right:1316079547124285610>", style=nextcord.ButtonStyle.gray)
+            
+            prev_button.disabled = True
+            
+            async def previous_callback(interaction):
+                nonlocal current_page
+                if interaction.user != ctx.author:
+                    return
+                current_page = max(0, current_page - 1)
+                prev_button.disabled = current_page == 0
+                next_button.disabled = current_page == total_pages - 1
+                await interaction.message.edit(embed=create_embed(current_page), view=view)
+                
+            async def next_callback(interaction):
+                nonlocal current_page
+                if interaction.user != ctx.author:
+                    return
+                current_page = min(total_pages - 1, current_page + 1)
+                prev_button.disabled = current_page == 0
+                next_button.disabled = current_page == total_pages - 1
+                await interaction.message.edit(embed=create_embed(current_page), view=view)
+                
+            prev_button.callback = previous_callback
+            next_button.callback = next_callback
+            next_button.disabled = total_pages <= 1
+            
+            view.add_item(prev_button)
+            view.add_item(next_button)
+            
+            await ctx.reply(embed=embed, view=view, mention_author=False)
+        else:
+            await ctx.reply(embed=embed, mention_author=False)
+
+    @commands.command(name="warns", aliases=["warnings"])
+    async def warns_cmd(self, ctx, member: nextcord.Member):
+        user_roles = [role.id for role in ctx.author.roles]
+        config = configuration.find_one({"_id": "config"})
+        config = config["moderation"]
+        config = config["warn"]
+        config = config.get(str(ctx.guild.id))
+        if not config:
+            return
+        if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.administrator:
+            return
+        doc = collection.find_one({"_id": f"warn_logs_{ctx.guild.id}"})
+        if not doc:
+            await ctx.reply("No warns found for this guild.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        page_size = 5
+        warnings = []
+        for case, data in doc.items():
+            if int(data.get("member", 0)) == member.id:
+                warnings.append({
+                    "case_id": case,
+                    "moderator": data.get("moderator"),
+                    "reason": data.get("reason"),
+                    "date": data.get("date")
+                })
+
+        if not warnings:
+            await ctx.reply("No warns found for this user.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+
+        total_pages = (len(warnings) + page_size - 1) // page_size
+        current_page = 0
+
+        def create_embed(page):
+            embed = nextcord.Embed(title=f"Warnings for {member.name}", color=nextcord.Color.blurple())
+            start = page * page_size
+            end = start + page_size
+            for warning in warnings[start:end]:
+                embed.add_field(
+                    name=f"Case ID: {warning['case_id']}",
+                    value=f"**Moderator:** {warning['moderator']}\n**Reason:** {warning['reason']}\n**Date:** {warning['date']}",
+                    inline=False
+                )
+            embed.set_footer(text=f"Page {page + 1}/{total_pages}")
+            return embed
+
+        embed = create_embed(current_page)
+        message = await ctx.reply(embed=embed)
+
+        if total_pages > 1:
+            view = nextcord.ui.View()
+            
+            prev_button = nextcord.ui.Button(emoji="<a:arrow_left:1316079524710191156>", style=nextcord.ButtonStyle.gray)
+            next_button = nextcord.ui.Button(emoji="<a:arrow_right:1316079547124285610>", style=nextcord.ButtonStyle.gray)
+            
+            prev_button.disabled = True
+            
+            async def previous_callback(interaction):
+                nonlocal current_page
+                if interaction.user != ctx.author:
+                    return
+                current_page = max(0, current_page - 1)
+                prev_button.disabled = current_page == 0
+                next_button.disabled = current_page == total_pages - 1
+                await interaction.message.edit(embed=create_embed(current_page), view=view)
+
+            async def next_callback(interaction):
+                nonlocal current_page
+                if interaction.user != ctx.author:
+                    return
+                current_page = min(total_pages - 1, current_page + 1)
+                prev_button.disabled = current_page == 0
+                next_button.disabled = current_page == total_pages - 1
+                await interaction.message.edit(embed=create_embed(current_page), view=view)
+
+            prev_button.callback = previous_callback
+            next_button.callback = next_callback
+            
+            view.add_item(prev_button)
+            view.add_item(next_button)
+
+            await message.edit(view=view)
     @commands.command(name="removewarn", aliases=["rwarn", "deletewarn", "delwarn"])
     async def removewarn_cmd(self, ctx, member: nextcord.Member, warn_id: str = None, *, reason: str = "No reason provided"):
         config = configuration.find_one({"_id": "config"})
