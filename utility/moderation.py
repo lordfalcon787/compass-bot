@@ -566,7 +566,7 @@ class Moderation(commands.Cog):
 
             await message.edit(view=view)
     @commands.command(name="removewarn", aliases=["rwarn", "deletewarn", "delwarn"])
-    async def removewarn_cmd(self, ctx, member: nextcord.Member, warn_id: str = None, *, reason: str = "No reason provided"):
+    async def removewarn_cmd(self, ctx, warn_id: str = None, *, reason: str = "No reason provided"):
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
         logs = config["logs"]
@@ -591,12 +591,10 @@ class Moderation(commands.Cog):
             await ctx.message.add_reaction(RED_X)
             return
         doc = doc.get(str(warn_id))
-        await ctx.reply(f"Removed warn **{warn_id}** from **{member.name}** for reason: {reason}", mention_author=False)
         await ctx.message.add_reaction(GREEN_CHECK)
         collection.update_one({"_id": f"warn_logs_{ctx.guild.id}"}, {"$unset": {str(warn_id): 1}})
         if logs:
-            embed = nextcord.Embed(title=f"Member Warn Removed | Warn ID #{warn_id}", description=f"**User Warned:** {member.name} ({member.id})\n**Moderator:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
-            embed.set_footer(text=f"ID: {member.id}")
+            embed = nextcord.Embed(title=f"Member Warn Removed | Warn ID #{warn_id}", description=f"**Moderator:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
             embed.timestamp = datetime.now()
             logs = self.bot.get_channel(int(logs))
             try:
