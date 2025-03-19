@@ -125,6 +125,7 @@ class Moderation(commands.Cog):
         collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "kick", "date": datetime.now().strftime("%d/%m/%Y")}}}, upsert=True)
         if logs:
             embed = nextcord.Embed(title="Member Kick", description=f"**User Kicked:** {member.name} ({member.id})\n**Kicked By:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
+            logs = self.bot.get_channel(int(logs))
             try:
                 await logs.send(embed=embed)
             except:
@@ -169,6 +170,7 @@ class Moderation(commands.Cog):
         collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "ban", "date": datetime.now().strftime("%d/%m/%Y")}}}, upsert=True)
         if logs:
             embed = nextcord.Embed(title="Member Ban", description=f"**User Banned:** {member.name} ({member.id})\n**Banned By:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
+            logs = self.bot.get_channel(int(logs))
             try:
                 await logs.send(embed=embed)
             except:
@@ -213,6 +215,7 @@ class Moderation(commands.Cog):
         collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "unban", "date": datetime.now().strftime("%d/%m/%Y")}}}, upsert=True)
         if logs:
             embed = nextcord.Embed(title="Member Unban", description=f"**User Unbanned:** {member.name} ({member.id})\n**Unbanned By:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
+            logs = self.bot.get_channel(int(logs))
             try:
                 await logs.send(embed=embed)
             except:
@@ -261,6 +264,7 @@ class Moderation(commands.Cog):
         collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "untimeout", "date": datetime.now().strftime("%d/%m/%Y")}}}, upsert=True)
         if logs:
             embed = nextcord.Embed(title="Member Timeout Removed", description=f"**User Timed Out:** {member.name} ({member.id})\n**Timed Out By:** {ctx.author.name} ({ctx.author.id})", color=nextcord.Color.blurple())
+            logs = self.bot.get_channel(int(logs))
             try:
                 await logs.send(embed=embed)
             except:
