@@ -33,7 +33,7 @@ class UnoReminder(commands.Cog):
         if player_name:
             member = nextcord.utils.get(message.guild.members, name=player_name)
             if member:
-                await message.reply(f'{member.mention} - it is your turn!')
+                await message.reply(f'{member.mention} - it is your turn in UNO!')
 
 def setup(bot):
     bot.add_cog(UnoReminder(bot))
