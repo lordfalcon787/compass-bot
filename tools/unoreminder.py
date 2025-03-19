@@ -27,7 +27,7 @@ class UnoReminder(commands.Cog):
         descp_split = descp.split("\n")
         for line in descp_split:
             if "It is now" in line:
-                player_name = line.split(" ")[2].strip("'s")
+                player_name = line.split(" ")[3].strip("'s")
                 break
         
         if player_name:
