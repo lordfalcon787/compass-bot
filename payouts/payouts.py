@@ -435,7 +435,16 @@ class View(nextcord.ui.View):
         config = configuration.find_one({"_id": "config"})
         queue = config[f"queue"]
         queue = queue[f"{interaction.guild.id}"]
-        msg = await self.bot.get_channel(queue).send(embed=embed, view=view)
+        channel = self.bot.get_channel(queue)
+        webhook = None
+        webhooks = await channel.webhooks()
+        for wh in webhooks:
+            if wh.name == "Compass Payouts":
+                webhook = wh
+                break
+        if webhook is None:
+            webhook = await channel.create_webhook(name="Compass Payouts", avatar=await interaction.guild.icon.read())
+        msg = await webhook.send(embed=embed, view=view, wait=True)
         link = doc["link"]
         view = QueuedView(self.bot)
         view.add_item(nextcord.ui.Button(label="Event Message", url=f"{link}", emoji="🔗"))
