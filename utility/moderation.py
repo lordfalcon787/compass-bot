@@ -1,4 +1,6 @@
 import nextcord
+
+from typing import Optional
 from nextcord.ext import commands
 from datetime import datetime, timedelta, timezone
 from utils.mongo_connection import MongoConnection
@@ -610,17 +612,119 @@ class Moderation(commands.Cog):
         pass
 
     @quarantine.subcommand(name="add", description="Quarantine a user.")
-    async def add(self, interaction: nextcord.Interaction, member: nextcord.Member):
-        await interaction.response.send_message(f"Quarantined **{member.name}**.", ephemeral=True)
-
-    @quarantine.subcommand(name="configure", description="Configure the quarantine system.")
-    async def configure(self, interaction: nextcord.Interaction):
-        await interaction.response.send_message(f"Quarantine configured.", ephemeral=True)
+    async def add(self, interaction: nextcord.Interaction, member: nextcord.Member, reason: Optional[str] = "No reason provided"):
+        config = configuration.find_one({"_id": "config"})
+        config = config["quarantine"]
+        logs = config["logs"]
+        logs = logs.get(str(interaction.guild.id))
+        config = config.get(str(interaction.guild.id))
+        if not config:
+            await interaction.response.send_message(f"Quarantine is not configured for this server.", ephemeral=True)
+            return
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(f"You do not have permission to quarantine users.", ephemeral=True)
+            return
+        if member.top_role.position >= interaction.user.top_role.position:
+            await interaction.response.send_message(f"You do not have permission to quarantine this user.", ephemeral=True)
+            return
+        quarantine_role = interaction.guild.get_role(config)
+        member_roles = [role.id for role in member.roles]
+        if not quarantine_role:
+            await interaction.response.send_message(f"Quarantine role is not configured for this server or the role does not exist.", ephemeral=True)
+            return
+        if quarantine_role.id in member_roles:
+            await interaction.response.send_message(f"**{member.name}** is already quarantined.", ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=True)
+        try:
+            await member.edit(roles=[quarantine_role])
+        except nextcord.Forbidden:
+            await interaction.response.send_message("I don't have permission to modify this user's roles.", ephemeral=True)
+            return
+        except Exception as e:
+            await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
+            return
+        collection.update_one(
+            {"_id": f"quarantines_{interaction.guild.id}"}, 
+            {"$set": {f"{member.id}": member_roles}},
+            upsert=True
+        )
+        embed = nextcord.Embed(title=f"Member Quarantined", description=f"**User Quarantined:** {member.name} ({member.id})\n**Moderator:** {interaction.user.name} ({interaction.user.id})\n**Reason:** {reason}", color=nextcord.Color.green())
+        embed.set_footer(text=f"ID: {member.id}")
+        embed.timestamp = datetime.now()
+        await interaction.send(embed=embed, ephemeral=True)
+        if logs:
+            logs = self.bot.get_channel(int(logs))
+            try:
+                await logs.send(embed=embed)
+            except:
+                pass
+        
 
     @quarantine.subcommand(name="remove", description="Remove a user from quarantine.")
-    async def remove(self, interaction: nextcord.Interaction, member: nextcord.Member):
-        await interaction.response.send_message(f"Removed **{member.name}** from quarantine.", ephemeral=True)
+    async def remove(self, interaction: nextcord.Interaction, member: nextcord.Member, reason: Optional[str] = "No reason provided"):
+        config = configuration.find_one({"_id": "config"})
+        config = config["quarantine"]
+        logs = config["logs"]
+        logs = logs.get(str(interaction.guild.id))
+        config = config.get(str(interaction.guild.id))
 
+        if not config:
+            await interaction.response.send_message(f"Quarantine is not configured for this server.", ephemeral=True)
+            return
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(f"You do not have permission to remove users from quarantine.", ephemeral=True)
+            return
+        if member.top_role.position >= interaction.user.top_role.position:
+            await interaction.response.send_message(f"You do not have permission to remove this user from quarantine.", ephemeral=True)
+            return
+        quarantine_role = interaction.guild.get_role(config)
+        if not quarantine_role:
+            await interaction.response.send_message(f"Quarantine role is not configured for this server or the role does not exist.", ephemeral=True)
+            return
+        member_roles = [role.id for role in member.roles]
+        if not quarantine_role.id in member_roles:
+            await interaction.response.send_message(f"**{member.name}** is not quarantined.", ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=True)
+        backup_roles_doc = collection.find_one({"_id": f"quarantines_{interaction.guild.id}"})
+        if not backup_roles_doc:
+            await interaction.response.send_message("No role backup found for this server.", ephemeral=True)
+            return
+        backup_roles = backup_roles_doc.get(str(member.id))
+        roles = []
+        if backup_roles:
+            for role_id in backup_roles:
+                role = interaction.guild.get_role(int(role_id))
+                if role:
+                    roles.append(role)
+        try:
+            await member.edit(roles=roles)
+        except nextcord.Forbidden:
+            await interaction.response.send_message("I don't have permission to modify this user's roles.", ephemeral=True)
+            return
+        except Exception as e:
+            await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
+            return
+        try:
+            collection.update_one(
+                {"_id": f"quarantines_{interaction.guild.id}"}, 
+                {"$unset": {f"{member.id}": 1}}
+            )
+        except Exception as e:
+            await interaction.response.send_message(f"Failed to update database: {str(e)}", ephemeral=True)
+            return
+        embed = nextcord.Embed(title=f"Member Quarantine Removed", description=f"**User Quarantined:** {member.name} ({member.id})\n**Moderator:** {interaction.user.name} ({interaction.user.id})\n**Reason:** {reason}", color=nextcord.Color.red())
+        embed.set_footer(text=f"ID: {member.id}")
+        embed.timestamp = datetime.now()
+        await interaction.send(embed=embed, ephemeral=True)
+        if logs:
+            logs = self.bot.get_channel(int(logs))
+            try:
+                await logs.send(embed=embed)
+            except:
+                pass
+        
     async def get_time_until_timeout(self, time: str):
         time_units = {
             's': ('seconds', 1),           
