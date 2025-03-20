@@ -395,7 +395,8 @@ class Config(commands.Cog):
         embed.add_field(name="Quarantine Role", value=quarantine_role, inline=True)
         quarantine_role_button = nextcord.ui.Button(label="Modify Quarantine Role", style=nextcord.ButtonStyle.primary)
         disable_quarantine_button = nextcord.ui.Button(label="Disable Quarantine", style=nextcord.ButtonStyle.danger)
-        
+        view = View(self.bot)
+
         async def update_config_embed(interaction: nextcord.Interaction):
             updated_doc = configuration.find_one({"_id": "config"})
             updated_quarantine = updated_doc["quarantine"]
@@ -463,7 +464,6 @@ class Config(commands.Cog):
         view.add_item(disable_quarantine_button)
         
         await interaction.message.edit(embed=embed, view=view)
-        view = View(self.bot)
 
     async def moderation_config(self, interaction: nextcord.Interaction):
         embed = nextcord.Embed(
