@@ -627,6 +627,9 @@ class Moderation(commands.Cog):
         if member.top_role.position >= interaction.user.top_role.position:
             await interaction.response.send_message(f"You do not have permission to quarantine this user.", ephemeral=True)
             return
+        if member.top_role.position >= interaction.guild.me.top_role.position:
+            await interaction.response.send_message(f"I do not have permission to quarantine this user.", ephemeral=True)
+            return
         quarantine_role = interaction.guild.get_role(config)
         member_roles = [role.id for role in member.roles]
         if not quarantine_role:
