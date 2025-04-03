@@ -649,11 +649,12 @@ class Moderation(commands.Cog):
             doc = collection.find_one({"_id": f"ebl_{ctx.guild.id}"})
             doc = doc.get(str(member.id))
             if doc:
+                current_roles = member.roles
                 roles = doc.get("roles")
                 for role in roles:
-                    add = ctx.guild.get_role(int(role))
-                    if add:
-                        await member.add_roles(add)
+                    current_roles.append(ctx.guild.get_role(int(role)))
+                await member.edit(roles=current_roles)
+            collection.update_one({"_id": f"ebl_{ctx.guild.id}"}, {"$unset": {str(member.id): ""}})
             await ctx.message.clear_reactions()
             await ctx.message.add_reaction(GREEN_CHECK)
         else:
@@ -662,12 +663,13 @@ class Moderation(commands.Cog):
             if time is None:
                 await ctx.message.add_reaction(RED_X)
                 return
+            current_roles = member.roles
             roles = []
-            for role in member.roles:
+            for role in current_roles:
                 if "donor" in role.name.lower():
-                    await member.remove_roles(role)
-                    roles.append(role.id)
-            collection.update_one({"_id": f"ebl_{ctx.guild.id}"}, {"$set": {str(member.id): {"roles": roles, "end": end, "reason": reason}}}, upsert=True)
+                    current_roles.remove(role)
+            await member.edit(roles=current_roles)
+            collection.update_one({"_id": f"ebl_{ctx.guild.id}"}, {"$set": {str(member.id): {"roles": current_roles, "end": end, "reason": reason}}}, upsert=True)
             await member.add_roles(ebl_role)
             await ctx.message.clear_reactions()
             await ctx.message.add_reaction(GREEN_CHECK)
