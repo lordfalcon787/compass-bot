@@ -667,9 +667,10 @@ class Moderation(commands.Cog):
             roles = []
             for role in current_roles:
                 if "donor" in role.name.lower():
+                    roles.append(role.id)
                     current_roles.remove(role)
             await member.edit(roles=current_roles)
-            collection.update_one({"_id": f"ebl_{ctx.guild.id}"}, {"$set": {str(member.id): {"roles": current_roles, "end": end, "reason": reason}}}, upsert=True)
+            collection.update_one({"_id": f"ebl_{ctx.guild.id}"}, {"$set": {str(member.id): {"roles": roles, "end": end, "reason": reason}}}, upsert=True)
             await member.add_roles(ebl_role)
             await ctx.message.clear_reactions()
             await ctx.message.add_reaction(GREEN_CHECK)
