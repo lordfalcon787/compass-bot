@@ -60,7 +60,7 @@ class Utilv2(commands.Cog):
             await interaction.response.send_message("Failed to rename channel.", ephemeral=True)
 
     @channel.subcommand(name="viewlock")
-    async def viewlock(self, interaction: nextcord.Interaction, access_roles: Optional[List[nextcord.Role]] = None, channel: Optional[nextcord.TextChannel] = None):
+    async def viewlock(self, interaction: nextcord.Interaction, role: nextcord.Role, channel: Optional[nextcord.TextChannel] = None):
         if channel is None:
             channel = interaction.channel
         if not interaction.user.guild_permissions.manage_channels:
@@ -75,9 +75,7 @@ class Utilv2(commands.Cog):
                     await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
                     return
         channel_overwrites = channel.overwrites
-        if access_roles is not None:
-            for role in access_roles:
-                channel_overwrites[role] = nextcord.PermissionOverwrite(view_channel=True)  
+        channel_overwrites[role] = nextcord.PermissionOverwrite(view_channel=True)
         channel_overwrites[interaction.guild.default_role] = nextcord.PermissionOverwrite(view_channel=False)
         try:
             await channel.edit(overwrites=channel_overwrites)
