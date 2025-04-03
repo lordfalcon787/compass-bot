@@ -1,7 +1,7 @@
 import nextcord
 
 from nextcord.ext import commands
-from typing import Optional
+from typing import Optional, List
 from utils.mongo_connection import MongoConnection
 
 mongo = MongoConnection.get_instance()
@@ -60,7 +60,7 @@ class Utilv2(commands.Cog):
             await interaction.response.send_message("Failed to rename channel.", ephemeral=True)
 
     @channel.subcommand(name="viewlock")
-    async def viewlock(self, interaction: nextcord.Interaction, access_roles: Optional[list[nextcord.Role]] = None, channel: Optional[nextcord.TextChannel] = None):
+    async def viewlock(self, interaction: nextcord.Interaction, access_roles: Optional[List[nextcord.Role]] = None, channel: Optional[nextcord.TextChannel] = None):
         if channel is None:
             channel = interaction.channel
         if not interaction.user.guild_permissions.manage_channels:
