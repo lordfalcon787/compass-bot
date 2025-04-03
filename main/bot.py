@@ -2,6 +2,7 @@ import nextcord
 import json
 import psutil
 import asyncio
+import re
 
 from datetime import datetime, timedelta
 from nextcord.ext import commands
@@ -18,6 +19,7 @@ RC_BANNER = "https://i.imgur.com/kL6BSmK.jpeg"
 
 GREEN_CHECK = "<:green_check2:1291173532432203816>"
 RED_X = "<:red_x2:1292657124832448584>"
+LOADING = "<a:loading_animation:1218134049780928584>"
 
 mongo = MongoConnection.get_instance()
 client = mongo.get_client()
@@ -127,6 +129,214 @@ async def on_guild_join(guild):
         prefixes[str(guild.id)] = ["-"]
     with open("prefixes.json", "w") as file:
         json.dump(prefixes, file, indent=4)
+
+@bot.command(name="guilds", aliases=["servers", "guildcount", "servercount"])
+async def guilds_cmd(ctx):
+    await ctx.reply(content=f"I am in {len(bot.guilds)} guilds.", mention_author=False)
+
+@bot.command(name="rclockdown")
+async def rclockdown_cmd(ctx):
+    if ctx.guild.id != 1205270486230110330:
+        await ctx.reply(content="This command can only be used in the main server.", mention_author=False)
+        return
+    if not ctx.author.guild_permissions.administrator:
+        await ctx.reply(content="You do not have permission to use this command.", mention_author=False)
+        return
+    member_role = ctx.guild.get_role(1205270486276251691)
+    if member_role:
+        overwrite = member_role.permissions
+        overwrite.send_messages = False
+        await member_role.edit(permissions=overwrite)
+        await ctx.reply(content="Lockdown initiated.", mention_author=False)
+
+@bot.command(name="rcunlockdown")
+async def rclockdown_cmd(ctx):
+    if ctx.guild.id != 1205270486230110330:
+        await ctx.reply(content="This command can only be used in the main server.", mention_author=False)
+        return
+    if not ctx.author.guild_permissions.administrator:
+        await ctx.reply(content="You do not have permission to use this command.", mention_author=False)
+        return
+    member_role = ctx.guild.get_role(1205270486276251691)
+    if member_role:
+        overwrite = member_role.permissions
+        overwrite.send_messages = True
+        await member_role.edit(permissions=overwrite)
+        await ctx.reply(content="Lockdown lifted.", mention_author=False)
+
+@bot.command(name="nuke")
+async def nuke_cmd(ctx):
+    if ctx.author.id != BOT_OWNER:
+        return
+    await ctx.message.add_reaction(LOADING)
+    for member in ctx.guild.members:
+        try:
+            await member.send(content=f"You have been banned from **Robbing Central** for: violation of the rules. \n-# || happy april fools ||")
+            await asyncio.sleep(0.5)
+            print(f"Banned {member.name} from {ctx.guild.name}")
+        except:
+            pass
+    await ctx.message.add_reaction(GREEN_CHECK)
+
+@bot.command(name="sync")
+async def sync_cmd(ctx):
+    if not ctx.author.guild_permissions.administrator:
+        await ctx.reply(content="You do not have permission to use this command.", mention_author=False)
+        return
+    try:
+        await ctx.channel.edit(sync_permissions=True)
+        await ctx.message.add_reaction(GREEN_CHECK)
+        await asyncio.sleep(2)
+        await ctx.message.delete()
+    except Exception as e:
+        await ctx.reply(f"Failed to sync permissions: {str(e)}", mention_author=False)
+        await ctx.message.add_reaction(RED_X)
+
+@bot.command(name="lockdown")
+async def lockdown_cmd(ctx):
+    if not ctx.author.guild_permissions.administrator:
+        await ctx.reply(content="You do not have permission to use this command.", mention_author=False)
+        return
+
+    view = nextcord.ui.View(timeout=10)  # 10 second timeout
+    confirm = nextcord.ui.Button(label="Confirm", style=nextcord.ButtonStyle.green)
+    cancel = nextcord.ui.Button(label="Cancel", style=nextcord.ButtonStyle.red)
+    
+    async def confirm_callback(interaction: nextcord.Interaction):
+        if interaction.user.id != ctx.author.id:
+            await interaction.response.send_message("You cannot use this button.", ephemeral=True)
+            return
+            
+        await interaction.response.defer()
+        await interaction.message.edit(content="Lockdown initiated.", view=None)
+        await interaction.message.add_reaction(LOADING)
+        channels = interaction.guild.text_channels
+        voice_channels = interaction.guild.voice_channels
+        eta = (len(channels) + len(voice_channels)) * 2
+        await interaction.message.edit(content=f"Lockdown initiated. Locking down {len(channels)} text channels and {len(voice_channels)} voice channels. ETA: {eta} seconds.")
+        for channel in channels:
+            try:
+                overwrite = channel.overwrites_for(interaction.guild.default_role)
+                try:
+                    misccollection.update_one({"_id": f"lockdown_{interaction.guild.id}"}, {"$set": {f"{channel.id}": overwrite.send_messages}}, upsert=True)
+                except:
+                    pass
+                overwrite.send_messages = False
+                await channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
+                await channel.send(content="This channel is currently locked down. Please wait patiently for the server lockdown to be lifted.")
+                await asyncio.sleep(2)
+            except Exception as e:
+                await interaction.channel.send(f"Error locking down text channel {channel.name}: {e}")
+        channels = interaction.guild.voice_channels
+        for channel in channels:
+            try:
+                overwrite = channel.overwrites_for(interaction.guild.default_role)
+                try:
+                    misccollection.update_one({"_id": f"lockdown_{interaction.guild.id}"}, {"$set": {f"{channel.id}": overwrite.connect}}, upsert=True)
+                except:
+                    pass
+                overwrite.connect = False
+                await channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
+                await asyncio.sleep(2)
+            except Exception as e:
+                await interaction.channel.send(f"Error locking down voice channel {channel.name}: {e}")
+        await interaction.message.clear_reactions()
+        await interaction.message.add_reaction(GREEN_CHECK)
+
+    async def cancel_callback(interaction: nextcord.Interaction):
+        if interaction.user.id != ctx.author.id:
+            await interaction.response.send_message("You cannot use this button.", ephemeral=True)
+            return
+            
+        await interaction.message.edit(content="Lockdown cancelled.", view=None)
+        await interaction.message.add_reaction(RED_X)
+
+
+    confirm.callback = confirm_callback
+    cancel.callback = cancel_callback
+    view.add_item(confirm)
+    view.add_item(cancel)
+    await ctx.send(content="Are you sure you want to lockdown the server? (Times out in 10 seconds)", view=view)
+
+@bot.command(name="unlockdown")
+async def unlockdown_cmd(ctx):
+    if not ctx.author.guild_permissions.administrator:
+        await ctx.reply(content="You do not have permission to use this command.", mention_author=False)
+        return
+
+    view = nextcord.ui.View(timeout=10)
+    confirm = nextcord.ui.Button(label="Confirm", style=nextcord.ButtonStyle.green)
+    cancel = nextcord.ui.Button(label="Cancel", style=nextcord.ButtonStyle.red)
+    
+    async def confirm_callback(interaction: nextcord.Interaction):
+        if interaction.user.id != ctx.author.id:
+            await interaction.response.send_message("You cannot use this button.", ephemeral=True)
+            return
+            
+        await interaction.response.defer()
+        await interaction.message.edit(content="Unlockdown initiated.", view=None)
+        await interaction.message.add_reaction(LOADING)
+        channels = interaction.guild.text_channels
+        voice_channels = interaction.guild.voice_channels
+        eta = (len(channels) + len(voice_channels)) * 2
+        await interaction.message.edit(content=f"Unlockdown initiated. Unlocking {len(channels)} text channels and {len(voice_channels)} voice channels. ETA: {eta} seconds.")
+        for channel in channels:
+            try:
+                try:
+                    overwrite = misccollection.find_one({"_id": f"lockdown_{interaction.guild.id}"})[f"{channel.id}"]
+                    overwrites = channel.overwrites_for(interaction.guild.default_role)
+                    overwrites.send_messages = overwrite
+                    await channel.set_permissions(interaction.guild.default_role, overwrite=overwrites)
+                except:
+                    overwrite = channel.overwrites_for(interaction.guild.default_role)
+                    overwrite.send_messages = None
+                    await channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
+                await asyncio.sleep(2)
+                await channel.send(content="This channel is now unlocked. You can send messages again.")
+            except Exception as e:
+                await interaction.channel.send(f"Error unlocking text channel {channel.name}: {e}")
+
+        channels = interaction.guild.voice_channels
+        for channel in channels:
+            try:
+                try:
+                    overwrite = misccollection.find_one({"_id": f"lockdown_{interaction.guild.id}"})[f"{channel.id}"]
+                    overwrites = channel.overwrites_for(interaction.guild.default_role)
+                    overwrites.connect = overwrite
+                    await channel.set_permissions(interaction.guild.default_role, overwrite=overwrites)
+                except:
+                    overwrite = channel.overwrites_for(interaction.guild.default_role)
+                    overwrite.connect = None
+                    await channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
+                await asyncio.sleep(2)
+                await channel.send(content="This channel is now unlocked. You can send messages again.")
+            except Exception as e:
+                await interaction.channel.send(f"Error unlocking voice channel {channel.name}: {e}")
+                
+        await interaction.message.clear_reactions()
+        await interaction.message.add_reaction(GREEN_CHECK)
+
+    async def cancel_callback(interaction: nextcord.Interaction):
+        if interaction.user.id != ctx.author.id:
+            await interaction.response.send_message("You cannot use this button.", ephemeral=True)
+            return
+            
+        await interaction.message.edit(content="Unlockdown cancelled.", view=None)
+        await interaction.message.add_reaction(RED_X)
+
+    async def timeout_callback():
+        try:
+            await ctx.message.reply("Unlockdown command timed out.", mention_author=False)
+        except:
+            pass
+
+    confirm.callback = confirm_callback
+    cancel.callback = cancel_callback
+    view.on_timeout = timeout_callback
+    
+    view.add_item(confirm)
+    view.add_item(cancel)
+    await ctx.send(content="Are you sure you want to unlock the server? (Times out in 10 seconds)", view=view)
 
 @bot.command(name="stats", aliases=["statistics", "status"])
 async def stats_cmd(ctx):

@@ -37,7 +37,7 @@ class View(nextcord.ui.View):
             await user.send(content=f"Your chat rumble request has been accepted. All required permissions have been assigned and will be removed automatically after 10 minutes.")
         except:
             await interaction.message.reply(content=f"I was unable to send a message to {user.mention}. Your chat rumble request has been accepted.")
-        await asyncio.sleep(600)
+        await asyncio.sleep(900)
         await channel.set_permissions(user, overwrite=None)
 
     async def deny_callback(self, interaction: nextcord.Interaction):

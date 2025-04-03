@@ -50,6 +50,7 @@ class View(nextcord.ui.View):
         pcms_button = nextcord.ui.Button(label="PCMS", style=nextcord.ButtonStyle.primary, emoji="💳")
         afk_button = nextcord.ui.Button(label="AFK", style=nextcord.ButtonStyle.primary, emoji="💤")
         quarantine_button = nextcord.ui.Button(label="Quarantine", style=nextcord.ButtonStyle.primary, emoji="🩺")
+        perks_button = nextcord.ui.Button(label="Perks", style=nextcord.ButtonStyle.primary, emoji="🎁")
 
         async def moderation_callback(interaction: nextcord.Interaction):
             if interaction.user.id != original_interaction.user.id:
@@ -140,6 +141,12 @@ class View(nextcord.ui.View):
                 await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
                 return
             await self.bot.get_cog("Config").quarantine_config(original_interaction)
+        
+        async def perks_callback(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+            await self.bot.get_cog("Config").perks_config(original_interaction)
 
         moderation_button.callback = moderation_callback
         payout_button.callback = payout_callback
@@ -156,6 +163,7 @@ class View(nextcord.ui.View):
         pcms_button.callback = pcms_callback
         afk_button.callback = afk_callback
         quarantine_button.callback = quarantine_callback
+        perks_button.callback = perks_callback
         view.add_item(moderation_button)
         view.add_item(payout_button)
         view.add_item(ar_button)
@@ -171,6 +179,7 @@ class View(nextcord.ui.View):
         view.add_item(pcms_button)
         view.add_item(afk_button)
         view.add_item(quarantine_button)
+        view.add_item(perks_button)
         await interaction.message.edit(embed=embed, view=view)
 
 class Config(commands.Cog):
@@ -257,6 +266,7 @@ class Config(commands.Cog):
         pcms_button = nextcord.ui.Button(label="PCMS", style=nextcord.ButtonStyle.primary, emoji="💳")
         afk_button = nextcord.ui.Button(label="AFK", style=nextcord.ButtonStyle.primary, emoji="💤")
         quarantine_button = nextcord.ui.Button(label="Quarantine", style=nextcord.ButtonStyle.primary, emoji="🩺")
+        perks_button = nextcord.ui.Button(label="Perks", style=nextcord.ButtonStyle.primary, emoji="🎁")
 
         async def moderation_callback(interaction: nextcord.Interaction):
             if interaction.user.id != original_interaction.user.id:
@@ -348,6 +358,12 @@ class Config(commands.Cog):
                 return
             await self.quarantine_config(interaction)
 
+        async def perks_callback(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+            await self.perks_config(interaction)
+
         moderation_button.callback = moderation_callback
         payout_button.callback = payout_callback
         ar_button.callback = ar_callback
@@ -363,6 +379,7 @@ class Config(commands.Cog):
         pcms_button.callback = pcms_callback
         afk_button.callback = afk_callback
         quarantine_button.callback = quarantine_callback
+        perks_button.callback = perks_callback
         view.add_item(moderation_button)
         view.add_item(payout_button)
         view.add_item(ar_button)
@@ -378,8 +395,90 @@ class Config(commands.Cog):
         view.add_item(pcms_button)
         view.add_item(afk_button)
         view.add_item(quarantine_button)
+        view.add_item(perks_button)
         await interaction.send(embed=embed, view=view, ephemeral=False)
 
+   
+    async def perks_config(self, interaction: nextcord.Interaction):
+        embed = nextcord.Embed(
+            title="Perks Configuration",
+            description="Configure the perks system for the server.",
+            color=nextcord.Color.blue()
+        )
+        guild = str(interaction.guild.id)
+        original_interaction = interaction
+        doc = configuration.find_one({"_id": "config"})
+        perks = doc["perks"]
+        snipe = perks["snipe"]
+        snipe_roles = snipe.get(guild, "None")
+        snipe_roles = ", ".join(f"<@&{role}>" for role in snipe_roles) if snipe_roles != "None" else snipe_roles
+        embed.add_field(name="Snipe Roles", value=snipe_roles, inline=True)
+
+        async def update_config_embed(interaction: nextcord.Interaction):
+            updated_doc = configuration.find_one({"_id": "config"})
+            updated_snipe = updated_doc["perks"]["snipe"]
+            updated_snipe_roles = updated_snipe.get(guild, "None")
+            updated_snipe_roles = ", ".join(f"<@&{role}>" for role in updated_snipe_roles) if updated_snipe_roles != "None" else updated_snipe_roles
+            embed.add_field(name="Snipe Roles", value=updated_snipe_roles, inline=True)
+            await interaction.message.edit(embed=embed)
+        
+        snipe_role_button = nextcord.ui.Button(label="Modify Snipe Roles", style=nextcord.ButtonStyle.primary)
+        disable_snipe_button = nextcord.ui.Button(label="Disable Snipe", style=nextcord.ButtonStyle.danger)
+        view = View(self.bot)
+
+        async def snipe_role_callback(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+            
+            role_select = nextcord.ui.RoleSelect(
+                placeholder="Select roles to add/remove",
+                min_values=1,
+                max_values=25
+            )
+            
+            view = nextcord.ui.View()
+            
+            async def role_select_callback(interaction: nextcord.Interaction):
+                selected_roles = [role.id for role in role_select.values]
+                doc = configuration.find_one({"_id": "config"})
+                snipe_roles = doc["perks"]["snipe"]
+                
+                if guild not in snipe_roles:
+                    snipe_roles[guild] = []
+                
+                for role_id in selected_roles:
+                    if role_id in snipe_roles[guild]:
+                        snipe_roles[guild].remove(role_id)
+                    else:
+                        snipe_roles[guild].append(role_id)
+                
+                configuration.update_one({"_id": "config"}, {"$set": {"perks.snipe": snipe_roles}})
+                await interaction.response.send_message("Snipe roles updated successfully!", ephemeral=True)
+                await update_config_embed(interaction)
+            
+            role_select.callback = role_select_callback
+            view.add_item(role_select)
+
+            await interaction.response.send_message("Select roles to add or remove from snipe permissions:", view=view, ephemeral=True)
+        
+        async def disable_snipe_callback(interaction: nextcord.Interaction):
+            if interaction.user.id != original_interaction.user.id:
+                await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
+                return
+            
+            configuration.update_one({"_id": "config"}, {"$unset": {"perks.snipe": ""}})
+            await interaction.response.send_message("Snipe system has been disabled for this server.", ephemeral=True)
+            await update_config_embed(original_interaction)
+        
+        snipe_role_button.callback = snipe_role_callback
+        disable_snipe_button.callback = disable_snipe_callback
+        
+        view.add_item(snipe_role_button)
+        view.add_item(disable_snipe_button)
+        
+        await interaction.message.edit(embed=embed, view=view)
+        
     async def quarantine_config(self, interaction: nextcord.Interaction):
         embed = nextcord.Embed(
             title="Quarantine Configuration",

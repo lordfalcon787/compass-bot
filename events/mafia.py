@@ -37,7 +37,7 @@ class Mafia(commands.Cog):
             description="**1) DMing/Teaming Rules:**\n"
                         "- __Villager__: Do _not_ DM villager roles. Do _not_ DM anyone if you're a villager role. This includes Santa's child and mayor.\n"
                         "- __Mafia/Neutral__: If you're a mafia or neutral, you may DM other mafias or neutrals _only if_ they can win with you. Do _not_ team with anyone who you cannot win with.\n"
-                        "- __Submissor and Isekai__ have their own DM rules: [View](https://discord.com/channels/1205270486230110330/1265160374534275124)\n\n"
+                        "- __Submissor and Isekai__ have their own DM rules: [View](https://discord.com/channels/1205270486230110330/1265160374534275124/1322563077547233361)\n\n"
                         "**2) General Rules:**\n"
                         "- Do not go __AFK__ during the game. Actively participate in the mafia channel to avoid confusion.\n"
                         "- __Screenshotting or Copy-Pasting__ game info is not allowed.\n"

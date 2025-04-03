@@ -82,7 +82,7 @@ class Suggestions(commands.Cog):
         
         author_id = doc.get(f"{num}_author")
         if author_id:
-            author = await interaction.guild.fetch_member(author_id)
+            author = await interaction.guild.get_member(author_id)
             if author:
                 try:
                     await author.send(f"Your suggestion #{num} has been approved!\nReason: {reason}\nLink: {msg.jump_url}")
@@ -128,7 +128,7 @@ class Suggestions(commands.Cog):
         await msg.edit(embed=embed)
         author_id = doc.get(f"{num}_author")
         if author_id:
-            author = await interaction.guild.fetch_member(author_id)
+            author = await interaction.guild.get_member(author_id)
             if author:
                 try:
                     await author.send(f"Your suggestion #{num} has been implemented!\nReason: {reason}\nLink: {msg.jump_url}")
@@ -173,7 +173,7 @@ class Suggestions(commands.Cog):
         await msg.edit(embed=embed)
         author_id = doc.get(f"{num}_author")
         if author_id:
-            author = await interaction.guild.fetch_member(author_id)
+            author = await interaction.guild.get_member(author_id)
             if author:
                 try:
                     await author.send(f"Your suggestion #{num} has been denied.\nReason: {reason}\nLink: {msg.jump_url}")
@@ -218,7 +218,7 @@ class Suggestions(commands.Cog):
         await msg.edit(embed=embed)
         author_id = doc.get(f"{num}_author")
         if author_id:
-            author = await interaction.guild.fetch_member(author_id)
+            author = await interaction.guild.get_member(author_id)
             if author:
                 try:
                     await author.send(f"Your suggestion #{num} is being considered!\nReason: {reason}\nLink: {msg.jump_url}")
@@ -313,7 +313,7 @@ class Suggestions(commands.Cog):
 
         author_id = doc.get(f"{old_num}_author")
         if author_id:
-            author = await ctx.guild.fetch_member(author_id)
+            author = await ctx.guild.get_member(author_id)
             if author:
                 try:
                     await author.send(f"Your suggestion #{old_num} has been denied.\nReason: {reason}\nLink: {msg.jump_url}")
@@ -362,7 +362,7 @@ class Suggestions(commands.Cog):
         await msg.edit(embed=embed)
         author_id = doc.get(f"{old_num}_author")
         if author_id:
-            author = await ctx.guild.fetch_member(author_id)
+            author = await ctx.guild.get_member(author_id)
             if author:
                 try:
                     await author.send(f"Your suggestion #{old_num} has been approved!\nReason: {reason}\nLink: {msg.jump_url}")
@@ -411,7 +411,7 @@ class Suggestions(commands.Cog):
         await msg.edit(embed=embed)
         author_id = doc.get(f"{old_num}_author")
         if author_id:
-            author = await ctx.guild.fetch_member(author_id)
+            author = await ctx.guild.get_member(author_id)
             if author:
                 try:
                     await author.send(f"Your suggestion #{old_num} has been implemented!\nReason: {reason}\nLink: {msg.jump_url}")
@@ -460,7 +460,7 @@ class Suggestions(commands.Cog):
         await msg.edit(embed=embed)
         author_id = doc.get(f"{old_num}_author")
         if author_id:
-            author = await ctx.guild.fetch_member(author_id)
+            author = await ctx.guild.get_member(author_id)
             if author:
                 try:
                     await author.send(f"Your suggestion #{old_num} is being considered!\nReason: {reason}\nLink: {msg.jump_url}")

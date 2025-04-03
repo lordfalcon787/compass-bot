@@ -1,9 +1,9 @@
 import nextcord
-from nextcord.ext import commands
-from nextcord import SlashOption
-CHANNEL = [1214594429575503912, 1286101587965775953, 1340900373589790780, 1346932927937904743]
 
+from nextcord.ext import commands
+from typing import Optional
 from utils.mongo_connection import MongoConnection
+
 mongo = MongoConnection.get_instance()
 db = mongo.get_db()
 configuration = db["Configuration"]
@@ -11,53 +11,136 @@ configuration = db["Configuration"]
 class Utilv2(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.viewlocked_channels = {}
 
     @commands.Cog.listener()
     async def on_ready(self):
         print("Utilityv2 cog is ready.")
 
-    @nextcord.slash_command(name="viewlock", description="Viewlock a channel.", guild_ids=[1205270486230110330])
-    async def viewlock(self, interaction: nextcord.Interaction, role: nextcord.Role = SlashOption(description="The role to viewlock the channel for.")):
-        if interaction.channel.id not in CHANNEL:
-            await interaction.response.send_message("This command can only be used in events-2, events-3, and mini-games.", ephemeral=True)
-            return
-        
-        user_roles = [role.id for role in interaction.user.roles]
-        if 1205270486469058637 in user_roles or interaction.user.guild_permissions.administrator:
-            pass
-        else:
-            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
-            return
-        
-        await interaction.channel.set_permissions(interaction.guild.default_role, view_channel=False)
-        await interaction.channel.set_permissions(interaction.guild.default_role, send_messages=False)
-        await interaction.channel.set_permissions(role, view_channel=True)
-        self.viewlocked_channels[interaction.channel.id] = role.id
-        await interaction.response.send_message(f"Viewlocked **{interaction.channel.mention}**, so only **{role.mention}** can view the channel.", ephemeral=True)
+    @nextcord.slash_command(name="channel")
+    async def channel(self, interaction: nextcord.Interaction):
+        pass
 
-    @nextcord.slash_command(name="unviewlock", description="Unviewlock a channel.", guild_ids=[1205270486230110330])
-    async def unviewlock(self, interaction: nextcord.Interaction):
-        if interaction.channel.id not in CHANNEL:
-            await interaction.response.send_message("This command can only be used in events-2, events-3, and mini-games.", ephemeral=True)
-            return
-        
-        user_roles = [role.id for role in interaction.user.roles]
-        if 1205270486469058637 in user_roles or interaction.user.guild_permissions.administrator:
-            pass
-        else:
+    @channel.subcommand(name="create")
+    async def create(self, interaction: nextcord.Interaction, name: str, category: Optional[nextcord.CategoryChannel] = None):
+        if not interaction.user.guild_permissions.manage_channels:
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
             return
-        
-        await interaction.channel.set_permissions(interaction.guild.default_role, view_channel=None)
-        await interaction.channel.set_permissions(interaction.guild.default_role, send_messages=False)
-        if interaction.channel.id in self.viewlocked_channels:
-            role_id = self.viewlocked_channels[interaction.channel.id]
-            role = interaction.guild.get_role(role_id)
-            if role:
-                await interaction.channel.set_permissions(role, overwrite=None)
-            del self.viewlocked_channels[interaction.channel.id]
-        await interaction.response.send_message(f"Unviewlocked **{interaction.channel.mention}**, so everyone can view the channel.", ephemeral=True)
+        try:
+            channel = await interaction.guild.create_text_channel(name=name, category=category)
+            await interaction.response.send_message(f"Channel created - {channel.mention}.", ephemeral=True)
+        except:
+            await interaction.response.send_message("Failed to create channel.", ephemeral=True)
+
+    @channel.subcommand(name="delete")
+    async def delete(self, interaction: nextcord.Interaction, channel: nextcord.TextChannel):
+        if not interaction.user.guild_permissions.manage_channels:
+            channel_perms = channel.permissions_for(interaction.user)
+            if not channel_perms.manage_channels:
+                await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+                return
+        try:
+            await channel.delete()
+            await interaction.response.send_message(f"Channel deleted.", ephemeral=True)
+        except:
+            await interaction.response.send_message("Failed to delete channel.", ephemeral=True)
+
+    @channel.subcommand(name="rename")
+    async def rename(self, interaction: nextcord.Interaction, name: str, channel: Optional[nextcord.TextChannel] = None):
+        if channel is None:
+            channel = interaction.channel
+        if not interaction.user.guild_permissions.manage_channels:
+            channel_perms = channel.permissions_for(interaction.user)
+            if not channel_perms.manage_channels:
+                await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+                return
+        try:
+            await channel.edit(name=name)
+            await interaction.response.send_message(f"Channel renamed to {name}.", ephemeral=True)
+        except:
+            await interaction.response.send_message("Failed to rename channel.", ephemeral=True)
+
+    @channel.subcommand(name="viewlock")
+    async def viewlock(self, interaction: nextcord.Interaction, access_roles: Optional[list[nextcord.Role]] = None, channel: Optional[nextcord.TextChannel] = None):
+        if channel is None:
+            channel = interaction.channel
+        if not interaction.user.guild_permissions.manage_channels:
+            channel_perms = channel.permissions_for(interaction.user)
+            if not channel_perms.manage_permissions:
+                if channel.category:
+                    category_perms = channel.category.permissions_for(interaction.user)
+                    if not (category_perms.manage_channels or category_perms.manage_permissions):
+                        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+                        return
+                else:
+                    await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+                    return
+        channel_overwrites = channel.overwrites
+        if access_roles is not None:
+            for role in access_roles:
+                channel_overwrites[role] = nextcord.PermissionOverwrite(view_channel=True)  
+        channel_overwrites[interaction.guild.default_role] = nextcord.PermissionOverwrite(view_channel=False)
+        try:
+            await channel.edit(overwrites=channel_overwrites)
+            await interaction.response.send_message(f"Channel viewlocked. Only specified roles can view this channel.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"Failed to viewlock channel: {str(e)}", ephemeral=True)
+
+    @channel.subcommand(name="unviewlock")
+    async def unviewlock(self, interaction: nextcord.Interaction):
+        if channel is None:
+            channel = interaction.channel
+        if not interaction.user.guild_permissions.manage_channels:
+            channel_perms = channel.permissions_for(interaction.user)
+            if not channel_perms.manage_permissions:
+                if channel.category:
+                    category_perms = channel.category.permissions_for(interaction.user)
+                    if not (category_perms.manage_channels or category_perms.manage_permissions):
+                        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+                        return
+                else:
+                    await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+                    return
+        channel_overwrites = channel.overwrites
+        channel_overwrites[interaction.guild.default_role] = nextcord.PermissionOverwrite(view_channel=True)
+        try:
+            await channel.edit(overwrites=channel_overwrites)
+            await interaction.response.send_message(f"Channel unviewlocked.", ephemeral=True)
+        except:
+            await interaction.response.send_message("Failed to unviewlock channel.", ephemeral=True)
+
+    @channel.subcommand(name="lock")
+    async def lock_channel_slash(self, interaction: nextcord.Interaction, channel: Optional[nextcord.TextChannel] = None):
+        if channel is None:
+            channel = interaction.channel
+        if not interaction.user.guild_permissions.manage_messages:
+            channel_perms = channel.permissions_for(interaction.user)
+            if not channel_perms.manage_messages:
+                await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+                return
+        try:
+            overwrites = channel.overwrites_for(interaction.guild.default_role)
+            overwrites.send_messages = False
+            await channel.set_permissions(interaction.guild.default_role, overwrite=overwrites)
+            await interaction.response.send_message(f"Channel locked.", ephemeral=True)
+        except:
+            await interaction.response.send_message("Failed to lock channel.", ephemeral=True)
+
+    @channel.subcommand(name="unlock")
+    async def unlock_channel_slash(self, interaction: nextcord.Interaction, channel: Optional[nextcord.TextChannel] = None):
+        if channel is None:
+            channel = interaction.channel
+        if not interaction.user.guild_permissions.manage_messages:
+            channel_perms = channel.permissions_for(interaction.user)
+            if not channel_perms.manage_messages:
+                await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+                return
+        try:
+            overwrites = channel.overwrites_for(interaction.guild.default_role)
+            overwrites.send_messages = None
+            await channel.set_permissions(interaction.guild.default_role, overwrite=overwrites)
+            await interaction.response.send_message(f"Channel unlocked.", ephemeral=True)
+        except:
+            await interaction.response.send_message("Failed to unlock channel.", ephemeral=True)
 
     @commands.command(name="rall", aliases=["removeall"])
     async def removeall(self, ctx):

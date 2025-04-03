@@ -2,7 +2,8 @@ import nextcord
 from nextcord.ext import commands, application_checks
 from nextcord import SlashOption
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
+import asyncio
 
 RC_ID = 1205270486230110330
 
@@ -14,9 +15,70 @@ collection = db["Polls"]
 misc = db["Misc"]
 configuration = db["Configuration"]
 
+class PollManager:
+    def __init__(self):
+        self.pending_updates = {}
+        self.update_locks = {}
+        
+    async def update_poll_message(self, message: nextcord.Message):
+        poll = collection.find_one({"_id": str(message.id)})
+        if not poll:
+            return
+            
+        # Check if poll is over 1 hour old
+        created_at = datetime.fromtimestamp(message.created_at.timestamp())
+        if datetime.now() - created_at < timedelta(hours=1):
+            # If less than 1 hour old, update immediately
+            await self._do_update(message, poll)
+            return
+            
+        # Add to pending updates
+        self.pending_updates[message.id] = (message, poll)
+        
+        # If no update task is running for this message, start one
+        if message.id not in self.update_locks:
+            self.update_locks[message.id] = asyncio.Lock()
+            asyncio.create_task(self._delayed_update(message.id))
+    
+    async def _delayed_update(self, message_id):
+        async with self.update_locks[message_id]:
+            # Wait for more votes to accumulate
+            await asyncio.sleep(60)  # Wait 1 minute
+            
+            # Get the latest data
+            if message_id in self.pending_updates:
+                message, poll = self.pending_updates[message_id]
+                # Get fresh poll data from database
+                latest_poll = collection.find_one({"_id": str(message_id)})
+                await self._do_update(message, latest_poll)
+                del self.pending_updates[message_id]
+                del self.update_locks[message_id]
+    
+    async def _do_update(self, message: nextcord.Message, poll: dict):
+        view = nextcord.ui.View()
+        
+        for i in range(10):
+            choice_key = f"choice_{i}"
+            choice_text_key = f"choice_{i}_text"
+            if choice_key in poll and choice_text_key in poll:
+                votes = len(poll[choice_key])
+                choice_text = poll[choice_text_key]
+                button = nextcord.ui.Button(
+                    style=nextcord.ButtonStyle.primary,
+                    label=f"{choice_text} [{votes}]",
+                    custom_id=f"poll_choice_{i}"
+                )
+                view.add_item(button)
+        
+        try:
+            await message.edit(view=view)
+        except Exception as e:
+            print(f"Failed to update poll {message.id}: {e}")
+
 class Poll(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.poll_manager = PollManager()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -344,7 +406,7 @@ class Poll(commands.Cog):
                         except:
                             await interaction.followup.send(embed=embed, ephemeral=True)
                         
-                        await self.update_poll_message(interaction.message)
+                        await self.poll_manager.update_poll_message(interaction.message)
                     else:
                         try:
                             embed = nextcord.Embed(title="You've already voted for this option.", color=16711680)
@@ -358,28 +420,6 @@ class Poll(commands.Cog):
                     except:
                         await interaction.followup.send(embed=embed, ephemeral=True)
 
-    async def update_poll_message(self, message: nextcord.Message):
-        poll = collection.find_one({"_id": str(message.id)})
-        if poll:
-            view = nextcord.ui.View()
-            
-            for i in range(10):
-                choice_key = f"choice_{i}"
-                choice_text_key = f"choice_{i}_text"
-                if choice_key in poll and choice_text_key in poll:
-                    votes = len(poll[choice_key])
-                    choice_text = poll[choice_text_key]
-                    button = nextcord.ui.Button(
-                        style=nextcord.ButtonStyle.primary,
-                        label=f"{choice_text} [{votes}]",
-                        custom_id=f"poll_choice_{i}"
-                    )
-                    view.add_item(button)
-            
-            await message.edit(view=view)
-
-    
-    
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: nextcord.RawReactionActionEvent):
         try:

@@ -1,7 +1,7 @@
 import nextcord
 
 from typing import Optional
-from nextcord.ext import commands
+from nextcord.ext import commands, tasks
 from datetime import datetime, timedelta, timezone
 from utils.mongo_connection import MongoConnection
 
@@ -12,6 +12,7 @@ collection = db["Moderation"]
 
 GREEN_CHECK = "<:green_check2:1291173532432203816>"
 RED_X = "<:red_x2:1292657124832448584>"
+LOADING = "<a:loading_animation:1218134049780928584>"
 
 class Moderation(commands.Cog):
     def __init__(self, bot):
@@ -20,7 +21,24 @@ class Moderation(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Moderation cog loaded.")
+        await self.check_ebl.start()
 
+    @tasks.loop(minutes=3)
+    async def check_ebl(self):
+        doc = collection.find_one({"_id": f"ebl_1205270486230110330"})
+        ebl_role = self.bot.get_guild(1205270486230110330).get_role(1205270486359998556)
+        for member in doc:
+            if doc.get(str(member)).get("end") < datetime.now():
+                member_object = self.bot.get_guild(1205270486230110330).get_member(int(member))
+                if member_object:
+                    roles = doc.get(str(member)).get("roles")
+                    for role in roles:
+                        add = self.bot.get_guild(1205270486230110330).get_role(int(role))
+                        if add:
+                            await member_object.add_roles(add)
+                    await member_object.remove_roles(ebl_role)
+                    collection.update_one({"_id": f"ebl_1205270486230110330"}, {"$unset": {str(member.id): ""}})
+                
     @commands.command(name="warn")
     async def warn_cmd(self, ctx, member: nextcord.Member, *, reason: str = "No reason provided"):
         user_roles = [role.id for role in ctx.author.roles]
@@ -606,6 +624,56 @@ class Moderation(commands.Cog):
                 await logs.send(embed=embed)
             except:
                 pass
+
+
+    @commands.command(name="ebl", aliases=["eventblacklist"])
+    async def ebl_cmd(self, ctx, member: nextcord.Member, duration: str = "1d", *, reason: str = "No reason provided"):
+        if ctx.guild.id != 1205270486230110330:
+            return
+        if not ctx.author.guild_permissions.manage_messages:
+            await ctx.message.add_reaction(RED_X)
+            return
+        if 1205270486469058636 in [role.id for role in ctx.author.roles]:
+            await ctx.message.add_reaction(RED_X)
+            return
+        ebl_role = ctx.guild.get_role(1205270486359998556)
+        if not ebl_role:
+            await ctx.message.add_reaction(RED_X)
+            return
+        if ctx.author.top_role.position < member.top_role.position:
+            await ctx.message.add_reaction(RED_X)
+            return
+        await ctx.message.add_reaction(LOADING)
+        if ebl_role in member.roles:
+            await member.remove_roles(ebl_role)
+            doc = collection.find_one({"_id": f"ebl_{ctx.guild.id}"})
+            doc = doc.get(str(member.id))
+            if doc:
+                roles = doc.get("roles")
+                for role in roles:
+                    add = ctx.guild.get_role(int(role))
+                    if add:
+                        await member.add_roles(add)
+            await ctx.message.clear_reactions()
+            await ctx.message.add_reaction(GREEN_CHECK)
+        else:
+            time = await self.get_time_until_timeout(duration)
+            end = datetime.now() + timedelta(seconds=time)
+            if time is None:
+                await ctx.message.add_reaction(RED_X)
+                return
+            roles = []
+            for role in member.roles:
+                if "donor" in role.name.lower():
+                    await member.remove_roles(role)
+                    roles.append(role.id)
+            collection.update_one({"_id": f"ebl_{ctx.guild.id}"}, {"$set": {str(member.id): {"roles": roles, "end": end, "reason": reason}}}, upsert=True)
+            await member.add_roles(ebl_role)
+            await ctx.message.clear_reactions()
+            await ctx.message.add_reaction(GREEN_CHECK)
+        
+        
+        
         
     @nextcord.slash_command(name="quarantine", description="Quarantine a user")
     async def quarantine(self, interaction: nextcord.Interaction):

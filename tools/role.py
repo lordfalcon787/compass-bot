@@ -1,9 +1,10 @@
 import nextcord
 import asyncio
+
 from nextcord.ext import commands
 from typing import Optional
 from nextcord import SlashOption
-
+from fuzzywuzzy import process, fuzz
 from utils.mongo_connection import MongoConnection
 
 mongo = MongoConnection.get_instance()
@@ -66,8 +67,7 @@ class View(nextcord.ui.View):
         
         initial_content = get_page_content(current_page)
         await interaction.response.send_message(content=initial_content, view=view, ephemeral=True)
-
-
+    
 class Role(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -76,6 +76,14 @@ class Role(commands.Cog):
     async def on_ready(self):
         print("Role cog is ready")
 
+    @commands.command(name="deletedusers")
+    async def deletedusers(self, ctx):
+        guild_members = ctx.guild.members
+        deleted_users = []
+        for member in guild_members:
+            if "deleted_user" in member.name:
+                deleted_users.append(member)
+        await ctx.send(f"Found {len(deleted_users)} deleted users in the server.")
     @nextcord.slash_command(name="customrole", description="Edit your custom role parameters.", guild_ids=[1205270486230110330])
     async def customrole(self, interaction: nextcord.Interaction,
                          name: Optional[str] = SlashOption(description="The new name of the role.", required=False),
@@ -233,19 +241,14 @@ class Role(commands.Cog):
         
         member_roles = [role.id for role in member.roles]
         
-        if role_name.isdigit():
+        if role_name.strip().isdigit():
             role = ctx.guild.get_role(int(role_name))
         else:
-            role_name_lower = role_name.lower()
-            guild_roles = ctx.guild.roles
-            
-            role = next((r for r in guild_roles 
-                        if r.name.replace("★ ", "").replace("♢ ", "").lower() == role_name_lower), None)
-            
-            if role is None:
-                role = next((r for r in guild_roles
-                            if role_name_lower in r.name.replace("★ ", "").replace("♢ ", "").lower()), None)
-
+            role_name_lower = role_name
+            guild_roles = [role.name for role in ctx.guild.roles]
+            role = process.extractOne(role_name_lower, guild_roles, scorer=fuzz.ratio)
+            role = nextcord.utils.get(ctx.guild.roles, name=role[0])
+           
         if role is None:
             await ctx.reply(content="Role not found.", mention_author=False)
             return

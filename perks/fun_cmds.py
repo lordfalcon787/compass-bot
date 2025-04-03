@@ -1,6 +1,6 @@
 import asyncio
 import nextcord
-from nextcord.ext import commands
+from nextcord.ext import commands, tasks
 import random
 from datetime import datetime, timedelta
 
@@ -16,14 +16,53 @@ mongo = MongoConnection.get_instance()
 db = mongo.get_db()
 collection = db["Fun Commands"]
 acollection = db["Admin"]
+configuration = db["Configuration"]
 
 class FunCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.cooldowns = {}
+        try:
+            self.deleted_messages = collection.find_one({"_id": "snipe_messages"})
+        except:
+            self.deleted_messages = {}
+    
     @commands.Cog.listener()
     async def on_ready(self):
         print("Fun Commands cog is ready")
+        self.log_snipes.start()
+
+    @tasks.loop(minutes=1)
+    async def log_snipes(self):
+        collection.update_one({"_id": "snipe_messages"}, {"$set": {"messages": self.deleted_messages}}, upsert=True)
+       
+    @commands.command(name="snipe")
+    async def snipe(self, ctx: commands.Context):
+        doc = configuration.find_one({"_id": "config"})
+        snipe = doc["perks"]["snipe"]
+        snipe_roles = snipe.get(str(ctx.guild.id), "None")
+        user_roles = [role.id for role in ctx.author.roles]
+        if snipe_roles == "None" and not ctx.author.guild_permissions.administrator:
+            await ctx.message.add_reaction(RED_X)
+            await ctx.reply("Snipe is not enabled for this server.", mention_author=False)
+            return
+        elif not any(role in snipe_roles for role in user_roles) and not ctx.author.guild_permissions.administrator:
+            await ctx.message.add_reaction(RED_X)
+            return
+        elif ctx.channel.id not in self.deleted_messages:
+            await ctx.message.add_reaction(RED_X)
+            await ctx.reply("There are no recently deleted messages in this channel.", mention_author=False)
+            return 
+        message_data = self.deleted_messages[ctx.channel.id]
+        author = self.bot.get_user(message_data["author_id"])
+        embed = nextcord.Embed(description=f"{message_data['content']} (<t:{message_data['timestamp']}:R>)", color=0x3498db)
+        embed.timestamp = datetime.now()
+        if author is not None:
+            embed.set_author(name=f"{author.name} ({author.id})", icon_url=author.display_avatar.url)
+        else:
+            embed.set_author(name=f"Unknown ({message_data['author_id']})")
+        embed.set_footer(text=f"Sniped by {ctx.author.name}")
+        await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command(name="kill")
     async def kill(self, ctx: commands.Context):
@@ -162,6 +201,14 @@ class FunCommands(commands.Cog):
         await ctx.channel.send(f"{user.mention}")
         await ctx.channel.send(f"{user.mention}")
         await ctx.channel.send(f"{user.mention}")
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message: nextcord.Message):
+        self.deleted_messages[message.channel.id] = {
+            "content": message.content,
+            "author_id": message.author.id,
+            "timestamp": int(datetime.now().timestamp())
+        }
 
 def setup(bot):
     bot.add_cog(FunCommands(bot))

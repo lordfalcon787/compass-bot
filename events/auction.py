@@ -343,7 +343,7 @@ class Auction(commands.Cog):
                     return
             
             current_price = doc["Price"]
-            if amount < current_price or abs(amount - current_price) < 50_000 or amount >= 10_000_000_000:
+            if amount < current_price or abs(amount - current_price) <= 50_000 or amount >= 10_000_000_000:
                 await message.add_reaction(RED_X)
                 return
             

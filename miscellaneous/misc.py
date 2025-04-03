@@ -1,7 +1,7 @@
 import nextcord
 import random
 import nextcord.ext.commands
-from nextcord.ext import commands, application_checks, tasks
+from nextcord.ext import commands, application_checks
 from typing import Optional
 from nextcord import SlashOption
 from utils.mongo_connection import MongoConnection

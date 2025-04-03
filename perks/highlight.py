@@ -164,6 +164,9 @@ class Highlight(commands.Cog):
             if msg in more:
                 collection.update_one({"_id": f"blacklists.{ctx.guild.id}"}, {"$pull": {f"{ctx.author.id}": msg}}, upsert=True)
                 await ctx.reply(f"Removed user {msg} ({auth.name}) from your blacklist.", mention_author=False)
+            else:
+                collection.update_one({"_id": f"blacklists.{ctx.guild.id}"}, {"$push": {f"{ctx.author.id}": msg}}, upsert=True)
+                await ctx.reply(f"Blacklisted user {msg} ({auth.name}).", mention_author=False)
         else:
             collection.update_one({"_id": f"blacklists.{ctx.guild.id}"}, {"$push": {f"{ctx.author.id}": msg}}, upsert=True)
             await ctx.reply(f"Blacklisted user {msg} ({auth.name}).", mention_author=False)

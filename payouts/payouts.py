@@ -22,6 +22,7 @@ collec = mongo.get_collection("Misc")
 backup = mongo.get_collection("Backup Items")
 misc = mongo.get_collection("Misc")
 configuration = mongo.get_collection("Configuration")
+bot_avatar = None
 
 loading_emoji = "<a:loading_animation:1218134049780928584>"
 
@@ -30,6 +31,7 @@ QUEUE = 1205270487643459617
 RC_ID = 1205270486230110330
 ROOT_ID = 1206299567520354317
 PAYOUT = 1205270487643459618
+AVATAR = "https://cdn.discordapp.com/avatars/1291996619490984037/68af925983c4da4fd4aec6994389495e.png?size=1024&width=1024&height=1024"
 
 PAID = "<:rc_paid:1304668330468053023>"
 DOT = "<a:golddot:1303833388410601522>"
@@ -101,7 +103,8 @@ class EditPrizeModal(nextcord.ui.Modal):
             queue = config[f"queue"]
             queue = queue[f"{interaction.guild.id}"]
             channel = self.bot.get_channel(queue)
-            queue_msg = await channel.fetch_message(int(queue_msg_url.split("/")[6]))
+            wh = await GetWebhook.get_webhook(channel)
+            queue_msg = await wh.fetch_message(int(queue_msg_url.split("/")[6]))
             embed = queue_msg.embeds[0]
             embed_footer = embed.footer.text
             queuer = embed_footer.split(" ")[2]
@@ -121,7 +124,7 @@ class EditPrizeModal(nextcord.ui.Modal):
                     embed.add_field(name="Prize Info", value=f"{DOT} **Won:** `{quantity:,}x` {item}\n{DOT} **Value:** `⏣ {value:,}`")
                 else:
                     embed.add_field(name="Prize Info", value=f"{DOT} **Won:** `⏣ {quantity:,}`")
-            await queue_msg.edit(embed=embed)
+            await wh.edit_message(queue_msg.id, content=None, embed=embed)
             claim_msg = self.interaction.message
             embed = claim_msg.embeds[0]
             if item:
@@ -356,7 +359,8 @@ class RejectWithReasonModal(nextcord.ui.Modal):
         link = doc["link"]
         view = QueuedPayoutsView()
         view.add_item(nextcord.ui.Button(label="Event Message", url=f"{link}", emoji="🔗"))
-        await interaction.message.edit(content=None, embed=embed, view=view)
+        wh = await GetWebhook.get_webhook(interaction.channel)
+        await wh.edit_message(interaction.message.id, content=None, embed=embed, view=view)
         await interaction.send(content=f"This payout has been rejected for reason: `{reason}`", ephemeral=True)
         
 class QueueView(nextcord.ui.View):
@@ -389,7 +393,8 @@ class QueueView(nextcord.ui.View):
         link = doc["link"]
         view = QueuedPayoutsView()
         view.add_item(nextcord.ui.Button(label="Event Message", url=f"{link}", emoji="🔗"))
-        await interaction.message.edit(content=None, embed=embed, view=view)
+        wh = await GetWebhook.get_webhook(interaction.channel)
+        await wh.edit_message(interaction.message.id, content=None, embed=embed, view=view)
         await interaction.response.send_message(content="This payout has been rejected.", ephemeral=True)
         collec.update_one({"_id": "payout_stats"}, {"$inc": {"rejected": 1}})
 
@@ -435,16 +440,9 @@ class View(nextcord.ui.View):
         config = configuration.find_one({"_id": "config"})
         queue = config[f"queue"]
         queue = queue[f"{interaction.guild.id}"]
-        channel = self.bot.get_channel(queue)
-        webhook = None
-        webhooks = await channel.webhooks()
-        for wh in webhooks:
-            if wh.name == "Compass Payouts":
-                webhook = wh
-                break
-        if webhook is None:
-            webhook = await channel.create_webhook(name="Compass Payouts", avatar=await interaction.guild.icon.read())
-        msg = await webhook.send(embed=embed, view=view, wait=True)
+        queue = self.bot.get_channel(queue)
+        wh = await GetWebhook.get_webhook(queue)
+        msg = await wh.send(embed=embed, view=view, wait=True)
         link = doc["link"]
         view = QueuedView(self.bot)
         view.add_item(nextcord.ui.Button(label="Event Message", url=f"{link}", emoji="🔗"))
@@ -614,12 +612,13 @@ class ViewPayout(nextcord.ui.View):
             collection.delete_one({"_id": id})
             queue_msg = other_doc["queuemsg"].split("/")[6]
             channel = self.bot.get_channel(queue)
-            queue_msg = await channel.fetch_message(int(queue_msg))
+            wh = await GetWebhook.get_webhook(channel)
+            queue_msg = await wh.fetch_message(int(queue_msg))
             embed = queue_msg.embeds[0]
             embed.title = "Payout Rejected"
             embed.color = 16711680
             embed.add_field(name="Rejected By", value=f"{interaction.user.mention}", inline=True)
-            await queue_msg.edit(embed=embed, view=None)
+            await wh.edit_message(queue_msg.id, content=None, embed=embed, view=None)
             return
         new_id = doc["payout_slice"][0]
         new_doc = collection.find_one({"_id": new_id})
@@ -657,12 +656,13 @@ class ViewPayout(nextcord.ui.View):
             pass
         self.state.last_responses[interaction.guild.id] = await interaction.send(content=content, embed=embed, ephemeral=True, view=view)
         queue_msg = other_doc["queuemsg"].split("/")[6]
-        queue_msg = await self.bot.get_channel(queue).fetch_message(int(queue_msg))
+        wh = await GetWebhook.get_webhook(queue)
+        queue_msg = await wh.fetch_message(int(queue_msg))
         embed = queue_msg.embeds[0]
         embed.title = "Payout Rejected"
         embed.color = 16711680
         embed.add_field(name="Rejected By", value=f"{interaction.user.mention}", inline=True)
-        await queue_msg.edit(embed=embed, view=None)
+        await wh.edit_message(queue_msg.id, content=None, embed=embed, view=None)
         collec.update_one({"_id": f"payout_stats_{interaction.guild.id}"}, {"$inc": {"rejected": 1}})
         await asyncio.sleep(60)
         doc = collection.find_one({"_id": f"current_payout_{interaction.guild.id}"})
@@ -758,6 +758,8 @@ class payouts(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Payouts cog loaded.")
+        global bot_avatar
+        bot_avatar = await self.bot.user.display_avatar.read()
         self.bot.add_view(View(self.bot))
         self.bot.add_view(QueuedPayoutsView())
         self.bot.add_view(QueueView())
@@ -1199,7 +1201,8 @@ class payouts(commands.Cog):
             embed.add_field(name="Prize Info", value=f"{DOT} **Won:** `⏣  {quan:,}`", inline=True)
         view = QueueView()
         view.add_item(nextcord.ui.Button(label="Event Message", url=f"{msg.jump_url}", emoji="🔗"))
-        response = await channel.send(embed=embed, view=view)
+        wh = GetWebhook.get_webhook(channel)
+        response = await wh.send(embed=embed, view=view, wait=True)
         doc = {
             "_id": response.id,
             "host": interaction.user.id,
@@ -1716,15 +1719,18 @@ class payouts(commands.Cog):
         
         try:
             queue_msg_id = other_doc["queuemsg"].split("/")[6]
-            queue_msg = await self.bot.get_channel(queue).fetch_message(int(queue_msg_id))
+            queue_channel = self.bot.get_channel(queue)
+            wh = await GetWebhook.get_webhook(queue_channel)
+            queue_msg = await wh.fetch_message(int(queue_msg_id))
             embed = queue_msg.embeds[0]
             embed.title = "Payout Paid"
             embed.color = 3066993
             view = PayoutView()
             view.add_item(nextcord.ui.Button(label="Paid At", url=message.jump_url, emoji="🔗"))
             view.add_item(nextcord.ui.Button(label="Event Message", url=other_doc["link"], emoji="🔗"))
-            await queue_msg.edit(embed=embed, view=view)
-        except:
+            await wh.edit_message(queue_msg.id, content=None, embed=embed, view=view)
+        except Exception as e:
+            print(e)
             pass
         
         try:
@@ -1752,14 +1758,16 @@ class payouts(commands.Cog):
         except:
             pass
         try:
-            queue_msg = await self.bot.get_channel(queue).fetch_message(int(other_doc["queuemsg"].split("/")[6]))
+            queue_channel = self.bot.get_channel(queue)
+            wh = await GetWebhook.get_webhook(queue_channel)
+            queue_msg = await wh.fetch_message(int(other_doc["queuemsg"].split("/")[6]))
             embed = queue_msg.embeds[0]
             embed.title = "Payout Paid"
-            embed.color = 3066993
+            embed.color = 3066993 
             view = PayoutView()
             view.add_item(nextcord.ui.Button(label="Paid At", url=jump_url, emoji="🔗"))
             view.add_item(nextcord.ui.Button(label="Event Message", url=f"{new_doc['link']}", emoji="🔗"))
-            await queue_msg.edit(embed=embed, view=view)
+            await wh.edit_message(queue_msg.id, content=None, embed=embed, view=view)
         except Exception as e:
             print(e)
             pass
@@ -1790,5 +1798,21 @@ class payouts(commands.Cog):
             except:
                 pass
 
+class GetWebhook:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    async def get_webhook(channel):
+        webhooks = await channel.webhooks()
+        for webhook in webhooks:
+            if webhook.name == "Compass Payouts":
+                return webhook
+
+        avatar_image = bot_avatar
+        wh = await channel.create_webhook(name="Compass Payouts", avatar=avatar_image)
+        return wh
+
+        
 def setup(bot):
     bot.add_cog(payouts(bot))

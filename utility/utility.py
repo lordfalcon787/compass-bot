@@ -348,7 +348,7 @@ class utility(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.id == RUMBLE_ROYALE:
-            await self.rumble(message)
+            asyncio.create_task(self.rumble(message))
 
         if "cumpass" in message.content.lower():
             if message.author.id == 1149719763388477481:
@@ -419,15 +419,15 @@ class utility(commands.Cog):
             await message.reply(choice, mention_author=False)
             
         elif any(word in message.content.lower() for word in WORDS) and "<@&1205270486263795720>" in message.content:
-            await self.unlock_module(message)
+            asyncio.create_task(self.unlock_module(message))
             return
         elif message.content.startswith("?av"):
-            await self.avatar(message)
+            asyncio.create_task(self.avatar(message))
             return
         elif message.content.startswith("?w") and message.guild.id == RC_ID:
             if not message.content.startswith("?w ") and len(message.content.split(" ")) > 1:
                 return
-            await self.user_info(message)
+            asyncio.create_task(self.user_info(message))
 
 def setup(bot):
     bot.add_cog(utility(bot))
