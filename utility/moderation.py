@@ -35,22 +35,17 @@ class Moderation(commands.Cog):
                 return
             doc.pop("_id")
             for key, item in doc.items():
-                print("1")
                 if item.get("end") < datetime.now():
-                    print("2")
                     member = guild.get_member(int(key))
                     if member:
-                        print("3")
                         roles = item.get("roles", [])
-                        print("4")
-                        for role_id in roles:
-                            add = guild.get_role(int(role_id))
-                            if add:
-                                print("5")
-                                await member.add_roles(add)
-                        await member.remove_roles(ebl_role)
-                        print("6")
-                        collection.update_one({"_id": f"ebl_1205270486230110330"}, {"$unset": {member: ""}})
+                        member_roles = member.roles
+                        for role in roles:
+                            role_object = guild.get_role(int(role))
+                            if role_object:
+                                member_roles.append(role_object)
+                        await member.edit(roles=member_roles)
+                        collection.update_one({"_id": f"ebl_1205270486230110330"}, {"$unset": {str(member.id): ""}})
         except Exception as e:
             print(f"Error in check_ebl: {e}")
             return
@@ -674,6 +669,9 @@ class Moderation(commands.Cog):
                 await member.edit(roles=current_roles)
             collection.update_one({"_id": f"ebl_{ctx.guild.id}"}, {"$unset": {str(member.id): ""}})
             await ctx.message.clear_reactions()
+            embed = nextcord.Embed(title=f"Event Blacklist Removed", description=f"{member.mention} has been removed from the event blacklist.", color=nextcord.Color.green())
+            await member.send("**Robbing Central:** You have been removed from the event blacklist.")
+            await ctx.reply(embed=embed, mention_author=False)
             await ctx.message.add_reaction(GREEN_CHECK)
         else:
             time, readable = await self.get_time_until_timeout(duration)
@@ -692,6 +690,10 @@ class Moderation(commands.Cog):
             collection.update_one({"_id": f"ebl_{ctx.guild.id}"}, {"$set": {str(member.id): {"roles": roles, "end": end, "reason": reason}}}, upsert=True)
             await member.add_roles(ebl_role)
             await ctx.message.clear_reactions()
+            embed = nextcord.Embed(title=f"Event Blacklist Added", description=f"{member.mention} has been blacklisted from events and giveaways for {readable}, for reason: {reason}", color=nextcord.Color.green())
+            embed.set_footer(text=f"Execute this command again to remove the blacklist.")
+            await member.send(f"**Robbing Central:** You have been blacklisted from events and giveaways for {readable}, for reason: {reason}")
+            await ctx.reply(embed=embed, mention_author=False)
             await ctx.message.add_reaction(GREEN_CHECK)
         
         
