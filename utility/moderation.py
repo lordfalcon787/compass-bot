@@ -33,6 +33,7 @@ class Moderation(commands.Cog):
             ebl_role = guild.get_role(1205270486359998556)
             if not ebl_role:
                 return
+            doc.pop("_id")
             for member in doc[0].keys():
                 member_data = doc[0].get(str(member))
                 if not member_data:
