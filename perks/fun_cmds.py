@@ -23,7 +23,7 @@ class FunCommands(commands.Cog):
         self.bot = bot
         self.cooldowns = {}
         try:
-            self.deleted_messages = collection.find_one({"_id": "snipe_messages"})
+            self.deleted_messages = collection.find_one({"_id": "snipe_messages"})["messages"]
         except:
             self.deleted_messages = {}
     

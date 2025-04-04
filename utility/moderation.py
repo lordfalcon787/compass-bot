@@ -25,20 +25,33 @@ class Moderation(commands.Cog):
 
     @tasks.loop(minutes=3)
     async def check_ebl(self):
-        doc = collection.find_one({"_id": f"ebl_1205270486230110330"})
-        ebl_role = self.bot.get_guild(1205270486230110330).get_role(1205270486359998556)
-        for member in doc:
-            if doc.get(str(member)).get("end") < datetime.now():
-                member_object = self.bot.get_guild(1205270486230110330).get_member(int(member))
-                if member_object:
-                    roles = doc.get(str(member)).get("roles")
-                    for role in roles:
-                        add = self.bot.get_guild(1205270486230110330).get_role(int(role))
-                        if add:
-                            await member_object.add_roles(add)
-                    await member_object.remove_roles(ebl_role)
-                    collection.update_one({"_id": f"ebl_1205270486230110330"}, {"$unset": {str(member.id): ""}})
-                
+        try:
+            doc = collection.find_one({"_id": f"ebl_1205270486230110330"})
+            if not doc:
+                return
+            ebl_role = self.bot.get_guild(1205270486230110330).get_role(1205270486359998556)
+            if not ebl_role:
+                return
+            for member in doc:
+                if member == "_id":
+                    continue
+                member_data = doc.get(str(member))
+                if not member_data:
+                    continue
+                if member_data.get("end") < datetime.now():
+                    member_object = self.bot.get_guild(1205270486230110330).get_member(int(member))
+                    if member_object:
+                        roles = member_data.get("roles", [])
+                        for role_id in roles:
+                            add = self.bot.get_guild(1205270486230110330).get_role(int(role_id))
+                            if add:
+                                await member_object.add_roles(add)
+                        await member_object.remove_roles(ebl_role)
+                        collection.update_one({"_id": f"ebl_1205270486230110330"}, {"$unset": {str(member): ""}})
+        except Exception as e:
+            print(f"Error in check_ebl: {e}")
+            return
+
     @commands.command(name="warn")
     async def warn_cmd(self, ctx, member: nextcord.Member, *, reason: str = "No reason provided"):
         user_roles = [role.id for role in ctx.author.roles]
