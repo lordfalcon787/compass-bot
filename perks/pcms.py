@@ -197,15 +197,6 @@ class PCMS(commands.Cog):
                 return True
         else:
             return True
-        
-    @nextcord.slash_command(name="mychannel", description="Manage your private channel.")
-    @application_checks.guild_only()
-    @application_checks.check(ban_check)
-    async def mychannel(self, interaction: nextcord.Interaction):
-        try:
-            await interaction.response.send_message("This command is deprecated. Please use `/pcms channel` instead.", ephemeral=True)
-        except:
-            pass
     
     @nextcord.slash_command(name="pcms", description="Manage your private channels.")
     @application_checks.guild_only()
