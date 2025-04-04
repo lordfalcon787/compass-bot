@@ -20,7 +20,7 @@ class Utilv2(commands.Cog):
     async def channel(self, interaction: nextcord.Interaction):
         pass
 
-    @channel.subcommand(name="create")
+    @channel.subcommand(name="create", description="Create a new channel")
     async def create(self, interaction: nextcord.Interaction, name: str, category: Optional[nextcord.CategoryChannel] = None):
         if not interaction.user.guild_permissions.manage_channels:
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
@@ -31,7 +31,7 @@ class Utilv2(commands.Cog):
         except:
             await interaction.response.send_message("Failed to create channel.", ephemeral=True)
 
-    @channel.subcommand(name="delete")
+    @channel.subcommand(name="delete", description="Delete a channel")
     async def delete(self, interaction: nextcord.Interaction, channel: nextcord.TextChannel):
         if not interaction.user.guild_permissions.manage_channels:
             channel_perms = channel.permissions_for(interaction.user)
@@ -44,7 +44,7 @@ class Utilv2(commands.Cog):
         except:
             await interaction.response.send_message("Failed to delete channel.", ephemeral=True)
 
-    @channel.subcommand(name="rename")
+    @channel.subcommand(name="rename", description="Rename a channel")
     async def rename(self, interaction: nextcord.Interaction, name: str, channel: Optional[nextcord.TextChannel] = None):
         if channel is None:
             channel = interaction.channel
@@ -59,7 +59,7 @@ class Utilv2(commands.Cog):
         except:
             await interaction.response.send_message("Failed to rename channel.", ephemeral=True)
 
-    @channel.subcommand(name="viewlock")
+    @channel.subcommand(name="viewlock", description="Viewlock a channel")
     async def viewlock(self, interaction: nextcord.Interaction, role: nextcord.Role = nextcord.SlashOption(description="Role that can see the channel", required=False), channel: Optional[nextcord.TextChannel] = None):
         if channel is None:
             channel = interaction.channel
@@ -84,7 +84,7 @@ class Utilv2(commands.Cog):
         except Exception as e:
             await interaction.response.send_message(f"Failed to viewlock channel: {str(e)}", ephemeral=True)
 
-    @channel.subcommand(name="unviewlock")
+    @channel.subcommand(name="unviewlock", description="Unviewlock a channel")
     async def unviewlock(self, interaction: nextcord.Interaction, channel: Optional[nextcord.TextChannel] = None):
         if channel is None:
             channel = interaction.channel
@@ -107,7 +107,7 @@ class Utilv2(commands.Cog):
         except:
             await interaction.response.send_message("Failed to unviewlock channel.", ephemeral=True)
 
-    @channel.subcommand(name="lock")
+    @channel.subcommand(name="lock", description="Lock a channel")
     async def lock_channel_slash(self, interaction: nextcord.Interaction, channel: Optional[nextcord.TextChannel] = None):
         if channel is None:
             channel = interaction.channel
@@ -124,7 +124,7 @@ class Utilv2(commands.Cog):
         except:
             await interaction.response.send_message("Failed to lock channel.", ephemeral=True)
 
-    @channel.subcommand(name="unlock")
+    @channel.subcommand(name="unlock", description="Unlock a channel")
     async def unlock_channel_slash(self, interaction: nextcord.Interaction, channel: Optional[nextcord.TextChannel] = None):
         if channel is None:
             channel = interaction.channel
