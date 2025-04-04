@@ -26,24 +26,23 @@ class Moderation(commands.Cog):
     @tasks.loop(minutes=3)
     async def check_ebl(self):
         try:
-            doc = collection.find_one({"_id": f"ebl_1205270486230110330"})
+            doc = list(collection.find({"_id": f"ebl_1205270486230110330"}))
             if not doc:
                 return
-            ebl_role = self.bot.get_guild(1205270486230110330).get_role(1205270486359998556)
+            guild = self.bot.get_guild(1205270486230110330)
+            ebl_role = guild.get_role(1205270486359998556)
             if not ebl_role:
                 return
-            for member in doc:
-                if member == "_id":
-                    continue
-                member_data = doc.get(str(member))
+            for member in doc[0].keys():
+                member_data = doc[0].get(str(member))
                 if not member_data:
                     continue
                 if member_data.get("end") < datetime.now():
-                    member_object = self.bot.get_guild(1205270486230110330).get_member(int(member))
+                    member_object = guild.get_member(int(member))
                     if member_object:
                         roles = member_data.get("roles", [])
                         for role_id in roles:
-                            add = self.bot.get_guild(1205270486230110330).get_role(int(role_id))
+                            add = guild.get_role(int(role_id))
                             if add:
                                 await member_object.add_roles(add)
                         await member_object.remove_roles(ebl_role)
@@ -665,24 +664,27 @@ class Moderation(commands.Cog):
                 current_roles = member.roles
                 roles = doc.get("roles")
                 for role in roles:
-                    current_roles.append(ctx.guild.get_role(int(role)))
+                    the_role = ctx.guild.get_role(int(role))
+                    if the_role:
+                        current_roles.append(the_role)
                 await member.edit(roles=current_roles)
             collection.update_one({"_id": f"ebl_{ctx.guild.id}"}, {"$unset": {str(member.id): ""}})
             await ctx.message.clear_reactions()
             await ctx.message.add_reaction(GREEN_CHECK)
         else:
-            time, _ = await self.get_time_until_timeout(duration)
-            end = datetime.now() + timedelta(seconds=time)
+            time, readable = await self.get_time_until_timeout(duration)
+            end = datetime.now() + timedelta(minutes=time // 60)
             if time is None:
                 await ctx.message.add_reaction(RED_X)
                 return
-            current_roles = member.roles
+            roles_to_edit = member.roles
+            member_roles = member.roles
             roles = []
-            for role in current_roles:
+            for role in member_roles:
                 if "donor" in role.name.lower():
                     roles.append(role.id)
-                    current_roles.remove(role)
-            await member.edit(roles=current_roles)
+                    roles_to_edit.remove(role)
+            await member.edit(roles=roles_to_edit)
             collection.update_one({"_id": f"ebl_{ctx.guild.id}"}, {"$set": {str(member.id): {"roles": roles, "end": end, "reason": reason}}}, upsert=True)
             await member.add_roles(ebl_role)
             await ctx.message.clear_reactions()
