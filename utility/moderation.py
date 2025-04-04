@@ -35,7 +35,7 @@ class Moderation(commands.Cog):
                 return
             doc.pop("_id")
             for member in doc[0].keys():
-                member_data = doc[0].get(str(member))
+                member_data = doc[0].get(member)
                 if not member_data:
                     continue
                 if member_data.get("end") < datetime.now():
@@ -47,7 +47,7 @@ class Moderation(commands.Cog):
                             if add:
                                 await member_object.add_roles(add)
                         await member_object.remove_roles(ebl_role)
-                        collection.update_one({"_id": f"ebl_1205270486230110330"}, {"$unset": {str(member): ""}})
+                        collection.update_one({"_id": f"ebl_1205270486230110330"}, {"$unset": {member: ""}})
         except Exception as e:
             print(f"Error in check_ebl: {e}")
             return
