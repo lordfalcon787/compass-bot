@@ -38,7 +38,7 @@ class PollManager:
     
     async def _delayed_update(self, message_id):
         async with self.update_locks[message_id]:
-            await asyncio.sleep(60)
+            await asyncio.sleep(180)
             
             if message_id in self.pending_updates:
                 message, poll = self.pending_updates[message_id]
