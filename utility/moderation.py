@@ -26,7 +26,7 @@ class Moderation(commands.Cog):
     @tasks.loop(minutes=3)
     async def check_ebl(self):
         try:
-            doc = list(collection.find({"_id": f"ebl_1205270486230110330"}))
+            doc = collection.find_one({"_id": f"ebl_1205270486230110330"})
             if not doc:
                 return
             guild = self.bot.get_guild(1205270486230110330)
@@ -34,19 +34,22 @@ class Moderation(commands.Cog):
             if not ebl_role:
                 return
             doc.pop("_id")
-            for member in doc[0].keys():
-                member_data = doc[0].get(member)
-                if not member_data:
-                    continue
-                if member_data.get("end") < datetime.now():
-                    member_object = guild.get_member(int(member))
-                    if member_object:
-                        roles = member_data.get("roles", [])
+            for key, item in doc.items():
+                print("1")
+                if item.get("end") < datetime.now():
+                    print("2")
+                    member = guild.get_member(int(key))
+                    if member:
+                        print("3")
+                        roles = item.get("roles", [])
+                        print("4")
                         for role_id in roles:
                             add = guild.get_role(int(role_id))
                             if add:
-                                await member_object.add_roles(add)
-                        await member_object.remove_roles(ebl_role)
+                                print("5")
+                                await member.add_roles(add)
+                        await member.remove_roles(ebl_role)
+                        print("6")
                         collection.update_one({"_id": f"ebl_1205270486230110330"}, {"$unset": {member: ""}})
         except Exception as e:
             print(f"Error in check_ebl: {e}")
