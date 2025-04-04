@@ -25,30 +25,23 @@ class PollManager:
         if not poll:
             return
             
-        # Check if poll is over 1 hour old
         created_at = datetime.fromtimestamp(message.created_at.timestamp())
         if datetime.now() - created_at < timedelta(hours=1):
-            # If less than 1 hour old, update immediately
             await self._do_update(message, poll)
             return
             
-        # Add to pending updates
         self.pending_updates[message.id] = (message, poll)
         
-        # If no update task is running for this message, start one
         if message.id not in self.update_locks:
             self.update_locks[message.id] = asyncio.Lock()
             asyncio.create_task(self._delayed_update(message.id))
     
     async def _delayed_update(self, message_id):
         async with self.update_locks[message_id]:
-            # Wait for more votes to accumulate
-            await asyncio.sleep(60)  # Wait 1 minute
+            await asyncio.sleep(60)
             
-            # Get the latest data
             if message_id in self.pending_updates:
                 message, poll = self.pending_updates[message_id]
-                # Get fresh poll data from database
                 latest_poll = collection.find_one({"_id": str(message_id)})
                 await self._do_update(message, latest_poll)
                 del self.pending_updates[message_id]
@@ -402,6 +395,7 @@ class Poll(commands.Cog):
                         
                         try:
                             embed = nextcord.Embed(title=f"You voted for: {choice_text}", color=65280)
+                            embed.set_footer(text="Your vote will be added to the results shortly.")
                             await interaction.response.send_message(embed=embed, ephemeral=True)
                         except:
                             await interaction.followup.send(embed=embed, ephemeral=True)
