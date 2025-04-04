@@ -53,7 +53,7 @@ class FunCommands(commands.Cog):
             await ctx.message.add_reaction(RED_X)
             await ctx.reply("There are no recently deleted messages in this channel.", mention_author=False)
             return 
-        message_data = self.deleted_messages[ctx.channel.id]
+        message_data = self.deleted_messages[str(ctx.channel.id)]
         author = self.bot.get_user(message_data["author_id"])
         embed = nextcord.Embed(description=f"{message_data['content']} (<t:{message_data['timestamp']}:R>)", color=0x3498db)
         embed.timestamp = datetime.now()
@@ -204,7 +204,7 @@ class FunCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message: nextcord.Message):
-        self.deleted_messages[message.channel.id] = {
+        self.deleted_messages[str(message.channel.id)] = {
             "content": message.content,
             "author_id": message.author.id,
             "timestamp": int(datetime.now().timestamp())
