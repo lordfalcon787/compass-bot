@@ -455,7 +455,7 @@ class Config(commands.Cog):
                 
                 configuration.update_one({"_id": "config"}, {"$set": {"perks.snipe": snipe_roles}})
                 await interaction.response.send_message("Snipe roles updated successfully!", ephemeral=True)
-                await update_config_embed(interaction)
+                await update_config_embed(original_interaction)
             
             role_select.callback = role_select_callback
             view.add_item(role_select)
