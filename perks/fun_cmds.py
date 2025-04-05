@@ -49,7 +49,7 @@ class FunCommands(commands.Cog):
         elif not any(role in snipe_roles for role in user_roles) and not ctx.author.guild_permissions.administrator:
             await ctx.message.add_reaction(RED_X)
             return
-        elif ctx.channel.id not in self.deleted_messages:
+        elif str(ctx.channel.id) not in self.deleted_messages:
             await ctx.message.add_reaction(RED_X)
             await ctx.reply("There are no recently deleted messages in this channel.", mention_author=False)
             return 
