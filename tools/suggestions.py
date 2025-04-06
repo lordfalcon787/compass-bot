@@ -83,7 +83,7 @@ class Suggestions(commands.Cog):
         
         author_id = doc.get(f"{num}_author")
         if author_id:
-            author = await interaction.guild.get_member(int(author_id))
+            author = self.bot.get_user(int(author_id))
             if author:
                 try:
                     await author.send(f"Your suggestion #{num} has been approved!\nReason: {reason}\nLink: {msg.jump_url}")
