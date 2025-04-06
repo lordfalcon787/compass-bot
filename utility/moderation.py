@@ -51,7 +51,11 @@ class Moderation(commands.Cog):
             return
 
     @commands.command(name="warn")
-    async def warn_cmd(self, ctx, member: nextcord.Member, *, reason: str = "No reason provided"):
+    async def warn_cmd(self, ctx, member: nextcord.Member = None, *, reason: str = "No reason provided"):
+        if member is None:
+            await ctx.reply("Correct usage: `!warn @member reason`", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
         user_roles = [role.id for role in ctx.author.roles]
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
@@ -88,7 +92,11 @@ class Moderation(commands.Cog):
                 pass
 
     @commands.command(name="timeout", aliases=["mute", "to"])
-    async def timeout_cmd(self, ctx, member: nextcord.Member, time: str, *, reason: str = "No reason provided"):
+    async def timeout_cmd(self, ctx, member: nextcord.Member = None, time: str = None, *, reason: str = "No reason provided"):
+        if member is None:
+            await ctx.reply("Correct usage: `!timeout @member time reason`", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
         user_roles = [role.id for role in ctx.author.roles]
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
@@ -142,7 +150,11 @@ class Moderation(commands.Cog):
 
     
     @commands.command(name="kick")
-    async def kick_cmd(self, ctx, member: nextcord.Member, *, reason: str = "No reason provided"):
+    async def kick_cmd(self, ctx, member: nextcord.Member = None, *, reason: str = "No reason provided"):
+        if member is None:
+            await ctx.reply("Correct usage: `!kick @member reason`", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
         user_roles = [role.id for role in ctx.author.roles]
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
@@ -189,7 +201,11 @@ class Moderation(commands.Cog):
                 pass
 
     @commands.command(name="ban")
-    async def ban_cmd(self, ctx, member: nextcord.User, *, reason: str = "No reason provided"):
+    async def ban_cmd(self, ctx, member: nextcord.Member = None, *, reason: str = "No reason provided"):
+        if member is None:
+            await ctx.reply("Correct usage: `!ban @member reason`", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
         user_roles = [role.id for role in ctx.author.roles]
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
@@ -236,7 +252,11 @@ class Moderation(commands.Cog):
                 pass
 
     @commands.command(name="unban")
-    async def unban_cmd(self, ctx, member: nextcord.User, *, reason: str = "No reason provided"):
+    async def unban_cmd(self, ctx, member: nextcord.User = None, *, reason: str = "No reason provided"):
+        if member is None:
+            await ctx.reply("Correct usage: `!unban @member reason`", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
         user_roles = [role.id for role in ctx.author.roles]
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
@@ -244,7 +264,7 @@ class Moderation(commands.Cog):
         config = config["ban"]
         logs = logs.get(str(ctx.guild.id))
         config = config.get(str(ctx.guild.id))
-        banned_users = await ctx.guild.bans()
+        banned_users = ctx.guild.bans()
         if not config:
             return
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.ban_members:
@@ -287,7 +307,11 @@ class Moderation(commands.Cog):
             pass
 
     @commands.command(name="removetimeout", aliases=["untimeout", "rto"])
-    async def removetimeout_cmd(self, ctx, member: nextcord.Member, *, reason: str = "No reason provided"):
+    async def removetimeout_cmd(self, ctx, member: nextcord.Member = None, *, reason: str = "No reason provided"):
+        if member is None:
+            await ctx.reply("Correct usage: `!removetimeout @member reason`", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
         user_roles = [role.id for role in ctx.author.roles]
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
@@ -334,7 +358,11 @@ class Moderation(commands.Cog):
                 pass
 
     @commands.command(name="clearwarns", aliases=["clearwarnings", "clw"])
-    async def clearwarns_cmd(self, ctx, member: nextcord.Member, *, reason: str = "No reason provided"):
+    async def clearwarns_cmd(self, ctx, member: nextcord.Member = None, *, reason: str = "No reason provided"):
+        if member is None:
+            await ctx.reply("Correct usage: `!clearwarns @member reason`", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
         logs = config["logs"]
