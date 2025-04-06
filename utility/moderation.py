@@ -264,7 +264,9 @@ class Moderation(commands.Cog):
         config = config["ban"]
         logs = logs.get(str(ctx.guild.id))
         config = config.get(str(ctx.guild.id))
-        banned_users = ctx.guild.bans()
+        banned_users = []
+        async for ban in ctx.guild.bans():
+            banned_users.append(ban.user)
         if not config:
             return
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.ban_members:
