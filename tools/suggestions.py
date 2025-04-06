@@ -79,17 +79,16 @@ class Suggestions(commands.Cog):
         embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
         embed.set_footer(text=f"Approved by {interaction.user.name}", icon_url=interaction.user.avatar.url)
         await msg.edit(embed=embed)
+        await interaction.send(f"Suggestion approved successfully for reason: {reason}", ephemeral=True)
         
         author_id = doc.get(f"{num}_author")
         if author_id:
-            author = await interaction.guild.get_member(author_id)
+            author = await interaction.guild.get_member(int(author_id))
             if author:
                 try:
                     await author.send(f"Your suggestion #{num} has been approved!\nReason: {reason}\nLink: {msg.jump_url}")
-                except:
-                    pass
-                    
-        await interaction.send(f"Suggestion approved successfully for reason: {reason}", ephemeral=True)
+                except Exception as e:
+                    print(f"Failed to send message to author: {e}")
 
 
     @suggestion.subcommand(name="implement", description="Mark a suggestion as implemented.")
@@ -126,16 +125,15 @@ class Suggestions(commands.Cog):
         embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
         embed.set_footer(text=f"Implemented by {interaction.user.name}", icon_url=interaction.user.avatar.url)
         await msg.edit(embed=embed)
+        await interaction.send(f"Suggestion marked as implemented successfully for reason: {reason}", ephemeral=True)
         author_id = doc.get(f"{num}_author")
         if author_id:
-            author = await interaction.guild.get_member(author_id)
+            author = self.bot.get_user(int(author_id))
             if author:
                 try:
                     await author.send(f"Your suggestion #{num} has been implemented!\nReason: {reason}\nLink: {msg.jump_url}")
-                except:
-                    pass
-
-        await interaction.send(f"Suggestion marked as implemented successfully for reason: {reason}", ephemeral=True)
+                except Exception as e:
+                    print(f"Failed to send message to author: {e}")
 
     @suggestion.subcommand(name="deny", description="Deny a suggestion.")
     @application_checks.guild_only()
@@ -171,16 +169,15 @@ class Suggestions(commands.Cog):
         embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
         embed.set_footer(text=f"Denied by {interaction.user.name}", icon_url=interaction.user.avatar.url)
         await msg.edit(embed=embed)
+        await interaction.send(f"Suggestion denied successfully for reason: {reason}", ephemeral=True)
         author_id = doc.get(f"{num}_author")
         if author_id:
-            author = await interaction.guild.get_member(author_id)
+            author = self.bot.get_user(int(author_id))
             if author:
                 try:
                     await author.send(f"Your suggestion #{num} has been denied.\nReason: {reason}\nLink: {msg.jump_url}")
-                except:
-                    pass
-
-        await interaction.send(f"Suggestion denied successfully for reason: {reason}", ephemeral=True)
+                except Exception as e:
+                    print(f"Failed to send message to author: {e}")
 
     @suggestion.subcommand(name="consider", description="Mark a suggestion as being considered.")
     @application_checks.guild_only()
@@ -216,16 +213,15 @@ class Suggestions(commands.Cog):
         embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
         embed.set_footer(text=f"Marked as considered by {interaction.user.name}", icon_url=interaction.user.avatar.url)
         await msg.edit(embed=embed)
+        await interaction.send(f"Suggestion marked as being considered successfully for reason: {reason}", ephemeral=True)
         author_id = doc.get(f"{num}_author")
         if author_id:
-            author = await interaction.guild.get_member(author_id)
+            author = self.bot.get_user(int(author_id))
             if author:
                 try:
                     await author.send(f"Your suggestion #{num} is being considered!\nReason: {reason}\nLink: {msg.jump_url}")
-                except:
-                    pass
-
-        await interaction.send(f"Suggestion marked as being considered successfully for reason: {reason}", ephemeral=True)
+                except Exception as e:
+                    print(f"Failed to send message to author: {e}")
 
     @suggestion.subcommand(name="suggest", description="Submit a new suggestion.")
     @application_checks.guild_only()
