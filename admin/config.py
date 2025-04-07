@@ -467,7 +467,7 @@ class Config(commands.Cog):
                 await interaction.response.send_message("You are not the original user who initiated the command.", ephemeral=True)
                 return
             
-            configuration.update_one({"_id": "config"}, {"$unset": {"perks.snipe": ""}})
+            configuration.update_one({"_id": "config"}, {"$unset": {f"perks.snipe.{guild}": ""}})
             await interaction.response.send_message("Snipe system has been disabled for this server.", ephemeral=True)
             await update_config_embed(original_interaction)
         
