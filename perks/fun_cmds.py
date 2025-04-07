@@ -204,6 +204,8 @@ class FunCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message: nextcord.Message):
+        if not message.content or message.content == "":
+            return
         self.deleted_messages[str(message.channel.id)] = {
             "content": message.content,
             "author_id": message.author.id,
