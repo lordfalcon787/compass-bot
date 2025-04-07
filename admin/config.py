@@ -419,7 +419,12 @@ class Config(commands.Cog):
             updated_snipe = updated_doc["perks"]["snipe"]
             updated_snipe_roles = updated_snipe.get(guild, "None")
             updated_snipe_roles = ", ".join(f"<@&{role}>" for role in updated_snipe_roles) if updated_snipe_roles != "None" else updated_snipe_roles
-            embed.fields[0].value = updated_snipe_roles
+            embed = nextcord.Embed(
+                title="Perks Configuration",
+                description="Configure the perks system for the server.",
+                color=nextcord.Color.blue()
+            )
+            embed.add_field(name="Snipe Roles", value=updated_snipe_roles, inline=True)
             await interaction.message.edit(embed=embed)
         
         snipe_role_button = nextcord.ui.Button(label="Modify Snipe Roles", style=nextcord.ButtonStyle.primary)
