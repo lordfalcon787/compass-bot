@@ -1,3 +1,4 @@
+import aiohttp
 import nextcord
 from nextcord.ext import commands, application_checks
 import asyncio
@@ -557,11 +558,15 @@ class Suggestions(commands.Cog):
             except:
                 return
             try:
-                async with asyncio.timeout(10):
-                    async for message in msg.channel.history(limit=10):
-                        if "Discuss" in message.content:
-                            await message.delete()
-                            break
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(f"https://google.com") as response:
+                        if response.status == 200:
+                            async with asyncio.timeout(10):
+                                async for message in msg.channel.history(limit=10):
+                                    if "Discuss" in message.content:
+                                        await message.delete()
+                        else:
+                            return
             except asyncio.TimeoutError:
                 return
 def setup(bot):
