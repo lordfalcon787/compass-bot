@@ -1766,12 +1766,12 @@ class payouts(commands.Cog):
             embed.color = 3066993 
             view = PayoutView()
             view.add_item(nextcord.ui.Button(label="Paid At", url=jump_url, emoji="🔗"))
-            view.add_item(nextcord.ui.Button(label="Event Message", url=f"{new_doc['link']}", emoji="🔗"))
+            view.add_item(nextcord.ui.Button(label="Event Message", url=f"{other_doc['link']}", emoji="🔗"))
             await wh.edit_message(queue_msg.id, content=None, embed=embed, view=view)
         except Exception as e:
             print(e)
             pass
-        await self._clear_event_reactions(new_doc)
+        await self._clear_event_reactions(other_doc)
 
     async def _clear_event_reactions(self, doc):
         try:
