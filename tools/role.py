@@ -143,62 +143,6 @@ class Role(commands.Cog):
             await interaction.response.send_message("I don't have permission to edit roles.", ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"An error occurred while editing the role: {str(e)}", ephemeral=True)
-        
-
-    @nextcord.slash_command(name="editrole", description="Easily edit parameters of a role.")
-    async def editrole(self, interaction: nextcord.Interaction,
-                          role: nextcord.Role = SlashOption(description="The role to edit."),
-                          name: Optional[str] = SlashOption(description="The new name of the role.", required=False),
-                          color: Optional[str] = SlashOption(description="The new color of the role.", required=False),
-                          image_icon: Optional[nextcord.Attachment] = SlashOption(description="The new icon of the role.", required=False),
-                          emoji_icon: Optional[str] = SlashOption(description="The new emoji icon of the role.", required=False)):
-        if not interaction.user.guild_permissions.manage_roles:
-            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
-            return
-        if role.position >= interaction.user.top_role.position:
-            await interaction.response.send_message("You cannot edit a role that is higher than or equal to your highest role.", ephemeral=True)
-            return
-        things_edited = []
-        try:
-            role_kwargs = {}
-            if name:
-                role_kwargs["name"] = name
-                things_edited.append("name")
-            if color:
-                try:
-                    role_kwargs["color"] = int(color.replace('#', ''), 16)
-                    things_edited.append("color")
-                except ValueError:
-                    await interaction.response.send_message("Invalid color hex code. Please provide a valid hex color code starting with #.", ephemeral=True)
-                    return
-
-            await role.edit(**role_kwargs)
-
-            if image_icon:
-                if image_icon.size > 2 * 1024 * 1024:
-                    await interaction.response.send_message("The icon file must be under 2MB in size.", ephemeral=True)
-                    return
-                if not any(image_icon.filename.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif']):
-                    await interaction.response.send_message("The icon file must be a PNG, JPG, or GIF image.", ephemeral=True)
-                    return
-                icon_bytes = await image_icon.read()
-                await role.edit(icon=icon_bytes)
-                things_edited.append("icon")
-            if emoji_icon:
-                try:
-                    emoji_id = emoji_icon.split(":")[2].split(">")[0]
-                    url = f"https://cdn.discordapp.com/emojis/{emoji_id}.png"
-                    await role.edit(icon=url)
-                    things_edited.append("emoji icon")
-                except Exception as e:
-                    await interaction.response.send_message(f"Failed to set emoji as role icon: {str(e)}", ephemeral=True)
-                    return
-            await interaction.response.send_message(f"Successfully edited role {role.mention}. Changed: {', '.join(things_edited)}", ephemeral=True)
-
-        except nextcord.Forbidden:
-            await interaction.response.send_message("I don't have permission to edit roles.", ephemeral=True)
-        except Exception as e:
-            await interaction.response.send_message(f"An error occurred while editing the role: {str(e)}", ephemeral=True)
 
     @commands.command(name="role")
     async def role(self, ctx):
@@ -334,6 +278,83 @@ class Role(commands.Cog):
         await role.delete()
         await interaction.send(content=f"Role `{role.name}` has been deleted.", ephemeral=True)
 
+    @role_slash.subcommand(name="in", description="Add a role to users in a role.")
+    async def in_(self, interaction: nextcord.Interaction, role: nextcord.Role = SlashOption(description="The role to add to users in", required=True), in_role: nextcord.Role = SlashOption(description="The role that has the users to add the role to", required=True)):
+        if not interaction.user.guild_permissions.manage_roles:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        if role.position >= interaction.user.top_role.position:
+            await interaction.response.send_message("You cannot add a role that is higher than or the same rank as your highest role.", ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=False)
+        await interaction.send(content=f"Adding role `{role.name}` to users in role `{in_role.name}`", ephemeral=False)
+        added = 0
+        total_added = 0
+        for member in in_role.members:
+            if added == 10:
+                await asyncio.sleep(5)
+                await interaction.edit_original_message(content=f"Added to {total_added}/{len(in_role.members)} members")
+                added = 0
+            await member.add_roles(role)
+            added += 1
+            total_added += 1
+        await interaction.send(content=f"Added role `{role.name}` to {len(in_role.members)} users in role `{in_role.name}`", ephemeral=False)
+
+    @role_slash.subcommand(name="edit", description="Easily edit parameters of a role.")
+    async def edit(self, interaction: nextcord.Interaction,
+                          role: nextcord.Role = SlashOption(description="The role to edit."),
+                          name: Optional[str] = SlashOption(description="The new name of the role.", required=False),
+                          color: Optional[str] = SlashOption(description="The new color of the role.", required=False),
+                          image_icon: Optional[nextcord.Attachment] = SlashOption(description="The new icon of the role.", required=False),
+                          emoji_icon: Optional[str] = SlashOption(description="The new emoji icon of the role.", required=False)):
+        if not interaction.user.guild_permissions.manage_roles:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        if role.position >= interaction.user.top_role.position:
+            await interaction.response.send_message("You cannot edit a role that is higher than or equal to your highest role.", ephemeral=True)
+            return
+        things_edited = []
+        try:
+            role_kwargs = {}
+            if name:
+                role_kwargs["name"] = name
+                things_edited.append("name")
+            if color:
+                try:
+                    role_kwargs["color"] = int(color.replace('#', ''), 16)
+                    things_edited.append("color")
+                except ValueError:
+                    await interaction.response.send_message("Invalid color hex code. Please provide a valid hex color code starting with #.", ephemeral=True)
+                    return
+
+            await role.edit(**role_kwargs)
+
+            if image_icon:
+                if image_icon.size > 2 * 1024 * 1024:
+                    await interaction.response.send_message("The icon file must be under 2MB in size.", ephemeral=True)
+                    return
+                if not any(image_icon.filename.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif']):
+                    await interaction.response.send_message("The icon file must be a PNG, JPG, or GIF image.", ephemeral=True)
+                    return
+                icon_bytes = await image_icon.read()
+                await role.edit(icon=icon_bytes)
+                things_edited.append("icon")
+            if emoji_icon:
+                try:
+                    emoji_id = emoji_icon.split(":")[2].split(">")[0]
+                    url = f"https://cdn.discordapp.com/emojis/{emoji_id}.png"
+                    await role.edit(icon=url)
+                    things_edited.append("emoji icon")
+                except Exception as e:
+                    await interaction.response.send_message(f"Failed to set emoji as role icon: {str(e)}", ephemeral=True)
+                    return
+            await interaction.response.send_message(f"Successfully edited role {role.mention}. Changed: {', '.join(things_edited)}", ephemeral=True)
+
+        except nextcord.Forbidden:
+            await interaction.response.send_message("I don't have permission to edit roles.", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f"An error occurred while editing the role: {str(e)}", ephemeral=True)
+
     @role_slash.subcommand(name="create", description="Create a role.")
     async def create(self, interaction: nextcord.Interaction, name: str = SlashOption(description="The name of the role", required=True), color: Optional[str] = SlashOption(description="The color of the role", required=False), hoist: Optional[bool] = SlashOption(description="Whether the role should be displayed separately", required=False, default=False), mentionable: Optional[bool] = SlashOption(description="Whether the role should be mentionable", required=False, default=False)):
         if not interaction.user.guild_permissions.manage_roles:
@@ -361,6 +382,10 @@ class Role(commands.Cog):
         if not interaction.user.guild_permissions.manage_roles:
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
             return
+        await interaction.response.defer(ephemeral=True)
+        if role.position >= interaction.user.top_role.position:
+            await interaction.send(content="You cannot remove a role that is higher than or the same rank as your highest role.", ephemeral=True)
+            return
         roles = roles.replace("<@&", "").replace(">", "")
         roles = roles.split(" ")
         for role in roles:
@@ -376,6 +401,10 @@ class Role(commands.Cog):
         if not interaction.user.guild_permissions.manage_roles:
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
             return
+        await interaction.response.defer(ephemeral=True)
+        if role.position >= interaction.user.top_role.position:
+            await interaction.send(content="You cannot add a role that is higher than or the same rank as your highest role.", ephemeral=True)
+            return
         roles = roles.replace("<@&", "").replace(">", "")
         roles = roles.split(" ")
         for role in roles:
@@ -387,25 +416,21 @@ class Role(commands.Cog):
         await interaction.send(content=f"Added roles to {member.mention}", ephemeral=True)
 
     @role_slash.subcommand(name="all", description="Add a role(s) to all members in the server")
-    async def all(self, interaction: nextcord.Interaction, roles: str = SlashOption(description="The role(s) ID/mention to add to all members in the server", required=True), bots: Optional[bool] = SlashOption(description="Whether to add the role to bots", required=False, default=False)):
+    async def all(self, interaction: nextcord.Interaction, role: nextcord.Role = SlashOption(description="The role to add to all members in the server", required=True), bots: Optional[bool] = SlashOption(description="Whether to add the role to bots", required=False, default=False)):
         if not interaction.user.guild_permissions.manage_roles:
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
             return
-        roles = roles.replace("<@&", "").replace(">", "")
-        roles = roles.split(" ")
+        await interaction.response.defer(ephemeral=False)
+        if role.position >= interaction.user.top_role.position:
+            await interaction.send(content="You cannot add a role that is higher than or the same rank as your highest role.", ephemeral=True)
+            return
         if not bots:
             bots = False
-        await interaction.response.send_message(content="Adding roles to all members in the server", ephemeral=False)
+        await interaction.send(content=f"Adding role `{role.name}` to all members in the server", ephemeral=False)
         members = interaction.guild.members
         added = 0
-        for role in roles:
-            role = role.replace("<@&", "").replace(">", "")
-            role = interaction.guild.get_role(int(role))
-            if not role:
-                await interaction.send(content=f"Role `{role}` not found", ephemeral=True)
-                return
-            total_added = 0
-            for member in members:
+        total_added = 0
+        for member in members:
                 if added == 10:
                     await asyncio.sleep(5)
                     await interaction.edit_original_message(content=f"Added to {total_added}/{len(members)} members")
@@ -415,7 +440,7 @@ class Role(commands.Cog):
                 await member.add_roles(role)
                 added += 1
                 total_added += 1
-        await interaction.edit_original_message(content=f"Added {total_added} roles to all members in the server")
+        await interaction.edit_original_message(content=f"Added {total_added} role `{role.name}` to all members in the server")
 
     @role_slash.subcommand(name="info", description="Get role info")
     async def info(self, interaction: nextcord.Interaction, role: nextcord.Role):
