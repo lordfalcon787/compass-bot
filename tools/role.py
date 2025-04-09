@@ -84,6 +84,7 @@ class Role(commands.Cog):
             if "deleted_user" in member.name:
                 deleted_users.append(member)
         await ctx.send(f"Found {len(deleted_users)} deleted users in the server.")
+    
     @nextcord.slash_command(name="customrole", description="Edit your custom role parameters.", guild_ids=[1205270486230110330])
     async def customrole(self, interaction: nextcord.Interaction,
                          name: Optional[str] = SlashOption(description="The new name of the role.", required=False),
@@ -232,6 +233,7 @@ class Role(commands.Cog):
         user = split[1]
         user = user.replace("@", "").replace("<", "").replace(">", "")
         role_name = " ".join(split[2:])
+        role_name = role_name.replace("<@&", "").replace(">", "")
         try:
             member = ctx.guild.get_member(int(user))
             user = await self.bot.fetch_user(int(user))
@@ -323,8 +325,73 @@ class Role(commands.Cog):
     async def role_slash(self, interaction: nextcord.Interaction):
         pass
 
+    @role_slash.subcommand(name="delete", description="Delete a role.")
+    async def delete(self, interaction: nextcord.Interaction, role: nextcord.Role = SlashOption(description="The role to delete", required=True)):
+        if not interaction.user.guild_permissions.manage_roles:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=False)
+        await role.delete()
+        await interaction.send(content=f"Role `{role.name}` has been deleted.", ephemeral=True)
+
+    @role_slash.subcommand(name="create", description="Create a role.")
+    async def create(self, interaction: nextcord.Interaction, name: str = SlashOption(description="The name of the role", required=True), color: Optional[str] = SlashOption(description="The color of the role", required=False), hoist: Optional[bool] = SlashOption(description="Whether the role should be displayed separately", required=False, default=False), mentionable: Optional[bool] = SlashOption(description="Whether the role should be mentionable", required=False, default=False)):
+        if not interaction.user.guild_permissions.manage_roles:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=False)
+        role = await interaction.guild.create_role(name=name)
+        if color:
+            try:
+                await role.edit(color=int(color.replace("#", ""), 16))
+            except:
+                await interaction.send(content=f"Invalid color hex code. Please provide a valid hex color code starting with #.", ephemeral=True)
+                return
+        if hoist:
+            await role.edit(hoist=hoist)
+        if mentionable:
+            await role.edit(mentionable=mentionable)
+        embed = nextcord.Embed(title=f"Role Created", description=f"Role `{name}` has been created.\n**Name:** {name}\n**Color:** #{role.color.value:06x}\n**Hoist:** {hoist}\n**Mentionable:** {mentionable}", color=role.color)
+        embed.color = role.color
+        embed.set_footer(text=f"ID: {role.id}")
+        await interaction.send(embed=embed, ephemeral=False)
+
+    @role_slash.subcommand(name="remove", description="Remove a role(s) from a member in the server")
+    async def remove(self, interaction: nextcord.Interaction, member: nextcord.Member = SlashOption(description="The member to remove the role from", required=True), roles: str = SlashOption(description="The role(s) ID/mention to remove from the member", required=True)):
+        if not interaction.user.guild_permissions.manage_roles:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        roles = roles.replace("<@&", "").replace(">", "")
+        roles = roles.split(" ")
+        for role in roles:
+            role = interaction.guild.get_role(int(role))
+            if not role:
+                await interaction.send(content=f"Role `{role}` not found", ephemeral=True)
+                return
+            await member.remove_roles(role)
+        await interaction.send(content=f"Removed roles from {member.mention}", ephemeral=True)
+
+    @role_slash.subcommand(name="add", description="Add a role(s) to a member in the server")
+    async def add(self, interaction: nextcord.Interaction, member: nextcord.Member = SlashOption(description="The member to add the role to", required=True), roles: str = SlashOption(description="The role(s) ID/mention to add to the member", required=True)):
+        if not interaction.user.guild_permissions.manage_roles:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        roles = roles.replace("<@&", "").replace(">", "")
+        roles = roles.split(" ")
+        for role in roles:
+            role = interaction.guild.get_role(int(role))
+            if not role:
+                await interaction.send(content=f"Role `{role}` not found", ephemeral=True)
+                return
+            await member.add_roles(role)
+        await interaction.send(content=f"Added roles to {member.mention}", ephemeral=True)
+
     @role_slash.subcommand(name="all", description="Add a role(s) to all members in the server")
     async def all(self, interaction: nextcord.Interaction, roles: str = SlashOption(description="The role(s) ID/mention to add to all members in the server", required=True), bots: Optional[bool] = SlashOption(description="Whether to add the role to bots", required=False, default=False)):
+        if not interaction.user.guild_permissions.manage_roles:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        roles = roles.replace("<@&", "").replace(">", "")
         roles = roles.split(" ")
         if not bots:
             bots = False
@@ -335,17 +402,20 @@ class Role(commands.Cog):
             role = role.replace("<@&", "").replace(">", "")
             role = interaction.guild.get_role(int(role))
             if not role:
-                await interaction.send(content=f"Role {role} not found", ephemeral=True)
+                await interaction.send(content=f"Role `{role}` not found", ephemeral=True)
                 return
+            total_added = 0
             for member in members:
                 if added == 10:
                     await asyncio.sleep(5)
+                    await interaction.edit_original_message(content=f"Added to {total_added}/{len(members)} members")
                     added = 0
                 if not bots and member.bot:
                     continue
                 await member.add_roles(role)
                 added += 1
-        await interaction.edit_original_message(content=f"Added roles to all members in the server")
+                total_added += 1
+        await interaction.edit_original_message(content=f"Added {total_added} roles to all members in the server")
 
     @role_slash.subcommand(name="info", description="Get role info")
     async def info(self, interaction: nextcord.Interaction, role: nextcord.Role):
