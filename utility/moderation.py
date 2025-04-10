@@ -21,6 +21,8 @@ class Moderation(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Moderation cog loaded.")
+        if self.check_ebl.is_running():
+            self.check_ebl.stop()
         await self.check_ebl.start()
 
     @tasks.loop(minutes=3)
