@@ -21,8 +21,8 @@ class DonationCounter(commands.Cog):
     async def on_ready(self):
         print("Event Logger Cog Loaded.")
 
-    @nextcord.slash_command(name="use1ydonos", description="Use stuff from the 1 year anniversary event.", guild_ids=[1205270486230110330])
-    async def use1ydonos(self, interaction: nextcord.Interaction,
+    @nextcord.slash_command(name="useeasterdonos", description="Use stuff from the Easter event.", guild_ids=[1205270486230110330])
+    async def useeasterdonos(self, interaction: nextcord.Interaction,
                            quantity: str = SlashOption(description="The quantity of the item to use or coins to use."),
                            item: Optional[str] = SlashOption(description="The item to use.", autocomplete=True)):
         await interaction.response.defer(ephemeral=False)
@@ -31,7 +31,7 @@ class DonationCounter(commands.Cog):
         if manager not in roles and not interaction.user.guild_permissions.administrator:
             await interaction.send(content="You do not have permission to use this command.", ephemeral=False)
             return
-        doc = collection.find_one({"_id": "year_donations"})
+        doc = collection.find_one({"_id": "easter_donations"})
         if not doc:
             await interaction.send(content="No donations have been made yet.", ephemeral=False)
             return
@@ -61,23 +61,23 @@ class DonationCounter(commands.Cog):
                 await interaction.send(content="That item does not have that many donations.", ephemeral=False)
                 return
             doc[item] = doc[item] - quan
-            collection.update_one({"_id": "year_donations"}, {"$set": doc}, upsert=True)
+            collection.update_one({"_id": "easter_donations"}, {"$set": doc}, upsert=True)
             await interaction.send(content=f"Updated database. `{quan:,}x` {item} were used.", ephemeral=False)
         else:
             if doc["coins"] < quan:
                 await interaction.send(content="There are not enough coins to use.", ephemeral=False)
                 return
             doc["coins"] -= quan
-            collection.update_one({"_id": "year_donations"}, {"$set": doc}, upsert=True)
+            collection.update_one({"_id": "easter_donations"}, {"$set": doc}, upsert=True)
             await interaction.send(content=f"Updated database. `{quan:,}` coins were used.", ephemeral=False)
         
-    @commands.command(name="1ydonos", aliases=["1yeardonos"])
+    @commands.command(name="easterdonos", aliases=["easterdonations"])
     async def cdonos(self, ctx):
         try:
-            doc = collection.find_one({"_id": "year_donations"})
+            doc = collection.find_one({"_id": "easter_donations"})
             if not doc:
-                collection.insert_one({"_id": "year_donations", "coins": 0})
-                doc = collection.find_one({"_id": "year_donations"})
+                collection.insert_one({"_id": "easter_donations", "coins": 0})
+                doc = collection.find_one({"_id": "easter_donations"})
             coins = doc["coins"]
             desc = f"__**Coins:**__  ⏣ {coins:,}\n**Items:**"
             doc.pop("coins")
@@ -125,7 +125,7 @@ class DonationCounter(commands.Cog):
             embeds = []
             for i, desc in enumerate(desc_pages):
                 desc = f"**__Total Donation Value:__** ⏣ {total:,}\n\n{desc}"
-                embed = nextcord.Embed(title="RC 1 Year Anniversary Donations", description=desc, color=65280)
+                embed = nextcord.Embed(title="RC Easter Donations", description=desc, color=65280)
                 embed.set_thumbnail(url="https://i.imgur.com/cNIVuoA.jpeg")
                 embed.set_footer(text=f"Robbing Central - Page {i + 1}/{len(desc_pages)}", icon_url=self.bot.user.display_avatar.url)
                 embeds.append(embed)
@@ -192,7 +192,7 @@ class DonationCounter(commands.Cog):
             amount = amount.replace("*", "")
             amount = amount.replace(",", "")
             amount = int(amount)
-            collection.update_one({"_id": "year_donations"}, {"$inc": {"coins": amount}}, upsert=True)
+            collection.update_one({"_id": "easter_donations"}, {"$inc": {"coins": amount}}, upsert=True)
             await message.add_reaction(GREEN_CHECK)
         else:
             amount = descp.split("donated ")[1]
@@ -203,7 +203,7 @@ class DonationCounter(commands.Cog):
             first = first.replace(" ", "")
             first = first.replace(",", "")
             first = int(first)
-            collection.update_one({"_id": "year_donations"}, {"$inc": {second: first}}, upsert=True)
+            collection.update_one({"_id": "easter_donations"}, {"$inc": {second: first}}, upsert=True)
             await message.add_reaction(GREEN_CHECK)
 
     async def get_choices(self, interaction, current: str) -> List[str]:
@@ -215,7 +215,7 @@ class DonationCounter(commands.Cog):
             
         return choices
     
-    @use1ydonos.on_autocomplete("item")
+    @useeasterdonos.on_autocomplete("item")
     async def autocomplete_handler(self, interaction: nextcord.Interaction, current: str):
         try:
             choices = await self.get_choices(interaction, current)
