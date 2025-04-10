@@ -4,7 +4,7 @@ from nextcord import SlashOption
 from typing import Optional, List
 from utils.mongo_connection import MongoConnection
 
-DONATION_CHANNEL = 1316052875591422042
+DONATION_CHANNEL = 1358455974477824341
 DANK_ID = 270904126974590976
 GREEN_CHECK = "<:green_check2:1291173532432203816>"
 
