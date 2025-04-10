@@ -120,7 +120,12 @@ class DonationCounter(commands.Cog):
                     desc_pages.append(current_desc)
                     current_desc = coins_desc
                     items_added = 0
-
+            
+            if items_added > 0:
+                desc_pages.append(current_desc)
+            
+            if not desc_pages:
+                desc_pages.append(coins_desc)
 
             embeds = []
             for i, desc in enumerate(desc_pages):
