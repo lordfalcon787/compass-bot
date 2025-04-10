@@ -197,6 +197,29 @@ class misc(commands.Cog):
         file = nextcord.File(fp=image_bytes, filename="ship.png")
         await interaction.followup.send(file=file, embed=embed)
 
+    @nextcord.slash_command(name="embed", description="Create an embed")
+    @application_checks.guild_only()
+    async def embed_slash(self, interaction: nextcord.Interaction, 
+                   title: str = SlashOption(description="Enter a title for the embed", required=True),
+                   description: str = SlashOption(description="Enter a description for the embed", required=True),
+                   footer: str = SlashOption(description="Enter a footer for the embed", required=False),
+                   color: str = SlashOption(description="Enter a color for the embed", required=False),
+                   image: str = SlashOption(description="Enter an image url for the embed", required=False),
+                   thumbnail: str = SlashOption(description="Enter a thumbnail url for the embed", required=False)):
+        await interaction.response.defer(ephemeral=True)
+        description = description.replace("\\n", "\n")
+        embed = nextcord.Embed(title=title, description=description)
+        if color is not None:
+            embed.color = int(color, 16)
+        if footer is not None:
+            embed.set_footer(text=footer)
+        if image is not None:
+            embed.set_image(url=image)
+        if thumbnail is not None:
+            embed.set_thumbnail(url=thumbnail)
+        await interaction.channel.send(embed=embed)
+        await interaction.followup.send("Embed sent.", ephemeral=True)
+
 
     
 
