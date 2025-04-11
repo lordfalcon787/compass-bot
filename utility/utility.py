@@ -89,7 +89,8 @@ class utility(commands.Cog):
         if len(message.content.split(" ")) == 1:
             member = message.author
         else:
-            args = message.content.split("?w ")[1]
+            args = message.content.split(" ")[1:]
+            args = " ".join(args)
             args = args.replace("<", "").replace(">", "").replace("@", "")
             if args.isdigit():
                 try:
@@ -120,7 +121,7 @@ class utility(commands.Cog):
         role_mentions = [role.mention for role in sorted_roles[:42]]
         additional_roles = len(member.roles) - 42
         roles_value = " ".join(role_mentions) + (f" `+{additional_roles}`" if additional_roles > 0 else "")
-        embed.add_field(name=f"Roles [{len(member.roles)}]", value=roles_value, inline=False)
+        embed.add_field(name=f"Roles [{len(member.roles) - 1}]", value=roles_value, inline=False)
 
         perms = [
             perm.replace('_', ' ').title()
@@ -243,6 +244,11 @@ class utility(commands.Cog):
         await message.channel.set_permissions(message.guild.default_role, overwrite=overwrites)
         await message.channel.send(f":white_check_mark: Locked **{message.channel.name}**")
         await asyncio.sleep(1)
+
+    @commands.command(name="avatar", aliases=["av"])
+    async def avatar_cmd(self, message):
+        await self.avatar(message)
+        return
         
     async def avatar(self, message):
         arg = message.content.split(" ")
