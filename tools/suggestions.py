@@ -73,14 +73,20 @@ class Suggestions(commands.Cog):
         num = suggestion
         suggestion = doc[str(suggestion)]
         msg = interaction.guild.get_channel(suggestions_channel)
-        msg = await msg.fetch_message(suggestion)
-        embed = msg.embeds[0]
-        embed.title = f"Suggestion #{num} Approved"
-        embed.color = nextcord.Color.green()
-        embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
-        embed.set_footer(text=f"Approved by {interaction.user.name}", icon_url=interaction.user.avatar.url)
-        await msg.edit(embed=embed)
-        await interaction.send(f"Suggestion approved successfully for reason: {reason}", ephemeral=True)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://google.com") as response:
+                if response.status == 200:
+                    async with asyncio.timeout(10):
+                        msg = await msg.fetch_message(suggestion)
+                        embed = msg.embeds[0]
+                        embed.title = f"Suggestion #{num} Approved"
+                        embed.color = nextcord.Color.green()
+                        embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
+                        embed.set_footer(text=f"Approved by {interaction.user.name}", icon_url=interaction.user.avatar.url)
+                        await msg.edit(embed=embed)
+                        await interaction.send(f"Suggestion approved successfully for reason: {reason}", ephemeral=True)
+                else:
+                    await interaction.send("Failed to fetch message.", ephemeral=True)
         
         author_id = doc.get(f"{num}_author")
         if author_id:
@@ -119,14 +125,20 @@ class Suggestions(commands.Cog):
         num = suggestion
         suggestion = doc[str(suggestion)]
         msg = interaction.guild.get_channel(suggestions_channel)
-        msg = await msg.fetch_message(suggestion)
-        embed = msg.embeds[0]
-        embed.title = f"Suggestion #{num} Implemented"
-        embed.color = nextcord.Color.green()
-        embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
-        embed.set_footer(text=f"Implemented by {interaction.user.name}", icon_url=interaction.user.avatar.url)
-        await msg.edit(embed=embed)
-        await interaction.send(f"Suggestion marked as implemented successfully for reason: {reason}", ephemeral=True)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://google.com") as response:
+                if response.status == 200:
+                    async with asyncio.timeout(10):
+                        msg = await msg.fetch_message(suggestion)
+                        embed = msg.embeds[0]
+                        embed.title = f"Suggestion #{num} Implemented"
+                        embed.color = nextcord.Color.green()
+                        embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
+                        embed.set_footer(text=f"Implemented by {interaction.user.name}", icon_url=interaction.user.avatar.url)
+                        await msg.edit(embed=embed)
+                        await interaction.send(f"Suggestion marked as implemented successfully for reason: {reason}", ephemeral=True)
+                else:
+                    await interaction.send("Failed to fetch message.", ephemeral=True)
         author_id = doc.get(f"{num}_author")
         if author_id:
             author = self.bot.get_user(int(author_id))
@@ -163,14 +175,20 @@ class Suggestions(commands.Cog):
         num = suggestion
         suggestion = doc[str(suggestion)]
         msg = interaction.guild.get_channel(suggestions_channel)
-        msg = await msg.fetch_message(suggestion)
-        embed = msg.embeds[0]
-        embed.title = f"Suggestion #{num} Denied"
-        embed.color = nextcord.Color.red()
-        embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
-        embed.set_footer(text=f"Denied by {interaction.user.name}", icon_url=interaction.user.avatar.url)
-        await msg.edit(embed=embed)
-        await interaction.send(f"Suggestion denied successfully for reason: {reason}", ephemeral=True)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://google.com") as response:
+                if response.status == 200:
+                    async with asyncio.timeout(10):
+                        msg = await msg.fetch_message(suggestion)
+                        embed = msg.embeds[0]
+                        embed.title = f"Suggestion #{num} Denied"
+                        embed.color = nextcord.Color.red()
+                        embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
+                        embed.set_footer(text=f"Denied by {interaction.user.name}", icon_url=interaction.user.avatar.url)
+                        await msg.edit(embed=embed)
+                        await interaction.send(f"Suggestion denied successfully for reason: {reason}", ephemeral=True)
+                else:
+                    await interaction.send("Failed to fetch message.", ephemeral=True)
         author_id = doc.get(f"{num}_author")
         if author_id:
             author = self.bot.get_user(int(author_id))
@@ -207,14 +225,20 @@ class Suggestions(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         suggestion = doc[str(suggestion)]
         msg = interaction.guild.get_channel(suggestions_channel)
-        msg = await msg.fetch_message(suggestion)
-        embed = msg.embeds[0]
-        embed.title = f"Suggestion #{num} Considered"
-        embed.color = nextcord.Color.yellow()
-        embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
-        embed.set_footer(text=f"Marked as considered by {interaction.user.name}", icon_url=interaction.user.avatar.url)
-        await msg.edit(embed=embed)
-        await interaction.send(f"Suggestion marked as being considered successfully for reason: {reason}", ephemeral=True)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://google.com") as response:
+                if response.status == 200:
+                    async with asyncio.timeout(10):
+                        msg = await msg.fetch_message(suggestion)
+                        embed = msg.embeds[0]
+                        embed.title = f"Suggestion #{num} Considered"
+                        embed.color = nextcord.Color.yellow()
+                        embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
+                        embed.set_footer(text=f"Marked as considered by {interaction.user.name}", icon_url=interaction.user.avatar.url)
+                        await msg.edit(embed=embed)
+                        await interaction.send(f"Suggestion marked as being considered successfully for reason: {reason}", ephemeral=True)
+                else:
+                    await interaction.send("Failed to fetch message.", ephemeral=True)
         author_id = doc.get(f"{num}_author")
         if author_id:
             author = self.bot.get_user(int(author_id))
