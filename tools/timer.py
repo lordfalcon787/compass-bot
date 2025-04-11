@@ -68,6 +68,7 @@ class Timer(commands.Cog):
             return
         current_time = int(datetime.now().timestamp())
         end_time = current_time + total_seconds
+        end_time = int(end_time)
         message = "Timer"
         if len(split) > 2:
             message = " ".join(split[2:])
