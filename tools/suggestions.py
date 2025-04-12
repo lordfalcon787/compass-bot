@@ -160,7 +160,14 @@ class View(nextcord.ui.View):
             upvotes = []
             downvotes = []
         if interaction.user.id in upvotes:
-            await interaction.send("You have already upvoted on this suggestion.", ephemeral=True)
+            upvotes.remove(interaction.user.id)
+            new_doc["upvotes"] = upvotes
+            collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {f"{suggestion_num}": new_doc}}, upsert=True)
+            view = View()
+            view.agree.label = f"Agree [{len(upvotes)}]"
+            view.disagree.label = f"Disagree [{len(downvotes)}]"
+            await interaction.message.edit(view=view)
+            await interaction.send("You have removed your vote to agree.", ephemeral=True)
             return
         if interaction.user.id in downvotes:
             downvotes.remove(interaction.user.id)
@@ -201,7 +208,14 @@ class View(nextcord.ui.View):
             upvotes = []
             downvotes = []
         if interaction.user.id in downvotes:
-            await interaction.send("You have already downvoted on this suggestion.", ephemeral=True)
+            downvotes.remove(interaction.user.id)
+            new_doc["downvotes"] = downvotes
+            collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {f"{suggestion_num}": new_doc}}, upsert=True)
+            view = View()
+            view.agree.label = f"Agree [{len(upvotes)}]"
+            view.disagree.label = f"Disagree [{len(downvotes)}]"
+            await interaction.message.edit(view=view)
+            await interaction.send("You have removed your vote to disagree.", ephemeral=True)
             return
         if interaction.user.id in upvotes:
             upvotes.remove(interaction.user.id)
