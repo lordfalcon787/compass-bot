@@ -18,12 +18,12 @@ class View(nextcord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-        agree = nextcord.ui.Button(label="Agree [0]", style=nextcord.ButtonStyle.green, custom_id="agree_suggestions")
-        disagree = nextcord.ui.Button(label="Disagree [0]", style=nextcord.ButtonStyle.red, custom_id="disagree_suggestions")
-        agree.callback = self.agree_callback
-        disagree.callback = self.disagree_callback
-        self.add_item(agree)
-        self.add_item(disagree)
+        self.agree = nextcord.ui.Button(label="Agree [0]", style=nextcord.ButtonStyle.green, custom_id="agree_suggestions")
+        self.disagree = nextcord.ui.Button(label="Disagree [0]", style=nextcord.ButtonStyle.red, custom_id="disagree_suggestions")
+        self.agree.callback = self.agree_callback
+        self.disagree.callback = self.disagree_callback
+        self.add_item(self.agree)
+        self.add_item(self.disagree)
 
     async def agree_callback(self, interaction: nextcord.Interaction):
         await interaction.response.defer()
@@ -74,7 +74,7 @@ class View(nextcord.ui.View):
         collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {f"{suggestion_num}": new_doc}}, upsert=True)
         view = View()
         view.agree.label = f"Agree [{len(upvotes)}]"
-        view.disagree.label = f"Disagree [{len(downvotes)}]"
+        view.disagree.label = f"Disagree [{len(downvotes) + 1}]"
         await interaction.message.edit(view=view)
 
         
