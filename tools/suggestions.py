@@ -24,6 +24,124 @@ class View(nextcord.ui.View):
         self.disagree.callback = self.disagree_callback
         self.add_item(self.agree)
         self.add_item(self.disagree)
+        self.votes = nextcord.ui.Button(label="Votes", style=nextcord.ButtonStyle.blurple, custom_id="votes_suggestions")
+        self.votes.callback = self.votes_callback
+        self.add_item(self.votes)
+
+    async def votes_callback(self, interaction: nextcord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        guild_id = str(interaction.guild.id)
+        doc = collection.find_one({"_id": f"suggestions_{guild_id}"})
+        if doc is None:
+            return
+        suggestion_num = interaction.message.embeds[0].title.split("#")[1]
+        suggestion_num = int(suggestion_num.split(" ")[0])
+        new_doc = doc[str(suggestion_num)]
+        upvotes = new_doc.get("upvotes", [])
+        downvotes = new_doc.get("downvotes", [])
+        embed = nextcord.Embed(
+            title="Suggestion Votes",
+            description=f"Votes for Suggestion #{suggestion_num}",
+            color=nextcord.Color.blurple()
+        )
+        
+        upvote_users = []
+        downvote_users = []
+        
+        for user_id in upvotes:
+            try:
+                user = await interaction.guild.fetch_member(user_id)
+                upvote_users.append(f"{user.display_name}")
+            except:
+                upvote_users.append(f"Unknown User ({user_id})")
+        
+        for user_id in downvotes:
+            try:
+                user = await interaction.guild.fetch_member(user_id)
+                downvote_users.append(f"{user.display_name}")
+            except:
+                downvote_users.append(f"Unknown User ({user_id})")
+        
+        total_pages = max(
+            (len(upvote_users) + 9) // 10,
+            (len(downvote_users) + 9) // 10
+        ) or 1
+        
+        class VotesView(nextcord.ui.View):
+            def __init__(self):
+                super().__init__(timeout=60)
+                self.current_page = 1
+                self.update_buttons()
+            
+            def update_buttons(self):
+                self.prev_button.disabled = self.current_page <= 1
+                self.next_button.disabled = self.current_page >= total_pages
+            
+            def update_embed(self):
+                embed.clear_fields()
+                
+                start_idx = (self.current_page - 1) * 10
+                
+                upvotes_for_page = upvote_users[start_idx:start_idx+10] if start_idx < len(upvote_users) else []
+                if upvotes_for_page:
+                    upvotes_display = "\n".join(upvotes_for_page)
+                    embed.add_field(
+                        name=f"Agree [{len(upvote_users)}]",
+                        value=upvotes_display,
+                        inline=False
+                    )
+                else:
+                    if len(upvote_users) > 0:
+                        embed.add_field(name=f"Agree [{len(upvote_users)}]", 
+                                       value="No votes on this page", 
+                                       inline=False)
+                    else:
+                        embed.add_field(name="Agree [0]", 
+                                       value="No votes", 
+                                       inline=False)
+                
+                downvotes_for_page = downvote_users[start_idx:start_idx+10] if start_idx < len(downvote_users) else []
+                if downvotes_for_page:
+                    downvotes_display = "\n".join(downvotes_for_page)
+                    embed.add_field(
+                        name=f"Disagree [{len(downvote_users)}]",
+                        value=downvotes_display,
+                        inline=False
+                    )
+                else:
+                    if len(downvote_users) > 0:
+                        embed.add_field(name=f"Disagree [{len(downvote_users)}]", 
+                                       value="No votes on this page", 
+                                       inline=False)
+                    else:
+                        embed.add_field(name="Disagree [0]", 
+                                       value="No votes", 
+                                       inline=False)
+                
+                embed.set_footer(text=f"Page {self.current_page}/{total_pages}")
+                
+                return embed
+            
+            @nextcord.ui.button(label="◀ Previous", style=nextcord.ButtonStyle.blurple, custom_id="prev_page")
+            async def prev_button(self, button, interaction):
+                if self.current_page > 1:
+                    self.current_page -= 1
+                    self.update_buttons()
+                    await interaction.response.edit_message(embed=self.update_embed(), view=self)
+                else:
+                    await interaction.response.defer()
+            
+            @nextcord.ui.button(label="Next ▶", style=nextcord.ButtonStyle.blurple, custom_id="next_page")
+            async def next_button(self, button, interaction):
+                if self.current_page < total_pages:
+                    self.current_page += 1
+                    self.update_buttons()
+                    await interaction.response.edit_message(embed=self.update_embed(), view=self)
+                else:
+                    await interaction.response.defer()
+        
+        votes_view = VotesView()
+        await interaction.followup.send(embed=votes_view.update_embed(), view=votes_view, ephemeral=True)
 
     async def agree_callback(self, interaction: nextcord.Interaction):
         await interaction.response.defer(ephemeral=True)
@@ -32,6 +150,7 @@ class View(nextcord.ui.View):
         if doc is None:
             return
         suggestion_num = interaction.message.embeds[0].title.split("#")[1]
+        suggestion_num = int(suggestion_num.split(" ")[0])
         new_doc = doc[str(suggestion_num)]
         try:
             upvotes = new_doc.get("upvotes", [])
@@ -50,7 +169,7 @@ class View(nextcord.ui.View):
         view.agree.label = f"Agree [{len(upvotes) + 1}]"
         view.disagree.label = f"Disagree [{len(downvotes)}]"
         await interaction.message.edit(view=view) 
-        embed = nextcord.Embed(title="You have voted to agree", color=nextcord.Color.green())
+        embed = nextcord.Embed(title="You have voted to agree.", color=nextcord.Color.green())
         await interaction.followup.send(embed=embed, ephemeral=True)
         if not interaction.message.thread:
             await interaction.message.create_thread(name="Suggestion Discussion")
@@ -72,6 +191,7 @@ class View(nextcord.ui.View):
         if doc is None:
             return
         suggestion_num = interaction.message.embeds[0].title.split("#")[1]
+        suggestion_num = int(suggestion_num.split(" ")[0])
         new_doc = doc[str(suggestion_num)]
         try:
             upvotes = new_doc.get("upvotes", [])
