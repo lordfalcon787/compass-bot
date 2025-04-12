@@ -167,7 +167,8 @@ class View(nextcord.ui.View):
             view.agree.label = f"Agree [{len(upvotes)}]"
             view.disagree.label = f"Disagree [{len(downvotes)}]"
             await interaction.message.edit(view=view)
-            await interaction.send("You have removed your vote to agree.", ephemeral=True)
+            embed = nextcord.Embed(title="You have removed your vote to agree.", color=nextcord.Color.red())
+            await interaction.followup.send(embed=embed, ephemeral=True)
             return
         if interaction.user.id in downvotes:
             downvotes.remove(interaction.user.id)
@@ -215,7 +216,8 @@ class View(nextcord.ui.View):
             view.agree.label = f"Agree [{len(upvotes)}]"
             view.disagree.label = f"Disagree [{len(downvotes)}]"
             await interaction.message.edit(view=view)
-            await interaction.send("You have removed your vote to disagree.", ephemeral=True)
+            embed = nextcord.Embed(title="You have removed your vote to disagree.", color=nextcord.Color.red())
+            await interaction.followup.send(embed=embed, ephemeral=True)
             return
         if interaction.user.id in upvotes:
             upvotes.remove(interaction.user.id)
