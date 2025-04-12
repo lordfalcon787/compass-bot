@@ -33,13 +33,22 @@ class View(nextcord.ui.View):
             return
         suggestion_num = interaction.message.embeds[0].title.split("#")[1]
         new_doc = doc[str(suggestion_num)]
-        upvotes = new_doc.get("upvotes", 0)
-        downvotes = new_doc.get("downvotes", 0)
-        new_doc["upvotes"] = upvotes + 1
+        try:
+            upvotes = new_doc.get("upvotes", [])
+            downvotes = new_doc.get("downvotes", [])
+        except:
+            upvotes = []
+            downvotes = []
+        if interaction.user.id in upvotes:
+            await interaction.send("You have already upvoted on this suggestion.", ephemeral=True)
+            return
+        if interaction.user.id in downvotes:
+            downvotes.remove(interaction.user.id)
+        new_doc["upvotes"] = upvotes + [interaction.user.id]
         collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {f"{suggestion_num}": new_doc}}, upsert=True)
         view = View()
-        view.agree.label = f"Agree [{upvotes + 1}]"
-        view.disagree.label = f"Disagree [{downvotes}]"
+        view.agree.label = f"Agree [{len(upvotes) + 1}]"
+        view.disagree.label = f"Disagree [{len(downvotes)}]"
         await interaction.message.edit(view=view)       
 
     async def disagree_callback(self, interaction: nextcord.Interaction):
@@ -50,13 +59,22 @@ class View(nextcord.ui.View):
             return
         suggestion_num = interaction.message.embeds[0].title.split("#")[1]
         new_doc = doc[str(suggestion_num)]
-        upvotes = new_doc.get("upvotes", 0)
-        downvotes = new_doc.get("downvotes", 0)
-        new_doc["downvotes"] = downvotes + 1
+        try:
+            upvotes = new_doc.get("upvotes", [])
+            downvotes = new_doc.get("downvotes", [])
+        except:
+            upvotes = []
+            downvotes = []
+        if interaction.user.id in downvotes:
+            await interaction.send("You have already downvoted on this suggestion.", ephemeral=True)
+            return
+        if interaction.user.id in upvotes:
+            upvotes.remove(interaction.user.id)
+        new_doc["downvotes"] = downvotes + [interaction.user.id]
         collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {f"{suggestion_num}": new_doc}}, upsert=True)
         view = View()
-        view.agree.label = f"Agree [{upvotes}]"
-        view.disagree.label = f"Disagree [{downvotes + 1}]"
+        view.agree.label = f"Agree [{len(upvotes)}]"
+        view.disagree.label = f"Disagree [{len(downvotes)}]"
         await interaction.message.edit(view=view)
 
         
