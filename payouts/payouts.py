@@ -656,6 +656,7 @@ class ViewPayout(nextcord.ui.View):
             pass
         self.state.last_responses[interaction.guild.id] = await interaction.send(content=content, embed=embed, ephemeral=True, view=view)
         queue_msg = other_doc["queuemsg"].split("/")[6]
+        queue = self.bot.get_channel(queue)
         wh = await GetWebhook.get_webhook(queue)
         queue_msg = await wh.fetch_message(int(queue_msg))
         embed = queue_msg.embeds[0]
