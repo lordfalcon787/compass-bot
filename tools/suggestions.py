@@ -26,7 +26,7 @@ class View(nextcord.ui.View):
         self.add_item(self.disagree)
 
     async def agree_callback(self, interaction: nextcord.Interaction):
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=True)
         guild_id = str(interaction.guild.id)
         doc = collection.find_one({"_id": f"suggestions_{guild_id}"})
         if doc is None:
@@ -51,7 +51,7 @@ class View(nextcord.ui.View):
         view.disagree.label = f"Disagree [{len(downvotes)}]"
         await interaction.message.edit(view=view) 
         embed = nextcord.Embed(title="You have voted to agree", color=nextcord.Color.green())
-        await interaction.send(embed=embed, ephemeral=True)
+        await interaction.followup.send(embed=embed, ephemeral=True)
         if not interaction.message.thread:
             await interaction.message.create_thread(name="Suggestion Discussion")
             async with aiohttp.ClientSession() as session:
@@ -66,7 +66,7 @@ class View(nextcord.ui.View):
                         return
 
     async def disagree_callback(self, interaction: nextcord.Interaction):
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=True)
         guild_id = str(interaction.guild.id)
         doc = collection.find_one({"_id": f"suggestions_{guild_id}"})
         if doc is None:
@@ -91,7 +91,7 @@ class View(nextcord.ui.View):
         view.disagree.label = f"Disagree [{len(downvotes) + 1}]"
         await interaction.message.edit(view=view)
         embed = nextcord.Embed(title="You have voted to disagree.", color=nextcord.Color.green())
-        await interaction.send(embed=embed, ephemeral=True)
+        await interaction.followup.send(embed=embed, ephemeral=True)
         if not interaction.message.thread:
             await interaction.message.create_thread(name="Suggestion Discussion")
             async with aiohttp.ClientSession() as session:
