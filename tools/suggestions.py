@@ -120,6 +120,7 @@ class Suggestions(commands.Cog):
         if doc is None:
             return
         suggestion_num = message.embeds[0].title.split("#")[1]
+        suggestion_num = int(suggestion_num.split(" ")[0])
         new_doc = doc[str(suggestion_num)]
         upvotes = new_doc.get("upvotes", 0)
         downvotes = new_doc.get("downvotes", 0)
