@@ -49,7 +49,21 @@ class View(nextcord.ui.View):
         view = View()
         view.agree.label = f"Agree [{len(upvotes) + 1}]"
         view.disagree.label = f"Disagree [{len(downvotes)}]"
-        await interaction.message.edit(view=view)       
+        await interaction.message.edit(view=view) 
+        embed = nextcord.Embed(title="You have voted to agree", color=nextcord.Color.green())
+        await interaction.send(embed=embed, ephemeral=True)
+        if not interaction.message.thread:
+            await interaction.message.create_thread(name="Suggestion Discussion")
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"https://google.com") as response:
+                    if response.status == 200:
+                        async with asyncio.timeout(10):
+                            async for message in interaction.message.channel.history(limit=10):
+                                if "Suggestion Discussion" in message.content:
+                                    await message.delete()
+                                    break
+                    else:
+                        return
 
     async def disagree_callback(self, interaction: nextcord.Interaction):
         await interaction.response.defer()
@@ -76,6 +90,20 @@ class View(nextcord.ui.View):
         view.agree.label = f"Agree [{len(upvotes)}]"
         view.disagree.label = f"Disagree [{len(downvotes) + 1}]"
         await interaction.message.edit(view=view)
+        embed = nextcord.Embed(title="You have voted to disagree.", color=nextcord.Color.green())
+        await interaction.send(embed=embed, ephemeral=True)
+        if not interaction.message.thread:
+            await interaction.message.create_thread(name="Suggestion Discussion")
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"https://google.com") as response:
+                    if response.status == 200:
+                        async with asyncio.timeout(10):
+                            async for message in interaction.message.channel.history(limit=10):
+                                if "Suggestion Discussion" in message.content:
+                                    await message.delete()
+                                    break
+                    else:
+                        return
 
         
 class Suggestions(commands.Cog):
