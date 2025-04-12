@@ -40,8 +40,7 @@ class View(nextcord.ui.View):
         upvotes = new_doc.get("upvotes", [])
         downvotes = new_doc.get("downvotes", [])
         embed = nextcord.Embed(
-            title="Suggestion Votes",
-            description=f"Votes for Suggestion #{suggestion_num}",
+            title=f"Suggestion #{suggestion_num} Votes",
             color=nextcord.Color.blurple()
         )
         
@@ -50,15 +49,13 @@ class View(nextcord.ui.View):
         
         for user_id in upvotes:
             try:
-                user = await interaction.guild.fetch_member(user_id)
-                upvote_users.append(f"{user.display_name}")
+                upvote_users.append(f"<@{user_id}>")
             except:
                 upvote_users.append(f"Unknown User ({user_id})")
         
         for user_id in downvotes:
             try:
-                user = await interaction.guild.fetch_member(user_id)
-                downvote_users.append(f"{user.display_name}")
+                downvote_users.append(f"<@{user_id}>")
             except:
                 downvote_users.append(f"Unknown User ({user_id})")
         
@@ -66,6 +63,8 @@ class View(nextcord.ui.View):
             (len(upvote_users) + 9) // 10,
             (len(downvote_users) + 9) // 10
         ) or 1
+
+        response = None
         
         class VotesView(nextcord.ui.View):
             def __init__(self):
@@ -124,24 +123,26 @@ class View(nextcord.ui.View):
             
             @nextcord.ui.button(label="◀ Previous", style=nextcord.ButtonStyle.blurple, custom_id="prev_page")
             async def prev_button(self, button, interaction):
+                nonlocal response
                 if self.current_page > 1:
                     self.current_page -= 1
                     self.update_buttons()
-                    await interaction.response.edit_message(embed=self.update_embed(), view=self)
+                    await response.edit(embed=self.update_embed(), view=self)
                 else:
                     await interaction.response.defer()
             
             @nextcord.ui.button(label="Next ▶", style=nextcord.ButtonStyle.blurple, custom_id="next_page")
             async def next_button(self, button, interaction):
+                nonlocal response
                 if self.current_page < total_pages:
                     self.current_page += 1
                     self.update_buttons()
-                    await interaction.response.edit_message(embed=self.update_embed(), view=self)
+                    await response.edit(embed=self.update_embed(), view=self)
                 else:
                     await interaction.response.defer()
         
         votes_view = VotesView()
-        await interaction.followup.send(embed=votes_view.update_embed(), view=votes_view, ephemeral=True)
+        response = await interaction.followup.send(embed=votes_view.update_embed(), view=votes_view, ephemeral=True)
 
     async def agree_callback(self, interaction: nextcord.Interaction):
         await interaction.response.defer(ephemeral=True)
