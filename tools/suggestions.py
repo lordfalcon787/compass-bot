@@ -14,6 +14,52 @@ db = mongo.get_db()
 collection = db["Misc"]
 configuration = db["Configuration"]
 
+class View(nextcord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+        agree = nextcord.ui.Button(label="Agree [0]", style=nextcord.ButtonStyle.green)
+        disagree = nextcord.ui.Button(label="Disagree [0]", style=nextcord.ButtonStyle.red)
+        agree.callback = self.agree_callback
+        disagree.callback = self.disagree_callback
+        self.add_item(agree)
+        self.add_item(disagree)
+
+    async def agree_callback(self, interaction: nextcord.Interaction):
+        await interaction.response.defer()
+        guild_id = str(interaction.guild.id)
+        doc = collection.find_one({"_id": f"suggestions_{guild_id}"})
+        if doc is None:
+            return
+        suggestion_num = interaction.message.embeds[0].title.split("#")[1]
+        new_doc = doc[str(suggestion_num)]
+        upvotes = new_doc.get("upvotes", 0)
+        downvotes = new_doc.get("downvotes", 0)
+        new_doc["upvotes"] = upvotes + 1
+        collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {f"{suggestion_num}": new_doc}}, upsert=True)
+        view = View()
+        view.agree.label = f"Agree [{upvotes + 1}]"
+        view.disagree.label = f"Disagree [{downvotes}]"
+        await interaction.message.edit(view=view)       
+
+    async def disagree_callback(self, interaction: nextcord.Interaction):
+        await interaction.response.defer()
+        guild_id = str(interaction.guild.id)
+        doc = collection.find_one({"_id": f"suggestions_{guild_id}"})
+        if doc is None:
+            return
+        suggestion_num = interaction.message.embeds[0].title.split("#")[1]
+        new_doc = doc[str(suggestion_num)]
+        upvotes = new_doc.get("upvotes", 0)
+        downvotes = new_doc.get("downvotes", 0)
+        new_doc["downvotes"] = downvotes + 1
+        collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {f"{suggestion_num}": new_doc}}, upsert=True)
+        view = View()
+        view.agree.label = f"Agree [{upvotes}]"
+        view.disagree.label = f"Disagree [{downvotes + 1}]"
+        await interaction.message.edit(view=view)
+
+        
 class Suggestions(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -21,6 +67,26 @@ class Suggestions(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print("Suggestions cog is ready")
+        self.bot.add_view(View())
+
+
+    async def disable_view(self, message: nextcord.Message):
+        doc = collection.find_one({"_id": f"suggestions_{message.guild.id}"})
+        if doc is None:
+            return
+        suggestion_num = message.embeds[0].title.split("#")[1]
+        new_doc = doc[str(suggestion_num)]
+        upvotes = new_doc.get("upvotes", 0)
+        downvotes = new_doc.get("downvotes", 0)
+        new_doc["upvotes"] = upvotes
+        new_doc["downvotes"] = downvotes
+        view = View()
+        view.agree.label = f"Agree [{upvotes}]"
+        view.disagree.label = f"Disagree [{downvotes}]"
+        view.agree.disabled = True
+        view.disagree.disabled = True
+        return view
+
 
     async def suggestions_config(self, interaction: nextcord.Interaction):
         config = configuration.find_one({"_id": "config"})
@@ -83,7 +149,8 @@ class Suggestions(commands.Cog):
                         embed.color = nextcord.Color.green()
                         embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
                         embed.set_footer(text=f"Approved by {interaction.user.name}", icon_url=interaction.user.avatar.url)
-                        await msg.edit(embed=embed)
+                        view = await self.disable_view(msg)
+                        await msg.edit(embed=embed, view=view)
                         await interaction.send(f"Suggestion approved successfully for reason: {reason}", ephemeral=True)
                 else:
                     await interaction.send("Failed to fetch message.", ephemeral=True)
@@ -135,7 +202,8 @@ class Suggestions(commands.Cog):
                         embed.color = nextcord.Color.green()
                         embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
                         embed.set_footer(text=f"Implemented by {interaction.user.name}", icon_url=interaction.user.avatar.url)
-                        await msg.edit(embed=embed)
+                        view = await self.disable_view(msg)
+                        await msg.edit(embed=embed, view=view)
                         await interaction.send(f"Suggestion marked as implemented successfully for reason: {reason}", ephemeral=True)
                 else:
                     await interaction.send("Failed to fetch message.", ephemeral=True)
@@ -185,7 +253,8 @@ class Suggestions(commands.Cog):
                         embed.color = nextcord.Color.red()
                         embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
                         embed.set_footer(text=f"Denied by {interaction.user.name}", icon_url=interaction.user.avatar.url)
-                        await msg.edit(embed=embed)
+                        view = await self.disable_view(msg)
+                        await msg.edit(embed=embed, view=view)
                         await interaction.send(f"Suggestion denied successfully for reason: {reason}", ephemeral=True)
                 else:
                     await interaction.send("Failed to fetch message.", ephemeral=True)
@@ -235,7 +304,8 @@ class Suggestions(commands.Cog):
                         embed.color = nextcord.Color.yellow()
                         embed.add_field(name=f"Reason from {interaction.user.name}", value=reason, inline=False)
                         embed.set_footer(text=f"Marked as considered by {interaction.user.name}", icon_url=interaction.user.avatar.url)
-                        await msg.edit(embed=embed)
+                        view = await self.disable_view(msg)
+                        await msg.edit(embed=embed, view=view)
                         await interaction.send(f"Suggestion marked as being considered successfully for reason: {reason}", ephemeral=True)
                 else:
                     await interaction.send("Failed to fetch message.", ephemeral=True)
@@ -289,9 +359,7 @@ class Suggestions(commands.Cog):
         embed.set_author(name=interaction.user.name, icon_url=interaction.user.avatar.url)
         embed.color = nextcord.Color.blurple()
         channel = interaction.guild.get_channel(suggestions_channel)
-        msg = await channel.send(embed=embed)
-        await msg.add_reaction("⬆️")
-        await msg.add_reaction("⬇️")
+        msg = await channel.send(embed=embed, view=View())
         collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {"last_suggestion": sugg_num, f"{sugg_num}": msg.id, f"{sugg_num}_author": interaction.user.id}}, upsert=True)
         await interaction.send(f"Suggestion #{sugg_num} submitted successfully!", ephemeral=True)
 
@@ -330,7 +398,8 @@ class Suggestions(commands.Cog):
         embed.color = nextcord.Color.red()
         embed.add_field(name=f"Reason from {ctx.author.name}", value=reason, inline=False)
         embed.set_footer(text=f"Denied by {ctx.author.name}", icon_url=ctx.author.avatar.url)
-        await msg.edit(embed=embed)
+        view = await self.disable_view(msg)
+        await msg.edit(embed=embed, view=view)
 
         author_id = doc.get(f"{old_num}_author")
         if author_id:
@@ -380,7 +449,8 @@ class Suggestions(commands.Cog):
         embed.color = nextcord.Color.green()
         embed.add_field(name=f"Reason from {ctx.author.name}", value=reason, inline=False)
         embed.set_footer(text=f"Approved by {ctx.author.name}", icon_url=ctx.author.avatar.url)
-        await msg.edit(embed=embed)
+        view = await self.disable_view(msg)
+        await msg.edit(embed=embed, view=view)
         author_id = doc.get(f"{old_num}_author")
         if author_id:
             author = await ctx.guild.get_member(author_id)
@@ -429,7 +499,8 @@ class Suggestions(commands.Cog):
         embed.color = nextcord.Color.green()
         embed.add_field(name=f"Reason from {ctx.author.name}", value=reason, inline=False)
         embed.set_footer(text=f"Marked as implemented by {ctx.author.name}", icon_url=ctx.author.avatar.url)
-        await msg.edit(embed=embed)
+        view = await self.disable_view(msg)
+        await msg.edit(embed=embed, view=view)
         author_id = doc.get(f"{old_num}_author")
         if author_id:
             author = await ctx.guild.get_member(author_id)
@@ -478,7 +549,8 @@ class Suggestions(commands.Cog):
         embed.color = nextcord.Color.yellow()
         embed.add_field(name=f"Reason from {ctx.author.name}", value=reason, inline=False)
         embed.set_footer(text=f"Marked as considered by {ctx.author.name}", icon_url=ctx.author.avatar.url)
-        await msg.edit(embed=embed)
+        view = await self.disable_view(msg)
+        await msg.edit(embed=embed, view=view)
         author_id = doc.get(f"{old_num}_author")
         if author_id:
             author = await ctx.guild.get_member(author_id)
@@ -547,43 +619,10 @@ class Suggestions(commands.Cog):
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
         embed.color = nextcord.Color.blurple()
         channel = ctx.guild.get_channel(suggestions_channel)
-        msg = await channel.send(embed=embed)
-        await msg.add_reaction("⬆️")
-        await msg.add_reaction("⬇️")
+        msg = await channel.send(embed=embed, view=View())
         collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {"last_suggestion": sugg_num, f"{sugg_num}": msg.id, f"{sugg_num}_author": ctx.author.id}}, upsert=True)
         await ctx.message.add_reaction(GREEN_CHECK)
         await asyncio.sleep(2)
         await ctx.message.delete()
-
-    @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user):
-        if user.id == self.bot.user.id:
-            return
-        if not reaction.message.embeds:
-            return
-        if not reaction.message.embeds[0].title:
-            return
-        if reaction.message.author.id != self.bot.user.id:
-            return
-        if not reaction.message.embeds[0].title.startswith("Suggestion"):
-            return
-        
-        if reaction.emoji.name == "⬆️" or reaction.emoji.name == "⬇️":
-            try:
-                await reaction.message.create_thread(name="Discuss")
-            except:
-                return
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(f"https://google.com") as response:
-                        if response.status == 200:
-                            async with asyncio.timeout(10):
-                                async for message in reaction.message.channel.history(limit=10):
-                                    if "Discuss" in message.content:
-                                        await message.delete()
-                        else:
-                            return
-            except asyncio.TimeoutError:
-                return
 def setup(bot):
     bot.add_cog(Suggestions(bot))
