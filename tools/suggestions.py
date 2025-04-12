@@ -556,29 +556,21 @@ class Suggestions(commands.Cog):
         await ctx.message.delete()
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: nextcord.RawReactionActionEvent):
-        try:
-            msg_id = payload.message_id
-            channel_id = payload.channel_id
-            channel = self.bot.get_channel(channel_id)
-            msg = await channel.fetch_message(msg_id)
-        except:
+    async def on_reaction_add(self, reaction, user):
+        if user.id == self.bot.user.id:
+            return
+        if not reaction.message.embeds:
+            return
+        if not reaction.message.embeds[0].title:
+            return
+        if reaction.message.author.id != self.bot.user.id:
+            return
+        if not reaction.message.embeds[0].title.startswith("Suggestion"):
             return
         
-        if payload.user_id == self.bot.user.id:
-            return
-        elif not msg.embeds:
-            return
-        elif not msg.embeds[0].title:
-            return
-        elif msg.author.id != self.bot.user.id:
-            return
-        elif not msg.embeds[0].title.startswith("Suggestion"):
-            return
-        
-        if payload.emoji.name == "⬆️" or payload.emoji.name == "⬇️":
+        if reaction.emoji.name == "⬆️" or reaction.emoji.name == "⬇️":
             try:
-                await msg.create_thread(name="Discuss")
+                await reaction.message.create_thread(name="Discuss")
             except:
                 return
             try:
@@ -586,7 +578,7 @@ class Suggestions(commands.Cog):
                     async with session.get(f"https://google.com") as response:
                         if response.status == 200:
                             async with asyncio.timeout(10):
-                                async for message in msg.channel.history(limit=10):
+                                async for message in reaction.message.channel.history(limit=10):
                                     if "Discuss" in message.content:
                                         await message.delete()
                         else:
