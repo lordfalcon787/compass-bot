@@ -259,13 +259,13 @@ class Suggestions(commands.Cog):
         suggestion_num = message.embeds[0].title.split("#")[1]
         suggestion_num = int(suggestion_num.split(" ")[0])
         new_doc = doc[str(suggestion_num)]
-        upvotes = new_doc.get("upvotes", 0)
-        downvotes = new_doc.get("downvotes", 0)
+        upvotes = new_doc.get("upvotes", [])
+        downvotes = new_doc.get("downvotes", [])
         new_doc["upvotes"] = upvotes
         new_doc["downvotes"] = downvotes
         view = View()
-        view.agree.label = f"Agree [{upvotes}]"
-        view.disagree.label = f"Disagree [{downvotes}]"
+        view.agree.label = f"Agree [{(len(upvotes))}]"
+        view.disagree.label = f"Disagree [{(len(downvotes))}]"
         view.agree.disabled = True
         view.disagree.disabled = True
         return view
