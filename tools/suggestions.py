@@ -160,7 +160,7 @@ class Suggestions(commands.Cog):
             async with session.get(f"https://google.com") as response:
                 if response.status == 200:
                     async with asyncio.timeout(10):
-                        msg = await msg.fetch_message(suggestion)
+                        msg = await msg.fetch_message(suggestion.get("message_id"))
                         embed = msg.embeds[0]
                         embed.title = f"Suggestion #{num} Approved"
                         embed.color = nextcord.Color.green()
@@ -213,7 +213,7 @@ class Suggestions(commands.Cog):
             async with session.get(f"https://google.com") as response:
                 if response.status == 200:
                     async with asyncio.timeout(10):
-                        msg = await msg.fetch_message(suggestion)
+                        msg = await msg.fetch_message(suggestion.get("message_id"))
                         embed = msg.embeds[0]
                         embed.title = f"Suggestion #{num} Implemented"
                         embed.color = nextcord.Color.green()
@@ -264,7 +264,7 @@ class Suggestions(commands.Cog):
             async with session.get(f"https://google.com") as response:
                 if response.status == 200:
                     async with asyncio.timeout(10):
-                        msg = await msg.fetch_message(suggestion)
+                        msg = await msg.fetch_message(suggestion.get("message_id"))
                         embed = msg.embeds[0]
                         embed.title = f"Suggestion #{num} Denied"
                         embed.color = nextcord.Color.red()
@@ -315,7 +315,7 @@ class Suggestions(commands.Cog):
             async with session.get(f"https://google.com") as response:
                 if response.status == 200:
                     async with asyncio.timeout(10):
-                        msg = await msg.fetch_message(suggestion)
+                        msg = await msg.fetch_message(suggestion.get("message_id"))
                         embed = msg.embeds[0]
                         embed.title = f"Suggestion #{num} Considered"
                         embed.color = nextcord.Color.yellow()
@@ -377,7 +377,7 @@ class Suggestions(commands.Cog):
         embed.color = nextcord.Color.blurple()
         channel = interaction.guild.get_channel(suggestions_channel)
         msg = await channel.send(embed=embed, view=View())
-        collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {"last_suggestion": sugg_num, f"{sugg_num}": msg.id, f"{sugg_num}_author": interaction.user.id}}, upsert=True)
+        collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {"last_suggestion": sugg_num, f"{sugg_num}.message_id": msg.id, f"{sugg_num}_author": interaction.user.id}}, upsert=True)
         await interaction.send(f"Suggestion #{sugg_num} submitted successfully!", ephemeral=True)
 
     async def command_deny(self, ctx):
@@ -409,7 +409,7 @@ class Suggestions(commands.Cog):
         num = doc[str(num)]
         
         channel = ctx.guild.get_channel(suggestions_channel)
-        msg = await channel.fetch_message(num)
+        msg = await channel.fetch_message(num.get("message_id"))
         embed = msg.embeds[0]
         embed.title = f"Suggestion #{old_num} Denied"
         embed.color = nextcord.Color.red()
@@ -460,7 +460,7 @@ class Suggestions(commands.Cog):
         num = doc[str(num)]
         
         channel = ctx.guild.get_channel(suggestions_channel)
-        msg = await channel.fetch_message(num)
+        msg = await channel.fetch_message(num.get("message_id"))
         embed = msg.embeds[0]
         embed.title = f"Suggestion #{old_num} Approved"
         embed.color = nextcord.Color.green()
@@ -510,7 +510,7 @@ class Suggestions(commands.Cog):
         num = doc[str(num)]
         
         channel = ctx.guild.get_channel(suggestions_channel)
-        msg = await channel.fetch_message(num)
+        msg = await channel.fetch_message(num.get("message_id"))
         embed = msg.embeds[0]
         embed.title = f"Suggestion #{old_num} Implemented"
         embed.color = nextcord.Color.green()
@@ -558,6 +558,7 @@ class Suggestions(commands.Cog):
 
         old_num = num
         num = doc[str(num)]
+        num = num.get("message_id")
         
         channel = ctx.guild.get_channel(suggestions_channel)
         msg = await channel.fetch_message(num)
@@ -637,7 +638,7 @@ class Suggestions(commands.Cog):
         embed.color = nextcord.Color.blurple()
         channel = ctx.guild.get_channel(suggestions_channel)
         msg = await channel.send(embed=embed, view=View())
-        collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {"last_suggestion": sugg_num, f"{sugg_num}": msg.id, f"{sugg_num}_author": ctx.author.id}}, upsert=True)
+        collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {"last_suggestion": sugg_num, f"{sugg_num}.message_id": msg.id, f"{sugg_num}_author": ctx.author.id}}, upsert=True)
         await ctx.message.add_reaction(GREEN_CHECK)
         await asyncio.sleep(2)
         await ctx.message.delete()
