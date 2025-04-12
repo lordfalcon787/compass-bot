@@ -18,8 +18,8 @@ class View(nextcord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-        agree = nextcord.ui.Button(label="Agree [0]", style=nextcord.ButtonStyle.green)
-        disagree = nextcord.ui.Button(label="Disagree [0]", style=nextcord.ButtonStyle.red)
+        agree = nextcord.ui.Button(label="Agree [0]", style=nextcord.ButtonStyle.green, custom_id="agree_suggestions")
+        disagree = nextcord.ui.Button(label="Disagree [0]", style=nextcord.ButtonStyle.red, custom_id="disagree_suggestions")
         agree.callback = self.agree_callback
         disagree.callback = self.disagree_callback
         self.add_item(agree)
@@ -86,7 +86,6 @@ class Suggestions(commands.Cog):
     async def on_ready(self):
         print("Suggestions cog is ready")
         self.bot.add_view(View())
-
 
     async def disable_view(self, message: nextcord.Message):
         doc = collection.find_one({"_id": f"suggestions_{message.guild.id}"})
