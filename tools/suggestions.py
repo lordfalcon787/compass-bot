@@ -19,10 +19,13 @@ class View(nextcord.ui.View):
         super().__init__(timeout=None)
 
         self.agree = nextcord.ui.Button(label="Agree [0]", style=nextcord.ButtonStyle.green, custom_id="agree_suggestions")
+        self.maybe = nextcord.ui.Button(label="Maybe [0]", style=nextcord.ButtonStyle.yellow, custom_id="maybe_suggestions")
         self.disagree = nextcord.ui.Button(label="Disagree [0]", style=nextcord.ButtonStyle.red, custom_id="disagree_suggestions")
         self.agree.callback = self.agree_callback
+        self.maybe.callback = self.maybe_callback
         self.disagree.callback = self.disagree_callback
         self.add_item(self.agree)
+        self.add_item(self.maybe)
         self.add_item(self.disagree)
         self.votes = nextcord.ui.Button(label="Votes", style=nextcord.ButtonStyle.blurple, custom_id="votes_suggestions")
         self.votes.callback = self.votes_callback
@@ -39,6 +42,7 @@ class View(nextcord.ui.View):
         new_doc = doc[str(suggestion_num)]
         upvotes = new_doc.get("upvotes", [])
         downvotes = new_doc.get("downvotes", [])
+        maybe = new_doc.get("maybe", [])
         embed = nextcord.Embed(
             title=f"Suggestion #{suggestion_num} Votes",
             color=nextcord.Color.blurple()
@@ -46,7 +50,7 @@ class View(nextcord.ui.View):
         
         upvote_users = []
         downvote_users = []
-        
+        maybe_users = []
         for user_id in upvotes:
             try:
                 upvote_users.append(f"<@{user_id}>")
@@ -59,6 +63,12 @@ class View(nextcord.ui.View):
             except:
                 downvote_users.append(f"Unknown User ({user_id})")
         
+        for user_id in maybe:
+            try:
+                maybe_users.append(f"<@{user_id}>")
+            except:
+                maybe_users.append(f"Unknown User ({user_id})")
+                
         total_pages = max(
             (len(upvote_users) + 9) // 10,
             (len(downvote_users) + 9) // 10
@@ -116,9 +126,21 @@ class View(nextcord.ui.View):
                         embed.add_field(name="Disagree [0]", 
                                        value="No votes", 
                                        inline=False)
-                
-                embed.set_footer(text=f"Page {self.current_page}/{total_pages}")
-                
+                maybe_for_page = maybe_users[start_idx:start_idx+10] if start_idx < len(maybe_users) else []
+                if maybe_for_page:
+                    maybe_display = "\n".join(maybe_for_page)
+                    embed.add_field(
+                        name=f"Maybe [{len(maybe_users)}]",
+                        value=maybe_display,
+                        inline=False
+                    )
+                else:
+                    if len(maybe_users) > 0:
+                        embed.add_field(name=f"Maybe [{len(maybe_users)}]", 
+                                       value="No votes on this page", 
+                                       inline=False)
+                    else:
+                        embed.set_footer(text=f"Page {self.current_page}/{total_pages}")
                 return embed
             
             @nextcord.ui.button(label="◀ Previous", style=nextcord.ButtonStyle.blurple, custom_id="prev_page")
@@ -144,7 +166,7 @@ class View(nextcord.ui.View):
         votes_view = VotesView()
         response = await interaction.followup.send(embed=votes_view.update_embed(), view=votes_view, ephemeral=True)
 
-    async def agree_callback(self, interaction: nextcord.Interaction):
+    async def maybe_callback(self, interaction: nextcord.Interaction):
         await interaction.response.defer(ephemeral=True)
         guild_id = str(interaction.guild.id)
         doc = collection.find_one({"_id": f"suggestions_{guild_id}"})
@@ -159,6 +181,50 @@ class View(nextcord.ui.View):
         except:
             upvotes = []
             downvotes = []
+        maybe = new_doc.get("maybe", [])
+        if interaction.user.id in maybe:
+            maybe.remove(interaction.user.id)
+            new_doc["maybe"] = maybe
+            collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {f"{suggestion_num}": new_doc}}, upsert=True)
+            view = View()
+            view.agree.label = f"Agree [{len(upvotes)}]"
+            view.disagree.label = f"Disagree [{len(downvotes)}]"
+            view.maybe.label = f"Maybe [{len(maybe)}]"
+            await interaction.message.edit(view=view)
+            embed = nextcord.Embed(title="You have removed your vote for maybe.", color=nextcord.Color.red())
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            return
+        if interaction.user.id in upvotes:
+            upvotes.remove(interaction.user.id)
+        if interaction.user.id in downvotes:
+            downvotes.remove(interaction.user.id)
+        new_doc["maybe"] = maybe + [interaction.user.id]
+        collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {f"{suggestion_num}": new_doc}}, upsert=True)
+        view = View()
+        view.agree.label = f"Agree [{len(upvotes)}]"
+        view.disagree.label = f"Disagree [{len(downvotes)}]"
+        view.maybe.label = f"Maybe [{len(maybe) + 1}]"
+        await interaction.message.edit(view=view)
+        embed = nextcord.Embed(title="You have voted for maybe.", color=nextcord.Color.green())
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+    async def agree_callback(self, interaction: nextcord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        guild_id = str(interaction.guild.id)
+        doc = collection.find_one({"_id": f"suggestions_{guild_id}"})
+        if doc is None:
+            return
+        suggestion_num = interaction.message.embeds[0].title.split("#")[1]
+        suggestion_num = int(suggestion_num.split(" ")[0])
+        new_doc = doc[str(suggestion_num)]
+        try:
+            upvotes = new_doc.get("upvotes", [])
+            downvotes = new_doc.get("downvotes", [])
+            maybe = new_doc.get("maybe", [])
+        except:
+            upvotes = []
+            downvotes = []
+            maybe = []
         if interaction.user.id in upvotes:
             upvotes.remove(interaction.user.id)
             new_doc["upvotes"] = upvotes
@@ -166,17 +232,21 @@ class View(nextcord.ui.View):
             view = View()
             view.agree.label = f"Agree [{len(upvotes)}]"
             view.disagree.label = f"Disagree [{len(downvotes)}]"
+            view.maybe.label = f"Maybe [{len(maybe)}]"
             await interaction.message.edit(view=view)
             embed = nextcord.Embed(title="You have removed your vote to agree.", color=nextcord.Color.red())
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
         if interaction.user.id in downvotes:
             downvotes.remove(interaction.user.id)
+        if interaction.user.id in maybe:
+            maybe.remove(interaction.user.id)
         new_doc["upvotes"] = upvotes + [interaction.user.id]
         collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {f"{suggestion_num}": new_doc}}, upsert=True)
         view = View()
         view.agree.label = f"Agree [{len(upvotes) + 1}]"
         view.disagree.label = f"Disagree [{len(downvotes)}]"
+        view.maybe.label = f"Maybe [{len(maybe)}]"
         await interaction.message.edit(view=view) 
         embed = nextcord.Embed(title="You have voted to agree.", color=nextcord.Color.green())
         await interaction.followup.send(embed=embed, ephemeral=True)
@@ -205,9 +275,11 @@ class View(nextcord.ui.View):
         try:
             upvotes = new_doc.get("upvotes", [])
             downvotes = new_doc.get("downvotes", [])
+            maybe = new_doc.get("maybe", [])
         except:
             upvotes = []
             downvotes = []
+            maybe = []
         if interaction.user.id in downvotes:
             downvotes.remove(interaction.user.id)
             new_doc["downvotes"] = downvotes
@@ -215,17 +287,21 @@ class View(nextcord.ui.View):
             view = View()
             view.agree.label = f"Agree [{len(upvotes)}]"
             view.disagree.label = f"Disagree [{len(downvotes)}]"
+            view.maybe.label = f"Maybe [{len(maybe)}]"
             await interaction.message.edit(view=view)
             embed = nextcord.Embed(title="You have removed your vote to disagree.", color=nextcord.Color.red())
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
         if interaction.user.id in upvotes:
             upvotes.remove(interaction.user.id)
+        if interaction.user.id in maybe:
+            maybe.remove(interaction.user.id)
         new_doc["downvotes"] = downvotes + [interaction.user.id]
         collection.update_one({"_id": f"suggestions_{guild_id}"}, {"$set": {f"{suggestion_num}": new_doc}}, upsert=True)
         view = View()
         view.agree.label = f"Agree [{len(upvotes)}]"
         view.disagree.label = f"Disagree [{len(downvotes) + 1}]"
+        view.maybe.label = f"Maybe [{len(maybe)}]"
         await interaction.message.edit(view=view)
         embed = nextcord.Embed(title="You have voted to disagree.", color=nextcord.Color.green())
         await interaction.followup.send(embed=embed, ephemeral=True)
@@ -261,13 +337,20 @@ class Suggestions(commands.Cog):
         new_doc = doc[str(suggestion_num)]
         upvotes = new_doc.get("upvotes", [])
         downvotes = new_doc.get("downvotes", [])
-        new_doc["upvotes"] = upvotes
-        new_doc["downvotes"] = downvotes
+        maybe = new_doc.get("maybe", [])
         view = View()
         view.agree.label = f"Agree [{(len(upvotes))}]"
         view.disagree.label = f"Disagree [{(len(downvotes))}]"
+        try:
+            view.maybe.label = f"Maybe [{(len(maybe))}]"
+        except:
+            pass
         view.agree.disabled = True
         view.disagree.disabled = True
+        try:
+            view.maybe.disabled = True
+        except:
+            pass
         return view
 
 
