@@ -274,10 +274,10 @@ class utility(commands.Cog):
                 embed = nextcord.Embed(title=f"Server Avatar", color=member.color)
                 avatar = member.guild_avatar
                 if avatar is None:
-                    try:
-                        avatar = member.avatar.url
-                    except:
-                        avatar = self.bot.user.avatar.url
+                    embed.set_author(name=member.name)
+                    embed.description = f"No avatar found for {member.name}"
+                    await message.channel.send(embed=embed)
+                    return
                 else:
                     avatar = avatar.url
                 embed.set_image(url=avatar)
