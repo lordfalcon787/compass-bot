@@ -19,7 +19,7 @@ class View(nextcord.ui.View):
         super().__init__(timeout=None)
 
         self.agree = nextcord.ui.Button(label="Agree [0]", style=nextcord.ButtonStyle.green, custom_id="agree_suggestions")
-        self.maybe = nextcord.ui.Button(label="Maybe [0]", style=nextcord.ButtonStyle.yellow, custom_id="maybe_suggestions")
+        self.maybe = nextcord.ui.Button(label="Maybe [0]", style=nextcord.ButtonStyle.gray, custom_id="maybe_suggestions")
         self.disagree = nextcord.ui.Button(label="Disagree [0]", style=nextcord.ButtonStyle.red, custom_id="disagree_suggestions")
         self.agree.callback = self.agree_callback
         self.maybe.callback = self.maybe_callback
