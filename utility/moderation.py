@@ -707,6 +707,9 @@ class Moderation(commands.Cog):
             await ctx.message.add_reaction(GREEN_CHECK)
         else:
             time, readable = await self.get_time_until_timeout(duration)
+            if time == 0:
+                await ctx.message.add_reaction(RED_X)
+                return
             end = datetime.now() + timedelta(minutes=time // 60)
             if time is None:
                 await ctx.message.add_reaction(RED_X)
