@@ -255,13 +255,14 @@ class utility(commands.Cog):
 
         if len(arg) == 1:
             embed = nextcord.Embed(title="Server Avatar", color=message.author.color)
-            avatar = message.author.guild_avatar
+            avatar = message.author.display_avatar
             if avatar is None:
-                avatar = message.author.avatar.url
-            else:
-                avatar = avatar.url
-            embed.set_image(url=avatar)
-            embed.set_author(name=message.author.name, icon_url=avatar)
+                embed.set_author(name=message.author.name)
+                embed.description = f"No avatar found for {message.author.name}"
+                await message.channel.send(embed=embed)
+                return
+            embed.set_image(url=avatar.url)
+            embed.set_author(name=message.author.name, icon_url=avatar.url)
             await message.channel.send(embed=embed)
         else:
             arg = arg[1]
@@ -272,16 +273,14 @@ class utility(commands.Cog):
                 member = next((m for m in message.guild.members if arg.lower() in m.name.lower()), None)
             if member:
                 embed = nextcord.Embed(title=f"Server Avatar", color=member.color)
-                avatar = member.guild_avatar
+                avatar = member.display_avatar
                 if avatar is None:
                     embed.set_author(name=member.name)
                     embed.description = f"No avatar found for {member.name}"
                     await message.channel.send(embed=embed)
                     return
-                else:
-                    avatar = avatar.url
-                embed.set_image(url=avatar)
-                embed.set_author(name=member.name, icon_url=avatar)
+                embed.set_author(name=member.name, icon_url=avatar.url)
+                embed.set_image(url=avatar.url)
                 await message.channel.send(embed=embed)
 
     async def l_module(self, message):
