@@ -1,3 +1,4 @@
+import emoji
 import nextcord
 import asyncio
 
@@ -84,6 +85,43 @@ class Role(commands.Cog):
             if "deleted_user" in member.name:
                 deleted_users.append(member)
         await ctx.send(f"Found {len(deleted_users)} deleted users in the server.")
+
+    @nextcord.slash_command(name="crole", description="Create a custom role.", guild_ids=[1205270486230110330])
+    async def crole(self, interaction: nextcord.Interaction,
+                    name: str = SlashOption(description="The name of the role.", required=True),
+                    user: nextcord.Member = SlashOption(description="The user to create the role for.", required=True),
+                    color: str = SlashOption(description="The color of the role.", required=True),
+                    image_icon: Optional[nextcord.Attachment] = SlashOption(description="The icon of the role.", required=False),
+                    emoji_icon: Optional[str] = SlashOption(description="The emoji of the role.", required=False)):
+        if not interaction.user.guild_permissions.manage_roles:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        role_other = 1215914992352628858
+        role_other = interaction.guild.get_role(int(role_other))
+        position = role_other.position + 1
+        role = await interaction.guild.create_role(name=name, color=int(color.replace("#", ""), 16), position=position)
+        if emoji_icon:
+            try:
+                await role.edit(icon=emoji_icon)
+            except Exception as e:
+                await interaction.response.send_message(f"Failed to set emoji as role icon: {str(e)}", ephemeral=True)
+                return
+        if image_icon:
+            if image_icon.size > 256 * 1024:
+                await interaction.response.send_message("The icon file must be under 256KB in size.", ephemeral=True)
+                return
+            if not any(image_icon.filename.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif']):
+                await interaction.response.send_message("The icon file must be a PNG, JPG, or GIF image.", ephemeral=True)
+                return
+            icon_bytes = await image_icon.read()
+            try:
+                await role.edit(icon=icon_bytes)
+            except Exception as e:
+                await interaction.response.send_message(f"Failed to set image as role icon: {str(e)}", ephemeral=True)
+                return
+        await role.edit(position=position)
+        await user.add_roles(role)
+        await interaction.send(content=f"Successfully created role **{role.mention}** for {user.mention}.", ephemeral=True)
     
     @nextcord.slash_command(name="customrole", description="Edit your custom role parameters.", guild_ids=[1205270486230110330])
     async def customrole(self, interaction: nextcord.Interaction,
@@ -131,9 +169,7 @@ class Role(commands.Cog):
                 things_edited.append("icon")
             if emoji_icon:
                 try:
-                    emoji_id = emoji_icon.split(":")[2].split(">")[0]
-                    url = f"https://cdn.discordapp.com/emojis/{emoji_id}.png"
-                    await custom_role.edit(icon=url)
+                    await custom_role.edit(icon=emoji_icon)
                     things_edited.append("emoji icon")
                 except Exception as e:
                     await interaction.response.send_message(f"Failed to set emoji as role icon: {str(e)}", ephemeral=True)
@@ -341,9 +377,7 @@ class Role(commands.Cog):
                 things_edited.append("icon")
             if emoji_icon:
                 try:
-                    emoji_id = emoji_icon.split(":")[2].split(">")[0]
-                    url = f"https://cdn.discordapp.com/emojis/{emoji_id}.png"
-                    await role.edit(icon=url)
+                    await role.edit(icon=emoji_icon)
                     things_edited.append("emoji icon")
                 except Exception as e:
                     await interaction.response.send_message(f"Failed to set emoji as role icon: {str(e)}", ephemeral=True)
