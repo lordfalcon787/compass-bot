@@ -1,3 +1,4 @@
+import asyncio
 import nextcord
 from nextcord.ext import commands, tasks
 import json
@@ -19,6 +20,7 @@ class Counting(commands.Cog):
         self.bot = bot
         self.cache = {}
         self.number_cache = {}
+        self.lock = asyncio.Lock()
 
     @tasks.loop(seconds=30)
     async def update_cache(self):
@@ -51,7 +53,8 @@ class Counting(commands.Cog):
             return
         try:
             if len(message.content.split(" ")) == 1:
-                await self.count(message)
+                async with self.lock:
+                    await self.count(message)
             else:
                 return
         except:
