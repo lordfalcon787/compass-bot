@@ -18,13 +18,17 @@ class Counting(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.cache = {}
+        self.number_cache = {}
 
-    @tasks.loop(seconds=10)
+    @tasks.loop(seconds=30)
     async def update_cache(self):
         config = configuration.find_one({"_id": "config"})
         config = config["counting"]
         for key in config.keys():
             self.cache[key] = config[key]
+        docs = collection.find({})
+        for doc in docs:
+            self.number_cache[int(doc["_id"].split("_")[2])] = {"number": doc["Number"], "last": doc["Last"]}
 
     def cog_unload(self):
         if self.update_cache.is_running():
@@ -60,30 +64,29 @@ class Counting(commands.Cog):
             num = int(msg)
         except:
             return
-        
-        doc = collection.find_one({"_id": f"current_count_{message.guild.id}"})
-        if not doc:
-            doc = {"Number": 0, "Last": 11}
-            collection.insert_one({"_id": f"current_count_{message.guild.id}", "Number": 0, "Last": 11})
-        last_count = doc["Number"]
-        last_counter = doc["Last"]
+        last_count = self.number_cache.get(message.guild.id, {}).get("number", 0)
+        last_counter = self.number_cache.get(message.guild.id, {}).get("last", 11)
         if num <= last_count:
             await message.channel.send(f"{RED_X} {message.author.mention} RUINED IT at {num}!! The next number is **1**.")
             await message.add_reaction(RED_X)
+            self.number_cache[message.guild.id] = {"number": 0, "last": 11}
             collection.update_one({"_id": f"current_count_{message.guild.id}"}, {"$set": {"Number": 0, "Last": 11}})
             return
         elif message.author.id == last_counter:
             await message.channel.send(f"{RED_X} {message.author.mention} RUINED IT at {num}!! You cannot count twice in a row! The next number is **1**.")
+            self.number_cache[message.guild.id] = {"number": 0, "last": 11}
             await message.add_reaction(RED_X)
             collection.update_one({"_id": f"current_count_{message.guild.id}"}, {"$set": {"Number": 0, "Last": 11}})
             return
         elif num - last_count > 1:
             await message.channel.send(f"{RED_X} {message.author.mention} RUINED IT at {num}!! You cannot skip numbers! The next number is **1**.")
+            self.number_cache[message.guild.id] = {"number": 0, "last": 11}
             await message.add_reaction(RED_X)
             collection.update_one({"_id": f"current_count_{message.guild.id}"}, {"$set": {"Number": 0, "Last": 11}})
             return
         else:
             await message.add_reaction(GREEN_CHECK)
+            self.number_cache[message.guild.id] = {"number": num, "last": message.author.id}
             collection.update_one({"_id": f"current_count_{message.guild.id}"}, {"$set": {"Number": num, "Last": message.author.id}})
 
 def setup(bot):
