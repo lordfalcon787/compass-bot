@@ -88,8 +88,8 @@ class Counting(commands.Cog):
             collection.update_one({"_id": f"current_count_{message.guild.id}"}, {"$set": {"Number": 0, "Last": 11}})
             return
         else:
-            await message.add_reaction(GREEN_CHECK)
             self.number_cache[message.guild.id] = {"number": num, "last": message.author.id}
+            await message.add_reaction(GREEN_CHECK)
             collection.update_one({"_id": f"current_count_{message.guild.id}"}, {"$set": {"Number": num, "Last": message.author.id}})
 
 def setup(bot):
