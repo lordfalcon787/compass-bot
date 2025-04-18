@@ -96,6 +96,7 @@ class Role(commands.Cog):
         if not interaction.user.guild_permissions.manage_roles:
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
             return
+        await interaction.response.defer(ephemeral=True)
         role_other = 1215914992352628858
         role_other = interaction.guild.get_role(int(role_other))
         position = role_other.position + 1
@@ -104,20 +105,20 @@ class Role(commands.Cog):
             try:
                 await role.edit(icon=emoji_icon)
             except Exception as e:
-                await interaction.response.send_message(f"Failed to set emoji as role icon: {str(e)}", ephemeral=True)
+                await interaction.send(content=f"Failed to set emoji as role icon: {str(e)}", ephemeral=True)
                 return
         if image_icon:
             if image_icon.size > 256 * 1024:
-                await interaction.response.send_message("The icon file must be under 256KB in size.", ephemeral=True)
+                await interaction.send(content="The icon file must be under 256KB in size.", ephemeral=True)
                 return
             if not any(image_icon.filename.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif']):
-                await interaction.response.send_message("The icon file must be a PNG, JPG, or GIF image.", ephemeral=True)
+                await interaction.send(content="The icon file must be a PNG, JPG, or GIF image.", ephemeral=True)
                 return
             icon_bytes = await image_icon.read()
             try:
                 await role.edit(icon=icon_bytes)
             except Exception as e:
-                await interaction.response.send_message(f"Failed to set image as role icon: {str(e)}", ephemeral=True)
+                await interaction.send(content=f"Failed to set image as role icon: {str(e)}", ephemeral=True)
                 return
         await role.edit(position=position)
         await user.add_roles(role)
