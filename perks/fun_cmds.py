@@ -31,8 +31,9 @@ class FunCommands(commands.Cog):
     async def on_ready(self):
         print("Fun Commands cog is ready")
         if self.log_snipes.is_running():
-            self.log_snipes.stop()
-        await self.log_snipes.start()
+            pass
+        else:
+            await self.log_snipes.start()
 
     @tasks.loop(minutes=1)
     async def log_snipes(self):
