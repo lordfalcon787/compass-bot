@@ -145,7 +145,7 @@ class Role(commands.Cog):
                          color: Optional[str] = SlashOption(description="The new color of the role.", required=False),
                          image_icon: Optional[nextcord.Attachment] = SlashOption(description="The new icon of the role.", required=False),
                          emoji_icon: Optional[str] = SlashOption(description="The new emoji icon of the role.", required=False)):
-        custom_roles = [role for role in interaction.guild.roles if role.position < interaction.guild.get_role(1216541713489723452).position and role.position > interaction.guild.get_role(1215914992352628858).position]
+        custom_roles = [role for role in interaction.guild.roles if role.position < interaction.guild.get_role(1206518441855553566).position and role.position > interaction.guild.get_role(1215914992352628858).position]
         member = interaction.guild.get_member(interaction.user.id)
         custom_role = None
         for role in custom_roles:
