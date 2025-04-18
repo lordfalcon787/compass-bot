@@ -22,8 +22,9 @@ class Counting(commands.Cog):
         self.number_cache = {}
         self.lock = asyncio.Lock()
 
-    @tasks.loop(seconds=30)
-    async def update_cache(self):
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print(f"Counting cog loaded.")
         config = configuration.find_one({"_id": "config"})
         config = config["counting"]
         for key in config.keys():
@@ -31,16 +32,6 @@ class Counting(commands.Cog):
         docs = collection.find({})
         for doc in docs:
             self.number_cache[int(doc["_id"].split("_")[2])] = {"number": doc["Number"], "last": doc["Last"]}
-
-    def cog_unload(self):
-        if self.update_cache.is_running():
-            self.update_cache.cancel()
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print(f"Counting cog loaded.")
-        if not self.update_cache.is_running():
-            self.update_cache.start()
 
     @commands.Cog.listener()
     async def on_message(self, message):
