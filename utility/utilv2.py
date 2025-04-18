@@ -77,7 +77,7 @@ class Utilv2(commands.Cog):
         channel_overwrites = channel.overwrites
         if role:
             channel_overwrites[role] = nextcord.PermissionOverwrite(view_channel=True)
-        channel_overwrites[interaction.guild.default_role] = nextcord.PermissionOverwrite(view_channel=False)
+        channel_overwrites[interaction.guild.default_role] = nextcord.PermissionOverwrite(view_channel=False, send_messages=False)
         try:
             await channel.edit(overwrites=channel_overwrites)
             await interaction.response.send_message(f"Channel viewlocked. Only specified roles can view this channel.", ephemeral=True)
@@ -100,7 +100,7 @@ class Utilv2(commands.Cog):
                     await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
                     return
         channel_overwrites = channel.overwrites
-        channel_overwrites[interaction.guild.default_role] = nextcord.PermissionOverwrite(view_channel=True)
+        channel_overwrites[interaction.guild.default_role] = nextcord.PermissionOverwrite(view_channel=True, send_messages=False)
         try:
             await channel.edit(overwrites=channel_overwrites)
             await interaction.response.send_message(f"Channel unviewlocked.", ephemeral=True)
