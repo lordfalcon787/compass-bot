@@ -100,7 +100,7 @@ class Role(commands.Cog):
         role_other = 1215914992352628858
         role_other = interaction.guild.get_role(int(role_other))
         position = role_other.position + 1
-        role = await interaction.guild.create_role(name=name, color=int(color.replace("#", ""), 16), position=position)
+        role = await interaction.guild.create_role(name=name, color=int(color.replace("#", ""), 16))
         if emoji_icon:
             try:
                 await role.edit(icon=emoji_icon)
