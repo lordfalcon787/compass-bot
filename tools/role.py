@@ -1,6 +1,7 @@
 import emoji
 import nextcord
 import asyncio
+import aiohttp
 
 from nextcord.ext import commands
 from typing import Optional
@@ -103,7 +104,21 @@ class Role(commands.Cog):
         role = await interaction.guild.create_role(name=name, color=int(color.replace("#", ""), 16))
         if emoji_icon:
             try:
-                await role.edit(icon=emoji_icon)
+                if emoji_icon.startswith('<:') or emoji_icon.startswith('<a:'):
+                    emoji_id = emoji_icon.split(':')[-1].rstrip('>')
+                    is_animated = emoji_icon.startswith('<a:')
+                    extension = 'gif' if is_animated else 'png'
+                    emoji_url = f"https://cdn.discordapp.com/emojis/{emoji_id}.{extension}"
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(emoji_url) as response:
+                            if response.status == 200:
+                                emoji_bytes = await response.read()
+                                await role.edit(icon=emoji_bytes)
+                            else:
+                                await interaction.send(content=f"Failed to fetch emoji image: HTTP {response.status}", ephemeral=True)
+                                return
+                else:
+                    await role.edit(icon=emoji_icon)
             except Exception as e:
                 await interaction.send(content=f"Failed to set emoji as role icon: {str(e)}", ephemeral=True)
                 return
@@ -170,8 +185,23 @@ class Role(commands.Cog):
                 things_edited.append("icon")
             if emoji_icon:
                 try:
-                    await custom_role.edit(icon=emoji_icon)
-                    things_edited.append("emoji icon")
+                    if emoji_icon.startswith('<:') or emoji_icon.startswith('<a:'):
+                        emoji_id = emoji_icon.split(':')[-1].rstrip('>')
+                        is_animated = emoji_icon.startswith('<a:')
+                        extension = 'gif' if is_animated else 'png'
+                        emoji_url = f"https://cdn.discordapp.com/emojis/{emoji_id}.{extension}"
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(emoji_url) as response:
+                                if response.status == 200:
+                                    emoji_bytes = await response.read()
+                                    await custom_role.edit(icon=emoji_bytes)
+                                    things_edited.append("emoji icon")
+                                else:
+                                    await interaction.send(content=f"Failed to fetch emoji image: HTTP {response.status}", ephemeral=True)
+                                    return
+                    else:
+                        await custom_role.edit(icon=emoji_icon)
+                        things_edited.append("emoji icon")
                 except Exception as e:
                     await interaction.response.send_message(f"Failed to set emoji as role icon: {str(e)}", ephemeral=True)
                     return
@@ -378,7 +408,21 @@ class Role(commands.Cog):
                 things_edited.append("icon")
             if emoji_icon:
                 try:
-                    await role.edit(icon=emoji_icon)
+                    if emoji_icon.startswith('<:') or emoji_icon.startswith('<a:'):
+                        emoji_id = emoji_icon.split(':')[-1].rstrip('>')
+                        is_animated = emoji_icon.startswith('<a:')
+                        extension = 'gif' if is_animated else 'png'
+                        emoji_url = f"https://cdn.discordapp.com/emojis/{emoji_id}.{extension}"
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(emoji_url) as response:
+                                if response.status == 200:
+                                    emoji_bytes = await response.read()
+                                    await role.edit(icon=emoji_bytes)
+                                else:
+                                    await interaction.send(content=f"Failed to fetch emoji image: HTTP {response.status}", ephemeral=True)
+                                    return
+                    else:
+                        await role.edit(icon=emoji_icon)
                     things_edited.append("emoji icon")
                 except Exception as e:
                     await interaction.response.send_message(f"Failed to set emoji as role icon: {str(e)}", ephemeral=True)
