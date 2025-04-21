@@ -1,6 +1,6 @@
 import asyncio
 import nextcord
-from nextcord.ext import commands, tasks
+from nextcord.ext import commands
 from datetime import datetime
 
 from utils.mongo_connection import MongoConnection
@@ -14,25 +14,51 @@ collection.create_index("end_time")
 class Timer(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.active_timers = {}
 
     def cog_unload(self):
-        if self.check_timers.is_running():
-            self.check_timers.cancel()
+        for timer_id, task in self.active_timers.items():
+            if not task.done():
+                task.cancel()
 
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Timer cog loaded.")
-        if not self.check_timers.is_running():
-            self.check_timers.start()
+        await self.load_timers()
 
-    @tasks.loop(seconds=2)
-    async def check_timers(self):
+    async def load_timers(self):
         current_time = int(datetime.now().timestamp())
-        expired_timers = list(collection.find({"end_time": {"$lt": current_time}}).limit(100))
+        timers = list(collection.find({}))
         
-        for timer in expired_timers:
+        for timer in timers:
+            end_time = timer["end_time"]
+            seconds_remaining = end_time - current_time
+            
+            if seconds_remaining <= 0:
+                collection.delete_one({"_id": timer["_id"]})
+                asyncio.create_task(self.timer_end(timer))
+            else:
+                self.schedule_timer(timer, seconds_remaining)
+
+    def schedule_timer(self, timer, seconds_remaining):
+        timer_id = timer["_id"]
+        if timer_id in self.active_timers and not self.active_timers[timer_id].done():
+            self.active_timers[timer_id].cancel()
+        task = asyncio.create_task(self.wait_and_end_timer(timer, seconds_remaining))
+        self.active_timers[timer_id] = task
+
+    async def wait_and_end_timer(self, timer, seconds_remaining):
+        try:
+            await asyncio.sleep(seconds_remaining)
             collection.delete_one({"_id": timer["_id"]})
-            asyncio.create_task(self.timer_end(timer))
+            await self.timer_end(timer)
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            print(f"Error in timer task: {e}")
+        finally:
+            if timer["_id"] in self.active_timers:
+                del self.active_timers[timer["_id"]]
 
     async def timer_end(self, timer):
         try:
@@ -77,7 +103,17 @@ class Timer(commands.Cog):
         msg = await ctx.send(embed=embed)
         await ctx.message.delete()
         await msg.add_reaction("🔔")
-        collection.insert_one({"_id": msg.id, "end_time": end_time, "host": ctx.author.id, "channel": ctx.channel.id, "guild": ctx.guild.id})
+        
+        timer_data = {
+            "_id": msg.id, 
+            "end_time": end_time, 
+            "host": ctx.author.id, 
+            "channel": ctx.channel.id, 
+            "guild": ctx.guild.id
+        }
+        
+        collection.insert_one(timer_data)
+        self.schedule_timer(timer_data, total_seconds)
 
 def setup(bot):
     bot.add_cog(Timer(bot))
