@@ -231,7 +231,7 @@ class Moderation(commands.Cog):
         except:
             pass
         try:
-            await member.ban(reason=reason)
+            await member.ban(reason=reason, delete_message_days=0)
         except:
             await ctx.reply("I was unable to ban the user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
