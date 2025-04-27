@@ -1604,15 +1604,16 @@ class payouts(commands.Cog):
             payout = self.cache.get(str(message.guild.id))
             if not payout or message.channel.id != payout or message.author.id != 270904126974590976:
                 return
-            
+            print("1")
             if not message.embeds or not message.embeds[0].description or "successfully paid" not in message.embeds[0].description.lower():
                 return
-            
+            print("2")
             doc = collection.find_one({"_id": f"current_payout_{message.guild.id}"})
             if not doc:
                 return
             try:
                 ref_msg = message.reference.cached_message
+                print(ref_msg)
             except:
                 ref_msg = None
             if ref_msg:
