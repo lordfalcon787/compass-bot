@@ -1605,7 +1605,7 @@ class payouts(commands.Cog):
             if not payout or message.channel.id != payout or message.author.id != 270904126974590976:
                 return
             print("1")
-            print(message.view)
+            print(message.reference.cached_message)
             if not message.embeds or not message.embeds[0].description or "successfully paid" not in message.embeds[0].description.lower():
                 return
             print("2")
