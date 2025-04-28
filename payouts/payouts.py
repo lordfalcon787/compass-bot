@@ -1688,8 +1688,7 @@ class payouts(commands.Cog):
                 asyncio.create_task(self.check_timeout(message, time))
             except:
                 pass
-        except Exception as e:
-            print(e)
+        except:
             return
         
     async def check_timeout(self, message, time):
