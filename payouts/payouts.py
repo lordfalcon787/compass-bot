@@ -955,7 +955,7 @@ class payouts(commands.Cog):
             
         return choices
     
-    async def get_message(self, interaction, message_id):
+    async def get_message(self, interaction, message_id, override):
         msg = None
         if message_id:
             if "https://discord.com/channels/" in message_id:
@@ -971,7 +971,7 @@ class payouts(commands.Cog):
             except:
                 await interaction.send(content="Unable to find a message ID, make sure it is correct.", ephemeral=True)
                 return
-            if loading_emoji in [str(reaction.emoji) for reaction in msg.reactions if reaction.me]:
+            if loading_emoji in [str(reaction.emoji) for reaction in msg.reactions if reaction.me] and override is False:
                 await interaction.send(content="That message has already been used for a payout.", ephemeral=True)
                 return
         else:
@@ -1032,7 +1032,7 @@ class payouts(commands.Cog):
             return
         
         msg = None
-        msg = await self.get_message(interaction, message_id)
+        msg = await self.get_message(interaction, message_id, False)
             
         if msg is None:
             await interaction.send(content="Unable to find a message ID, make sure it is correct.", ephemeral=True)
@@ -1305,7 +1305,7 @@ class payouts(commands.Cog):
         if override is None:
             override = False
         msg = None
-        msg = await self.get_message(interaction, message_id)
+        msg = await self.get_message(interaction, message_id, override)
 
 
         if not msg:
