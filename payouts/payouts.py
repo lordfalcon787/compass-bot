@@ -1604,17 +1604,11 @@ class payouts(commands.Cog):
             payout = self.cache.get(str(message.guild.id))
             if not payout or message.channel.id != payout or message.author.id != 270904126974590976:
                 return
-            print("1")
-            print(message.reference.cached_message)
-            if not message.embeds or not message.embeds[0].description or "successfully paid" not in message.embeds[0].description.lower():
-                return
-            print("2")
             doc = collection.find_one({"_id": f"current_payout_{message.guild.id}"})
             if not doc:
                 return
             try:
                 ref_msg = message.reference.cached_message
-                print(ref_msg)
             except:
                 ref_msg = None
             if ref_msg:
@@ -1624,9 +1618,8 @@ class payouts(commands.Cog):
             current_user, current_prize, current_id = doc["user"], str(doc["prize"]), doc["current_id"]
             other_doc = collection.find_one({"_id": current_id})
             payout_slice = doc["payout_slice"]
-            content = message.embeds[0].description
+            content = ref_msg.embeds[0].description
             user = content.split("<@")[1].split(">")[0]
-
             prize = content.split("**")[1].replace("⏣ ", "").replace(",", "").split("**")[0].replace("*", "")
             if ">" in prize:
                 prize = f"{prize.split(' <')[0]} {prize.split('> ')[1]}"
@@ -1695,7 +1688,8 @@ class payouts(commands.Cog):
                 asyncio.create_task(self.check_timeout(message, time))
             except:
                 pass
-        except:
+        except Exception as e:
+            print(e)
             return
         
     async def check_timeout(self, message, time):
