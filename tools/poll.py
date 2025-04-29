@@ -299,7 +299,7 @@ class Poll(commands.Cog):
         choice_index = int(custom_id.split("_")[-1])
         poll_id = str(interaction.message.id)
         user_id = interaction.user.id
-
+        await interaction.response.defer(ephemeral=True)
         poll = collection.find_one({"_id": poll_id})
         voters = poll["voters"]
         if poll:
@@ -362,6 +362,7 @@ class Poll(commands.Cog):
             if custom_id.startswith("pollanon_choice_"):
                 await self.anon_choice(interaction)
             if custom_id.startswith("poll_choice_"):
+                await interaction.response.defer(ephemeral=True)
                 choice_index = int(custom_id.split("_")[-1])
                 poll_id = str(interaction.message.id)
                 user_id = str(interaction.user.id)
