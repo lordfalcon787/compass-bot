@@ -200,7 +200,51 @@ class misc(commands.Cog):
         file = nextcord.File(fp=image_bytes, filename="ship.png")
         await interaction.followup.send(file=file, embed=embed)
 
-    @nextcord.slash_command(name="embed", description="Create an embed")
+    @nextcord.slash_command(name="embed")
+    @application_checks.guild_only()
+    async def embed_slash(self, interaction: nextcord.Interaction):
+        pass
+
+    @embed_slash.subcommand(name="fetchdescription", description="Fetch the description of an embed")
+    @application_checks.guild_only()
+    async def fetch_description(self, interaction: nextcord.Interaction, 
+                                message_id: str = SlashOption(description="Enter the message ID of the embed to fetch the description of", required=True)):
+        await interaction.response.defer(ephemeral=True)
+        message = await interaction.channel.fetch_message(int(message_id))
+        embed = message.embeds[0]
+        await interaction.followup.send(f"```{embed.description}```", ephemeral=True)
+    @embed_slash.subcommand(name="edit", description="Edit an embed")
+    @application_checks.guild_only()
+    async def edit_embed(self, interaction: nextcord.Interaction, 
+                        message_id: str = SlashOption(description="Enter the message ID of the embed to edit", required=True),
+                        title: str = SlashOption(description="Enter a title for the embed", required=False),
+                        description: str = SlashOption(description="Enter a description for the embed", required=False),
+                        footer: str = SlashOption(description="Enter a footer for the embed", required=False),
+                        color: str = SlashOption(description="Enter a color for the embed", required=False),
+                        image: str = SlashOption(description="Enter an image url for the embed", required=False),
+                        thumbnail: str = SlashOption(description="Enter a thumbnail url for the embed", required=False)):
+        await interaction.response.defer(ephemeral=True)
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
+            return
+        message = await interaction.channel.fetch_message(int(message_id))
+        embed = message.embeds[0]
+        if title is not None:
+            embed.title = title
+        if description is not None:
+            embed.description = description
+        if footer is not None:
+            embed.set_footer(text=footer)
+        if color is not None:
+            embed.color = int(color, 16)
+        if image is not None:
+            embed.set_image(url=image)
+        if thumbnail is not None:
+            embed.set_thumbnail(url=thumbnail)
+        await message.edit(embed=embed)
+        await interaction.followup.send("Embed edited.", ephemeral=True)
+
+    @embed_slash.subcommand(name="create", description="Create an embed")
     @application_checks.guild_only()
     async def embed_slash(self, interaction: nextcord.Interaction, 
                    title: str = SlashOption(description="Enter a title for the embed", required=True),
