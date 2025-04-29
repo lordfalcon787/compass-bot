@@ -213,6 +213,7 @@ class misc(commands.Cog):
         message = await interaction.channel.fetch_message(int(message_id))
         embed = message.embeds[0]
         await interaction.followup.send(f"```{embed.description}```", ephemeral=True)
+    
     @embed_slash.subcommand(name="edit", description="Edit an embed")
     @application_checks.guild_only()
     async def edit_embed(self, interaction: nextcord.Interaction, 
@@ -246,7 +247,7 @@ class misc(commands.Cog):
 
     @embed_slash.subcommand(name="create", description="Create an embed")
     @application_checks.guild_only()
-    async def embed_slash(self, interaction: nextcord.Interaction, 
+    async def embed_slash_create(self, interaction: nextcord.Interaction, 
                    title: str = SlashOption(description="Enter a title for the embed", required=True),
                    description: str = SlashOption(description="Enter a description for the embed", required=True),
                    footer: str = SlashOption(description="Enter a footer for the embed", required=False),
