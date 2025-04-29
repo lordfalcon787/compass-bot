@@ -233,6 +233,7 @@ class misc(commands.Cog):
         if title is not None:
             embed.title = title
         if description is not None:
+            description = description.replace("\\n", "\n")
             embed.description = description
         if footer is not None:
             embed.set_footer(text=footer)
