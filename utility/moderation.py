@@ -205,7 +205,7 @@ class Moderation(commands.Cog):
                 pass
 
     @commands.command(name="ban")
-    async def ban_cmd(self, ctx, member: nextcord.Member = None, *, reason: str = "No reason provided"):
+    async def ban_cmd(self, ctx, member: nextcord.User = None, *, reason: str = "No reason provided"):
         if member is None:
             await ctx.reply("Correct usage: `!ban @member reason`", mention_author=False)
             await ctx.message.add_reaction(RED_X)
@@ -222,16 +222,19 @@ class Moderation(commands.Cog):
             return
         if not any(role in user_roles for role in config) and not ctx.author.guild_permissions.ban_members:
             return
-        if member.top_role >= ctx.author.top_role or member.top_role >= bot_member.top_role:
-            await ctx.reply("You cannot ban this user.", mention_author=False)
-            await ctx.message.add_reaction(RED_X)
-            return
+        member_in_guild = ctx.guild.get_member(member.id)
+        if member_in_guild:
+            if member_in_guild.top_role >= ctx.author.top_role or member_in_guild.top_role >= bot_member.top_role:
+                await ctx.reply("You cannot ban this user.", mention_author=False)
+                await ctx.message.add_reaction(RED_X)
+                return
+            try:
+                await member.send(f"You have been banned from **{ctx.guild.name}** for reason: {reason}")
+            except:
+                pass
+        
         try:
-            await member.send(f"You have been banned from **{ctx.guild.name}** for reason: {reason}")
-        except:
-            pass
-        try:
-            await member.ban(reason=reason, delete_message_seconds=0)
+            await ctx.guild.ban(member, reason=reason, delete_message_seconds=0)
         except:
             await ctx.reply("I was unable to ban the user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
