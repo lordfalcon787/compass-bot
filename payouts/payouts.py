@@ -798,6 +798,16 @@ class payouts(commands.Cog):
         if not self.cache_payouts.is_running():
             self.cache_payouts.start()
 
+    async def extract(self, message):
+        target = message
+        route = nextcord.http.Route(
+            'GET', '/channels/{channel_id}/messages/{message_id}',
+            channel_id=target.channel.id, message_id=target.id
+        )
+        raw_json = await self.bot.http.request(route)
+        content_pieces = self.extractor.extract_content(raw_json)
+        return content_pieces
+
     @commands.command(name="payoutstats", aliases=["pstats"])
     async def payoutstats(self, ctx):
         doc = collec.find_one({"_id": f"payout_stats_{ctx.guild.id}"})
@@ -813,13 +823,7 @@ class payouts(commands.Cog):
                 return await ctx.send("❌ Reply to a message to decode it!")
 
             target = ctx.message.reference.resolved
-            route = nextcord.http.Route(
-                'GET', '/channels/{channel_id}/messages/{message_id}',
-                channel_id=target.channel.id, message_id=target.id
-            )
-            raw_json = await self.bot.http.request(route)
-
-            content_pieces = self.extractor.extract_content(raw_json)
+            content_pieces = await self.extract(target)
 
             if not content_pieces:
                 return await ctx.send("🔍 No detectable content found")
@@ -1673,7 +1677,7 @@ class payouts(commands.Cog):
             current_user, current_prize, current_id = doc["user"], str(doc["prize"]), doc["current_id"]
             other_doc = collection.find_one({"_id": current_id})
             payout_slice = doc["payout_slice"]
-            content = await self.extractor.extract_content(ref_msg)
+            content = await self.extract(ref_msg)
             content = content.split("Are you sure")[1]
             content = content.split("pool?")[0]
             user = content.split("<@")[1].split(">")[0]
