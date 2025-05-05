@@ -1678,11 +1678,9 @@ class payouts(commands.Cog):
             other_doc = collection.find_one({"_id": current_id})
             payout_slice = doc["payout_slice"]
             content = await self.extract(ref_msg)
-            print(content)
+            content = " ".join(content)
             content = content.split("Are you sure")[1]
-            print(content)
             content = content.split("pool?")[0]
-            print(content)
             user = content.split("<@")[1].split(">")[0]
             prize = content.split("**")[1].replace("⏣ ", "").replace(",", "").split("**")[0].replace("*", "")
             if ">" in prize:
