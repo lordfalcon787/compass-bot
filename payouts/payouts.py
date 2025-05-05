@@ -747,6 +747,7 @@ class payouts(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.cache = {}
+        self.extractor = PrecisionExtractor()
         self.queue_cache = {}
         self.state = PayoutState.get_instance()
         self.embed = nextcord.Embed(title="Bot Banned", description="You are banned from using this bot. Please contact the bot owner if you believe this is an error. \n\n **Reason:** Direct violation of the Terms of Service.", color=16711680)
@@ -805,31 +806,34 @@ class payouts(commands.Cog):
         embed.set_thumbnail(url=ctx.guild.icon.url)
         await ctx.reply(embed=embed, mention_author=False)
 
-    @commands.command(name="decoded", aliases=["decode"])
-    async def decoded(self, ctx):
-        if not ctx.message.reference:
-            await ctx.reply("Please reply to a message to decode it.", mention_author=False)
-            return
-            
-        ref_msg = ctx.message.reference.resolved
-        if not ref_msg:
-            await ctx.reply("Could not find the referenced message.", mention_author=False)
-            return
-            
-        message_data = {
-            'components': [component.to_dict() for component in ref_msg.components]
-        }
-        
-        component_dict = ref_msg.components.to_dict()
-        print(component_dict)
-        json_data = json.dumps(message_data, indent=2)
-        
-        if len(json_data) > 1900:
-            chunks = [json_data[i:i+1900] for i in range(0, len(json_data), 1900)]
-            for i, chunk in enumerate(chunks, 1):
-                await ctx.reply(f"```json\n{chunk}\n```", mention_author=False)
-        else:
-            await ctx.reply(f"```json\n{json_data}\n```", mention_author=False)
+    @commands.command(name="decode")
+    async def decode(self, ctx: commands.Context):
+        try:
+            if not ctx.message.reference:
+                return await ctx.send("❌ Reply to a message to decode it!")
+
+            target = ctx.message.reference.resolved
+            route = nextcord.http.Route(
+                'GET', '/channels/{channel_id}/messages/{message_id}',
+                channel_id=target.channel.id, message_id=target.id
+            )
+            raw_json = await self.bot.http.request(route)
+
+            content_pieces = self.extractor.extract_content(raw_json)
+
+            if not content_pieces:
+                return await ctx.send("🔍 No detectable content found")
+
+            output = [
+                f"Message from {target.author.display_name}:",
+                *[f"• {piece}" for piece in content_pieces],
+                f"🕒 {target.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+            ]
+
+            await ctx.send(f"```yaml\n" + '\n'.join(output) + "\n```")
+
+        except Exception as e:
+            await ctx.send(f"❌ Error: {str(e)}")
 
     @commands.command(name="payoutpurge", aliases=["purgepay"])
     async def payoutpurge(self, ctx):
