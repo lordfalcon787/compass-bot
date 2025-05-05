@@ -2,13 +2,14 @@ import nextcord
 import time
 import asyncio
 import re
+import json
 import aiohttp
 
 from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
 from nextcord.ext import commands, tasks, application_checks
 from nextcord import SlashOption
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 from utils.mongo_connection import MongoConnection
 
@@ -38,6 +39,30 @@ DOT = "<a:golddot:1303833388410601522>"
 GREEN_CHECK = "<:green_check:1218286675508199434>"
 
 DICT = {487328045275938828: "gartic", 807692666107985941: "giveaway",758999095070687284: "mafia", 511786918783090688: "mafia", 693167035068317736: "rumble", 675996677366218774: "hangry", 742231542209708103: "giveaway"}
+
+class PrecisionExtractor:
+    def extract_content(self, raw_json: Dict[str, Any]) -> List[str]:
+        results = []
+        
+        def scan_component(component: Dict[str, Any]):
+            for field in ['label', 'content', 'value', 'placeholder']:
+                if field in component and isinstance(component[field], str):
+                    text = component[field].strip()
+                    if text and len(text) > 1:  
+                        results.append(text)
+            
+            if 'components' in component:
+                for child in component['components']:
+                    scan_component(child)
+
+        if 'content' in raw_json and raw_json['content']:
+            results.append(raw_json['content'].strip())
+        
+        if 'components' in raw_json:
+            for component in raw_json['components']:
+                scan_component(component)
+
+        return results
 
 class EditPrizeModal(nextcord.ui.Modal):
     def __init__(self, bot, interaction):
@@ -779,6 +804,34 @@ class payouts(commands.Cog):
         embed.set_footer(text="Logged since 12/17/2024", icon_url=ctx.guild.icon.url)
         embed.set_thumbnail(url=ctx.guild.icon.url)
         await ctx.reply(embed=embed, mention_author=False)
+
+    @commands.command(name="decoded", aliases=["decode"])
+    async def decoded(self, ctx):
+        if not ctx.message.reference:
+            await ctx.reply("Please reply to a message to decode it.", mention_author=False)
+            return
+            
+        try:
+            ref_msg = ctx.message.reference.resolved
+            if not ref_msg:
+                await ctx.reply("Could not find the referenced message.", mention_author=False)
+                return
+                
+            message_data = {
+                'components': [component.to_dict() for component in ref_msg.components]
+            }
+            
+            json_data = json.dumps(message_data, indent=2)
+            
+            if len(json_data) > 1900:
+                chunks = [json_data[i:i+1900] for i in range(0, len(json_data), 1900)]
+                for i, chunk in enumerate(chunks, 1):
+                    await ctx.reply(f"```json\n{chunk}\n```", mention_author=False)
+            else:
+                await ctx.reply(f"```json\n{json_data}\n```", mention_author=False)
+                
+        except Exception as e:
+            await ctx.reply(f"Error decoding message: {str(e)}", mention_author=False)
 
     @commands.command(name="payoutpurge", aliases=["purgepay"])
     async def payoutpurge(self, ctx):

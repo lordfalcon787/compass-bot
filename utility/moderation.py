@@ -232,7 +232,6 @@ class Moderation(commands.Cog):
                 await member.send(f"You have been banned from **{ctx.guild.name}** for reason: {reason}")
             except:
                 pass
-        
         try:
             await ctx.guild.ban(member, reason=reason, delete_message_seconds=0)
         except:
