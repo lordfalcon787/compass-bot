@@ -43,7 +43,10 @@ class Moderation(commands.Cog):
                     if member:
                         roles = item.get("roles", [])
                         member_roles = member.roles
-                        member_roles.remove(ebl_role)
+                        try:
+                            member_roles.remove(ebl_role)
+                        except:
+                            pass
                         for role in roles:
                             role_object = guild.get_role(int(role))
                             if role_object:
