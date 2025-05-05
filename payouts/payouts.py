@@ -811,27 +811,25 @@ class payouts(commands.Cog):
             await ctx.reply("Please reply to a message to decode it.", mention_author=False)
             return
             
-        try:
-            ref_msg = ctx.message.reference.resolved
-            if not ref_msg:
-                await ctx.reply("Could not find the referenced message.", mention_author=False)
-                return
-                
-            message_data = {
-                'components': [component.to_dict() for component in ref_msg.components]
-            }
+        ref_msg = ctx.message.reference.resolved
+        if not ref_msg:
+            await ctx.reply("Could not find the referenced message.", mention_author=False)
+            return
             
-            json_data = json.dumps(message_data, indent=2)
-            
-            if len(json_data) > 1900:
-                chunks = [json_data[i:i+1900] for i in range(0, len(json_data), 1900)]
-                for i, chunk in enumerate(chunks, 1):
-                    await ctx.reply(f"```json\n{chunk}\n```", mention_author=False)
-            else:
-                await ctx.reply(f"```json\n{json_data}\n```", mention_author=False)
-                
-        except Exception as e:
-            await ctx.reply(f"Error decoding message: {str(e)}", mention_author=False)
+        message_data = {
+            'components': [component.to_dict() for component in ref_msg.components]
+        }
+        
+        component_dict = ref_msg.components.to_dict()
+        print(component_dict)
+        json_data = json.dumps(message_data, indent=2)
+        
+        if len(json_data) > 1900:
+            chunks = [json_data[i:i+1900] for i in range(0, len(json_data), 1900)]
+            for i, chunk in enumerate(chunks, 1):
+                await ctx.reply(f"```json\n{chunk}\n```", mention_author=False)
+        else:
+            await ctx.reply(f"```json\n{json_data}\n```", mention_author=False)
 
     @commands.command(name="payoutpurge", aliases=["purgepay"])
     async def payoutpurge(self, ctx):
