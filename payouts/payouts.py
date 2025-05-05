@@ -421,7 +421,7 @@ class QueueView(nextcord.ui.View):
         wh = await GetWebhook.get_webhook(interaction.channel)
         await wh.edit_message(interaction.message.id, content=None, embed=embed, view=view)
         await interaction.response.send_message(content="This payout has been rejected.", ephemeral=True)
-        collec.update_one({"_id": "payout_stats"}, {"$inc": {"rejected": 1}})
+        collec.update_one({"_id": "payout_stats"}, {"$inc": {"rejected": 1, "queued": -doc["value"], "queued_amt": -1}})
 
     async def reject_with_reason_callback(self, interaction: nextcord.Interaction):
         roles = [role.id for role in interaction.user.roles]
@@ -503,6 +503,7 @@ class View(nextcord.ui.View):
         view.add_item(nextcord.ui.Button(label="Event Message", url=f"{link}", emoji="🔗"))
         await interaction.message.edit(content=None, embed=embed, view=view)
         await interaction.response.send_message(content="This payout has been cancelled successfully.", ephemeral=True)
+        collec.update_one({"_id": f"payout_stats_{interaction.guild.id}"}, {"$inc": {"queued": -doc["value"], "queued_amt": -1}})
     
 class PayoutState:
     _instance = None
