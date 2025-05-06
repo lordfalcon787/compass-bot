@@ -7,6 +7,8 @@ from nextcord import SlashOption
 from typing import Optional
 
 RC_ID = 1205270486230110330
+GREEN_CHECK = "<:green_check2:1291173532432203816>"
+RED_X = "<:red_x2:1292657124832448584>"
 
 from utils.mongo_connection import MongoConnection
 
@@ -34,6 +36,57 @@ class stafflist(commands.Cog):
     async def on_ready(self):
         print(f"Staff utility cog loaded.")
         self.bot.add_view(Use())
+
+    @commands.command(name="promote")
+    async def promote(self, ctx, member: nextcord.Member = None):
+        if ctx.guild.id != 1205270486230110330:
+            await ctx.send("This command is only available in the Robbing Central server.")
+            return
+        if member is None:
+            await ctx.send("Please specify a member to promote.")
+            return
+        if not ctx.author.guild_permissions.administrator:
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"You do not have permission to promote this member.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        if member.guild_permissions.administrator:
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"You do not have permission to promote this member.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        if member.top_role.position >= ctx.author.top_role.position:
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"You do not have permission to promote this member.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        array = ["★", "✦", "✧", "♢", "GarticMod"]
+        roles = member.roles
+        new_roles = []
+        for role in roles:
+            if not any(r for r in array if r in role.name):
+                new_roles.append(role)
+        removed_roles = len(roles) - len(new_roles)
+        retained_roles = len(new_roles)
+        if len(new_roles) == len(roles):
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"No dangerous roles to remove were found.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        try:
+            await member.edit(roles=new_roles)
+        except:
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"An error occurred while promoting the member.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        embed = nextcord.Embed(title = f"Successfully promoted to `Member`", description = f"Flagged and removed `{removed_roles}` roles from {member.mention} with `{retained_roles}` retained.", color=65280)
+        await ctx.reply(embed = embed, mention_author=False)
+        await ctx.message.add_reaction(GREEN_CHECK)
+        
+        
+        
+        
         
     @commands.command(name="kstaff")
     async def kstaff(self, ctx):
