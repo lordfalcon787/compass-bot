@@ -515,13 +515,15 @@ class Auction(commands.Cog):
                 print(e)
                 await message.add_reaction(RED_X)
                 return
-        if not msg.embeds:
+        content_pieces = await self.extract(msg)
+        if not content_pieces:
             await message.add_reaction(RED_X)
             return
-        elif "successfully donated" not in msg.embeds[0].description.lower():
+        content = " ".join(content_pieces)
+        if "successfully donated" not in content.lower():
             await message.add_reaction(RED_X)
             return
-        elif "⏣" in msg.embeds[0].description.lower():
+        elif "⏣" in content.lower():
             await message.add_reaction(RED_X)
             return
         if GREEN_CHECK in msg.reactions:
