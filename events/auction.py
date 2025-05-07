@@ -519,7 +519,9 @@ class Auction(commands.Cog):
         if not content_pieces:
             await message.add_reaction(RED_X)
             return
+        print(content_pieces)
         content = " ".join(content_pieces)
+        print(content)
         if "successfully donated" not in content.lower():
             await message.add_reaction(RED_X)
             return
