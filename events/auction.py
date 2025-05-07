@@ -550,6 +550,7 @@ class Auction(commands.Cog):
             if not content_pieces:
                 return
             content = " ".join(content_pieces)
+            print(content)
             if "successfully donated" not in content.lower():
                 return
             elif "⏣" in content.lower():
@@ -561,7 +562,8 @@ class Auction(commands.Cog):
                 return
             await message.add_reaction(GREEN_CHECK)
             await self.start_auction(message, message.channel.id, seller)
-        except:
+        except Exception as e:
+            print(e)
             return
 
     async def start_auction(self, message, channel_id, seller):
