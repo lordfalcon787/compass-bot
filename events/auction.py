@@ -1,6 +1,7 @@
 import nextcord
 from nextcord.ext import commands, tasks
 import asyncio
+from typing import Dict, Any, List
 from datetime import datetime
 
 AUCTION_CHANNEL = 1240782193270460476
@@ -19,7 +20,30 @@ db = mongo.get_db()
 collection = db["Auction"]
 itemcollection = db["Items"]
 configuration = db["Configuration"]
+class PrecisionExtractor:
 
+    def extract_content(self, raw_json: Dict[str, Any]) -> List[str]:
+        results = []
+        
+        def scan_component(component: Dict[str, Any]):
+            for field in ['label', 'content', 'value', 'placeholder']:
+                if field in component and isinstance(component[field], str):
+                    text = component[field].strip()
+                    if text and len(text) > 1:  
+                        results.append(text)
+            
+            if 'components' in component:
+                for child in component['components']:
+                    scan_component(child)
+
+        if 'content' in raw_json and raw_json['content']:
+            results.append(raw_json['content'].strip())
+        
+        if 'components' in raw_json:
+            for component in raw_json['components']:
+                scan_component(component)
+
+        return results
 class Use(nextcord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -52,6 +76,16 @@ class Auction(commands.Cog):
     async def cache_auction(self):
         config = configuration.find_one({"_id": "config"})
         self.cache = config["auction"]
+
+    async def extract(self, message):
+        target = message
+        route = nextcord.http.Route(
+            'GET', '/channels/{channel_id}/messages/{message_id}',
+            channel_id=target.channel.id, message_id=target.id
+        )
+        raw_json = await self.bot.http.request(route)
+        content_pieces = self.extractor.extract_content(raw_json)
+        return content_pieces
 
     @commands.command(name="auction")
     async def auction_handler(self, message):
@@ -511,11 +545,14 @@ class Auction(commands.Cog):
             message = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
             if message.author.id != DANK_ID:
                 return
-            elif not message.embeds:
+            
+            content_pieces = await self.extract(message)
+            if not content_pieces:
                 return
-            elif "successfully donated" not in message.embeds[0].description.lower():
+            content = " ".join(content_pieces)
+            if "successfully donated" not in content.lower():
                 return
-            elif "⏣" in message.embeds[0].description.lower():
+            elif "⏣" in content.lower():
                 return
             
             seller = message.interaction.user.id
@@ -532,13 +569,16 @@ class Auction(commands.Cog):
         channel = self.bot.get_channel(channel_id)
         msg = await channel.fetch_message(message.id)
         await msg.add_reaction(GREEN_CHECK)
-        msg = msg.embeds[0].description
-        emoji = msg.split(" ")[3]
-        amt = msg.split(" ")[2]
+        content_pieces = await self.extract(msg)
+        if not content_pieces:
+            return
+        content = " ".join(content_pieces)
+        emoji = content.split(" ")[3]
+        amt = content.split(" ")[2]
         amt = amt.replace(",", "")
         amt = amt.replace("*", "")
         amt = int(amt)
-        item = msg.split("> ")[1]
+        item = content.split("> ")[1]
         item = item.replace("*", "")
         if emoji.startswith("<a"):
             ending = "gif"
