@@ -573,6 +573,7 @@ class Auction(commands.Cog):
         if not content_pieces:
             return
         content = " ".join(content_pieces)
+        print(content)
         emoji = content.split(" ")[3]
         amt = content.split(" ")[2]
         amt = amt.replace(",", "")
