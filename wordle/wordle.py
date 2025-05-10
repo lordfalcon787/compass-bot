@@ -11,9 +11,8 @@ mongo = MongoConnection.get_instance()
 db = mongo.get_db()
 collection = db["Wordle"]
 
-with open(os.path.join(os.path.dirname(__file__), 'words.json')) as f:
+with open('words.json') as f:
     WORD_LIST = json.load(f)
-
 
 class Wordle(commands.Cog):
     def __init__(self, bot):
@@ -128,3 +127,6 @@ class Wordle(commands.Cog):
             await self.end_wordle(message)
         elif message.content.lower().startswith("guess "):
             await self.guess(message)
+
+def setup(bot):
+    bot.add_cog(Wordle(bot))
