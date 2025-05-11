@@ -68,6 +68,163 @@ class PollManager:
         except Exception as e:
             print(f"Failed to update poll {message.id}: {e}")
 
+class BinaryView(nextcord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.binary_yes = nextcord.ui.Button(label="Yes [0]", style=nextcord.ButtonStyle.success, custom_id="poll_binary_yes")
+        self.binary_no = nextcord.ui.Button(label="No [0]", style=nextcord.ButtonStyle.danger, custom_id="poll_binary_no")
+        self.binary_yes.callback = self.binary_yes_callback
+        self.binary_no.callback = self.binary_no_callback
+        self.add_item(self.binary_yes)
+        self.add_item(self.binary_no)
+
+    async def binary_yes_callback(self, interaction: nextcord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        admin_role = interaction.guild.get_role(1205270486502867030)
+        if admin_role not in interaction.user.roles:
+            await interaction.followup.send("You are not an admin, you cannot vote on this poll.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": str(interaction.message.id)})
+        if doc:
+            if str(interaction.user.id) in doc["yes"]:
+                await interaction.followup.send("You have already voted yes.", ephemeral=True)
+                return
+            if str(interaction.user.id) in doc["no"]:
+                collection.update_one({"_id": str(interaction.message.id)}, {"$pull": {"no": str(interaction.user.id)}})   
+            collection.update_one({"_id": str(interaction.message.id)}, {"$push": {"yes": str(interaction.user.id)}})
+            embed = nextcord.Embed(title="You have voted yes.", color=65280)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            await self.update_binary_poll_message(interaction.message)
+        else:
+            await interaction.followup.send("This poll does not exist.", ephemeral=True)
+
+    async def binary_no_callback(self, interaction: nextcord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        admin_role = interaction.guild.get_role(1205270486502867030)
+        if admin_role not in interaction.user.roles:
+            await interaction.followup.send("You are not an admin, you cannot vote on this poll.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": str(interaction.message.id)})
+        if doc:
+            if str(interaction.user.id) in doc["no"]:
+                await interaction.followup.send("You have already voted no.", ephemeral=True)
+                return
+            if str(interaction.user.id) in doc["yes"]:
+                collection.update_one({"_id": str(interaction.message.id)}, {"$pull": {"yes": str(interaction.user.id)}})   
+            collection.update_one({"_id": str(interaction.message.id)}, {"$push": {"no": str(interaction.user.id)}})
+            embed = nextcord.Embed(title="You have voted no.", color=65280)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            await self.update_binary_poll_message(interaction.message)
+        else:
+            await interaction.followup.send("This poll does not exist.", ephemeral=True)
+        
+
+    async def update_binary_poll_message(self, message: nextcord.Message):
+        doc = collection.find_one({"_id": str(message.id)})
+        if doc:
+            yes = len(doc["yes"])
+            no = len(doc["no"])
+            self.binary_yes.label = f"Yes [{yes}]"
+            self.binary_no.label = f"No [{no}]"
+            await message.edit(view=self)
+        else:
+            await message.edit(view=None)
+
+class AdminPollView(nextcord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.yes = nextcord.ui.Button(label="Yes [0]", style=nextcord.ButtonStyle.success, custom_id="poll_yes")
+        self.abstain = nextcord.ui.Button(label="Abstain [0]", style=nextcord.ButtonStyle.secondary, custom_id="poll_abstain")
+        self.no = nextcord.ui.Button(label="No [0]", style=nextcord.ButtonStyle.danger, custom_id="poll_no")
+        self.yes.callback = self.yes_callback
+        self.abstain.callback = self.abstain_callback
+        self.no.callback = self.no_callback
+        self.add_item(self.yes)
+        self.add_item(self.abstain)
+        self.add_item(self.no)
+
+    async def yes_callback(self, interaction: nextcord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        admin_role = interaction.guild.get_role(1205270486502867030)
+        if admin_role not in interaction.user.roles:
+            await interaction.followup.send("You are not an admin, you cannot vote on this poll.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": str(interaction.message.id)})
+        if doc:
+            if str(interaction.user.id) in doc["yes"]:
+                await interaction.followup.send("You have already voted yes.", ephemeral=True)
+                return
+            if str(interaction.user.id) in doc["no"]:
+                collection.update_one({"_id": str(interaction.message.id)}, {"$pull": {"no": str(interaction.user.id)}})   
+            if str(interaction.user.id) in doc["abstain"]:
+                collection.update_one({"_id": str(interaction.message.id)}, {"$pull": {"abstain": str(interaction.user.id)}})
+            collection.update_one({"_id": str(interaction.message.id)}, {"$push": {"yes": str(interaction.user.id)}})
+            embed = nextcord.Embed(title="You have voted yes.", color=65280)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            await self.update_admin_poll_message(interaction.message)
+        else:
+            await interaction.followup.send("This poll does not exist.", ephemeral=True)
+
+    async def abstain_callback(self, interaction: nextcord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        admin_role = interaction.guild.get_role(1205270486502867030)
+        if admin_role not in interaction.user.roles:
+            await interaction.followup.send("You are not an admin, you cannot vote on this poll.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": str(interaction.message.id)})
+        if doc:
+            if str(interaction.user.id) in doc["abstain"]:
+                await interaction.followup.send("You have already voted abstain.", ephemeral=True)
+                return
+            if str(interaction.user.id) in doc["yes"]:
+                collection.update_one({"_id": str(interaction.message.id)}, {"$pull": {"yes": str(interaction.user.id)}})   
+            if str(interaction.user.id) in doc["no"]:
+                collection.update_one({"_id": str(interaction.message.id)}, {"$pull": {"no": str(interaction.user.id)}})
+            collection.update_one({"_id": str(interaction.message.id)}, {"$push": {"abstain": str(interaction.user.id)}})
+            embed = nextcord.Embed(title="You have voted abstain.", color=65280)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            await self.update_admin_poll_message(interaction.message)
+        else:
+            await interaction.followup.send("This poll does not exist.", ephemeral=True)
+
+    async def no_callback(self, interaction: nextcord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        admin_role = interaction.guild.get_role(1205270486502867030)
+        if admin_role not in interaction.user.roles:
+            await interaction.followup.send("You are not an admin, you cannot vote on this poll.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": str(interaction.message.id)})
+        if doc:
+            if str(interaction.user.id) in doc["no"]:
+                await interaction.followup.send("You have already voted no.", ephemeral=True)
+                return
+            if str(interaction.user.id) in doc["yes"]:
+                collection.update_one({"_id": str(interaction.message.id)}, {"$pull": {"yes": str(interaction.user.id)}})   
+            if str(interaction.user.id) in doc["abstain"]:
+                collection.update_one({"_id": str(interaction.message.id)}, {"$pull": {"abstain": str(interaction.user.id)}})
+            collection.update_one({"_id": str(interaction.message.id)}, {"$push": {"no": str(interaction.user.id)}})
+            embed = nextcord.Embed(title="You have voted no.", color=65280)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            await self.update_admin_poll_message(interaction.message)
+        else:
+            await interaction.followup.send("This poll does not exist.", ephemeral=True)
+        
+
+    async def update_admin_poll_message(self, message: nextcord.Message):
+        doc = collection.find_one({"_id": str(message.id)})
+        if doc:
+            yes = len(doc["yes"])
+            abstain = len(doc["abstain"])
+            no = len(doc["no"])
+            self.yes.label = f"Yes [{yes}]"
+            self.no.label = f"No [{no}]"
+            self.abstain.label = f"Abstain [{abstain}]"
+            await message.edit(view=self)
+        else:
+            await message.edit(view=None)
+        
+        
+
 class Poll(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -76,6 +233,8 @@ class Poll(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print("Poll cog is ready")
+        await self.bot.add_view(AdminPollView())
+        await self.bot.add_view(BinaryView())
 
     async def ban_check(interaction: nextcord.Interaction):
         banned_users = misc.find_one({"_id": "bot_banned"})
@@ -94,6 +253,33 @@ class Poll(commands.Cog):
     @application_checks.check(ban_check)
     async def poll(self, interaction: nextcord.Interaction):
         pass
+
+    @poll.subcommand(name="admin", description="Create a Robbing Central Admin Poll")
+    @application_checks.guild_only()
+    @application_checks.check(ban_check)
+    async def poll_admin(self, interaction: nextcord.Interaction, title: str = SlashOption(description="The title of the poll"), description: str = SlashOption(description="The description of the poll", required=False), binary: bool = SlashOption(description="Whether the poll is binary", required=False)):
+        await interaction.response.defer(ephemeral=True)
+        if interaction.guild.id != 1205270486230110330:
+            await interaction.send("This command can only be used in the Robbing Central Discord Server.", ephemeral=True)
+            return
+        admin_role = interaction.guild.get_role(1205270486502867030)
+        if admin_role not in interaction.user.roles and interaction.user.id != interaction.guild.owner_id:
+            await interaction.send("You do not have permission to use this command.", ephemeral=True)
+            return
+        embed = nextcord.Embed(title=title, description=description, color=nextcord.Color.blue())
+        embed.set_footer(text=f"Admin poll created by {interaction.user.name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else None)
+        if binary:
+            view = BinaryView()
+        else:
+            view = AdminPollView()
+        message = await interaction.channel.send(embed=embed, view=view)
+        if binary:
+            collection.insert_one({"_id": str(message.id), "title": title, "description": description, "binary": binary, "creator": str(interaction.user.id), "created_at": datetime.utcnow(), "yes": [], "no": []})
+        else:
+            collection.insert_one({"_id": str(message.id), "title": title, "description": description, "binary": binary, "creator": str(interaction.user.id), "created_at": datetime.utcnow(), "yes": [], "no": [], "abstain": []})
+        await interaction.followup.send("Poll created", ephemeral=True)
+        
+        
 
     @poll.subcommand(name="end", description="End a poll")
     @application_checks.guild_only()
