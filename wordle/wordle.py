@@ -129,8 +129,11 @@ class Wordle(commands.Cog):
                 collection.delete_one({"_id": channel_id})
             else:
                 await message.reply(file=file)
-                collection.update_one({"_id": channel_id}, {"$set": {"guesses": game['guesses']}})
+                asyncio.create_task(self.update_wordle(channel_id, game))
     
+    async def update_wordle(self, channel_id, game):
+        collection.update_one({"_id": channel_id}, {"$set": {"guesses": game['guesses']}})
+        
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot:
