@@ -143,9 +143,9 @@ class Wordle(commands.Cog):
         if not stats:
             await message.reply("No wordle stats found.")
             return
-        points = stats.get(user.id, {}).get('points', 0)
-        wins = stats.get(user.id, {}).get('wins', 0)
-        guesses = stats.get(user.id, {}).get('guesses', 0)
+        points = stats.get(str(user.id), {}).get('points', 0)
+        wins = stats.get(str(user.id), {}).get('wins', 0)
+        guesses = stats.get(str(user.id), {}).get('guesses', 0)
         embed = nextcord.Embed(description=f"- Points: {points}\n- Total Correct Guesses: {wins}\n- Total Guesses: {guesses}\n- Average Guesses per Correct Word: {guesses / wins if wins > 0 else 0}")
         embed.set_author(name=f"{user.name}'s Wordle Stats", icon_url=user.avatar.url)
         embed.set_footer(text="Compass Wordle", icon_url=self.bot.user.avatar.url)
