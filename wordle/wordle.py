@@ -125,14 +125,117 @@ class Wordle(commands.Cog):
             file = nextcord.File(image_buf, filename="wordle.png")
             if word == answer:
                 del self.active_games[channel_id]
-                await message.reply(file=file, content=f"Correct! You guessed it in **{len(game['guesses'])}** tries.")
+                points = 10 if len(game['guesses']) == 1 else 7 if len(game['guesses']) == 2 else 5 if len(game['guesses']) == 3 else 3 if len(game['guesses']) == 4 else 2 if len(game['guesses']) == 5 else 1 if len(game['guesses']) == 6 else 0
+                await message.reply(file=file, content=f"Correct! You guessed it in **{len(game['guesses'])}** tries. You won **{points}** points.")
                 collection.delete_one({"_id": channel_id})
+                collection.update_one({"_id": "wordle_stats"}, {"$inc": {f"{message.author.id}.wins": 1}}, {"$inc": {f"{message.author.id}.guesses": 1}}, {"$inc": {f"{message.author.id}.points": points}}, upsert=True)
             else:
                 await message.reply(file=file)
-                asyncio.create_task(self.update_wordle(channel_id, game))
+                asyncio.create_task(self.update_wordle(channel_id, game, message.author))
     
-    async def update_wordle(self, channel_id, game):
+    async def update_wordle(self, channel_id, game, user):
         collection.update_one({"_id": channel_id}, {"$set": {"guesses": game['guesses']}})
+        collection.update_one({"_id": "wordle_stats"}, {"$inc": {f"{user.id}.guesses": 1}}, upsert=True)
+
+    async def wordle_stats(self, message):
+        user = message.author.id
+        stats = collection.find_one({"_id": "wordle_stats"})
+        if not stats:
+            await message.reply("No wordle stats found.")
+            return
+        points = stats.get(user.id, {}).get('points', 0)
+        wins = stats.get(user.id, {}).get('wins', 0)
+        guesses = stats.get(user.id, {}).get('guesses', 0)
+        embed = nextcord.Embed(description=f"- Points: {points}\n- Total Correct Guesses: {wins}\n- Total Guesses: {guesses}\n- Average Guesses per Correct Word: {guesses / wins if wins > 0 else 0}")
+        embed.set_author(name=f"{user.name}'s Wordle Stats", icon_url=user.avatar.url)
+        embed.set_footer(text="Compass Wordle", icon_url=self.bot.user.avatar.url)
+        await message.reply(embed=embed)
+
+    async def wordle_leaderboard(self, message):
+        stats = collection.find_one({"_id": "wordle_stats"})
+        if not stats:
+            await message.reply("No wordle stats found.")
+            return
+        
+        user_stats = [(k, v) for k, v in stats.items() if k != "_id"]
+        user_stats.sort(key=lambda x: x[1].get('points', 0), reverse=True)
+        
+        items_per_page = 10
+        pages = []
+        
+        for i in range(0, len(user_stats), items_per_page):
+            page_stats = user_stats[i:i+items_per_page]
+            page_content = ""
+            
+            for idx, (user_id, user_data) in enumerate(page_stats, start=i+1):
+                try:
+                    user = await self.bot.fetch_user(int(user_id))
+                    username = user.name
+                except:
+                    username = f"User {user_id}"
+                
+                points = user_data.get('points', 0)
+                wins = user_data.get('wins', 0)
+                guesses = user_data.get('guesses', 0)
+                
+                page_content += f"**{idx}. {username}** - {points} points\n"
+                page_content += f"   Wins: {wins} | Guesses: {guesses}\n"
+            
+            embed = nextcord.Embed(
+                title="Wordle Leaderboard",
+                description=page_content,
+                color=nextcord.Color.blue()
+            )
+            embed.set_footer(text=f"Page {len(pages)+1}/{(len(user_stats)+items_per_page-1)//items_per_page}")
+            pages.append(embed)
+        
+        if not pages:
+            embed = nextcord.Embed(
+                title="Wordle Leaderboard",
+                description="No stats available yet.",
+                color=nextcord.Color.blue()
+            )
+            await message.reply(embed=embed)
+            return
+        
+        class LeaderboardView(nextcord.ui.View):
+            def __init__(self, pages):
+                super().__init__(timeout=60)
+                self.pages = pages
+                self.current_page = 0
+                
+                if len(pages) <= 1:
+                    self.clear_items()
+                else:
+                    self.update_buttons()
+            
+            def update_buttons(self):
+                self.previous_button.disabled = self.current_page == 0
+                self.next_button.disabled = self.current_page == len(self.pages) - 1
+
+            @nextcord.ui.button(emoji="<a:arrow_left:1316079524710191156>", style=nextcord.ButtonStyle.blurple, disabled=True)
+            async def previous_button(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
+                await interaction.response.defer()
+                if self.current_page > 0:
+                    self.current_page -= 1
+                    self.update_buttons()
+                    await interaction.message.edit(embed=self.pages[self.current_page], view=self)
+            
+            @nextcord.ui.button(emoji="<a:arrow_right:1316079547124285610>", style=nextcord.ButtonStyle.blurple)
+            async def next_button(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
+                await interaction.response.defer()
+                if self.current_page < len(self.pages) - 1:
+                    self.current_page += 1
+                    self.update_buttons()
+                    await interaction.message.edit(embed=self.pages[self.current_page], view=self)
+            
+            async def on_timeout(self):
+                for item in self.children:
+                    item.disabled = True
+                await self.message.edit(view=self)
+        
+        view = LeaderboardView(pages)
+        view.message = await message.reply(embed=pages[0], view=view)
         
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -142,10 +245,20 @@ class Wordle(commands.Cog):
             return
         if message.content.lower() == "new wordle":
             asyncio.create_task(self.new_wordle(message))
+            return
         elif message.content.lower() == "end wordle":
             asyncio.create_task(self.end_wordle(message))
+            return
         elif message.content.lower().startswith("guess "):
             asyncio.create_task(self.guess(message))
+            return
+        elif message.content.lower() == "wordle stats" or message.content.lower() == "wordle statistics":
+            asyncio.create_task(self.wordle_stats(message))
+            return
+        elif message.content.lower() == "wordle leaderboard" or message.content.lower() == "wordle top":
+            asyncio.create_task(self.wordle_leaderboard(message))
+            return
+        
 
 def setup(bot):
     bot.add_cog(Wordle(bot))
