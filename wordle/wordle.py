@@ -128,7 +128,15 @@ class Wordle(commands.Cog):
                 points = 10 if len(game['guesses']) == 1 else 7 if len(game['guesses']) == 2 else 5 if len(game['guesses']) == 3 else 3 if len(game['guesses']) == 4 else 2 if len(game['guesses']) == 5 else 1 if len(game['guesses']) == 6 else 0
                 await message.reply(file=file, content=f"Correct! You guessed it in **{len(game['guesses'])}** tries. You won **{points}** points.")
                 collection.delete_one({"_id": channel_id})
-                collection.update_one({"_id": "wordle_stats"}, {"$inc": {f"{message.author.id}.wins": 1}}, {"$inc": {f"{message.author.id}.guesses": 1}}, {"$inc": {f"{message.author.id}.points": points}}, upsert=True)
+                collection.update_one(
+                    {"_id": "wordle_stats"}, 
+                    {"$inc": {
+                        f"{message.author.id}.wins": 1,
+                        f"{message.author.id}.guesses": 1,
+                        f"{message.author.id}.points": points
+                    }},
+                    upsert=True
+                )
             else:
                 await message.reply(file=file)
                 asyncio.create_task(self.update_wordle(channel_id, game, message.author))
@@ -149,7 +157,7 @@ class Wordle(commands.Cog):
         embed = nextcord.Embed(description=f"- Points: {points}\n- Total Correct Guesses: {wins}\n- Total Guesses: {guesses}\n- Average Guesses per Correct Word: {guesses / wins if wins > 0 else 0}")
         embed.set_author(name=f"{user.name}'s Wordle Stats", icon_url=user.avatar.url)
         embed.set_footer(text="Compass Wordle", icon_url=self.bot.user.avatar.url)
-        await message.reply(embed=embed)
+        await message.reply(embed=embed, mention_author=False)
 
     async def wordle_leaderboard(self, message):
         stats = collection.find_one({"_id": "wordle_stats"})
@@ -191,7 +199,7 @@ class Wordle(commands.Cog):
                 color=nextcord.Color.blue()
             )
             embed.set_footer(text="Compass Wordle", icon_url=self.bot.user.avatar.url)
-            await message.reply(embed=embed)
+            await message.reply(embed=embed, mention_author=False)
             return
         
         class LeaderboardView(nextcord.ui.View):
@@ -231,7 +239,7 @@ class Wordle(commands.Cog):
                 await self.message.edit(view=self)
         
         view = LeaderboardView(pages)
-        view.message = await message.reply(embed=pages[0], view=view)
+        view.message = await message.reply(embed=pages[0], view=view, mention_author=False)
         
     @commands.Cog.listener()
     async def on_message(self, message):
