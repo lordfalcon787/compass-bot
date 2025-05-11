@@ -112,8 +112,7 @@ class Wordle(commands.Cog):
         game = self.active_games[channel_id]
         game['guesses'].append(word)
         answer = game['word']
-        guesses = game['guesses']
-        image_buf = self.create_wordle_image(guesses, answer)
+        image_buf = self.create_wordle_image([word], answer)
         file = nextcord.File(image_buf, filename="wordle.png")
         if word == answer:
             del self.active_games[channel_id]
