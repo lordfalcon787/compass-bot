@@ -67,7 +67,7 @@ class Wordle(commands.Cog):
         img = Image.new('RGB', (width, height), color=black)
         draw = ImageDraw.Draw(img)
         try:
-            font = ImageFont.truetype("arial.ttf", font_size)
+            font = ImageFont.truetype("wordle2.ttf", font_size)
         except:
             font = ImageFont.load_default()
         for row, guess in enumerate(guesses):
