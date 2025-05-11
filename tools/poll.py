@@ -81,7 +81,7 @@ class BinaryView(nextcord.ui.View):
     async def binary_yes_callback(self, interaction: nextcord.Interaction):
         await interaction.response.defer(ephemeral=True)
         admin_role = interaction.guild.get_role(1205270486502867030)
-        if admin_role not in interaction.user.roles:
+        if admin_role not in interaction.user.roles and interaction.user.id != interaction.guild.owner_id:
             await interaction.followup.send("You are not an admin, you cannot vote on this poll.", ephemeral=True)
             return
         doc = collection.find_one({"_id": str(interaction.message.id)})
@@ -101,7 +101,7 @@ class BinaryView(nextcord.ui.View):
     async def binary_no_callback(self, interaction: nextcord.Interaction):
         await interaction.response.defer(ephemeral=True)
         admin_role = interaction.guild.get_role(1205270486502867030)
-        if admin_role not in interaction.user.roles:
+        if admin_role not in interaction.user.roles and interaction.user.id != interaction.guild.owner_id:
             await interaction.followup.send("You are not an admin, you cannot vote on this poll.", ephemeral=True)
             return
         doc = collection.find_one({"_id": str(interaction.message.id)})
@@ -146,7 +146,7 @@ class AdminPollView(nextcord.ui.View):
     async def yes_callback(self, interaction: nextcord.Interaction):
         await interaction.response.defer(ephemeral=True)
         admin_role = interaction.guild.get_role(1205270486502867030)
-        if admin_role not in interaction.user.roles:
+        if admin_role not in interaction.user.roles and interaction.user.id != interaction.guild.owner_id:
             await interaction.followup.send("You are not an admin, you cannot vote on this poll.", ephemeral=True)
             return
         doc = collection.find_one({"_id": str(interaction.message.id)})
@@ -168,7 +168,7 @@ class AdminPollView(nextcord.ui.View):
     async def abstain_callback(self, interaction: nextcord.Interaction):
         await interaction.response.defer(ephemeral=True)
         admin_role = interaction.guild.get_role(1205270486502867030)
-        if admin_role not in interaction.user.roles:
+        if admin_role not in interaction.user.roles and interaction.user.id != interaction.guild.owner_id:
             await interaction.followup.send("You are not an admin, you cannot vote on this poll.", ephemeral=True)
             return
         doc = collection.find_one({"_id": str(interaction.message.id)})
@@ -190,7 +190,7 @@ class AdminPollView(nextcord.ui.View):
     async def no_callback(self, interaction: nextcord.Interaction):
         await interaction.response.defer(ephemeral=True)
         admin_role = interaction.guild.get_role(1205270486502867030)
-        if admin_role not in interaction.user.roles:
+        if admin_role not in interaction.user.roles and interaction.user.id != interaction.guild.owner_id:
             await interaction.followup.send("You are not an admin, you cannot vote on this poll.", ephemeral=True)
             return
         doc = collection.find_one({"_id": str(interaction.message.id)})
@@ -223,8 +223,6 @@ class AdminPollView(nextcord.ui.View):
         else:
             await message.edit(view=None)
         
-        
-
 class Poll(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -233,8 +231,8 @@ class Poll(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print("Poll cog is ready")
-        await self.bot.add_view(AdminPollView())
-        await self.bot.add_view(BinaryView())
+        self.bot.add_view(AdminPollView())
+        self.bot.add_view(BinaryView())
 
     async def ban_check(interaction: nextcord.Interaction):
         banned_users = misc.find_one({"_id": "bot_banned"})
