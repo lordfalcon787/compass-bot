@@ -181,15 +181,16 @@ class Wordle(commands.Cog):
                 description=page_content,
                 color=nextcord.Color.blue()
             )
-            embed.set_footer(text=f"Page {len(pages)+1}/{(len(user_stats)+items_per_page-1)//items_per_page}")
+            embed.set_footer(text=f"Page {len(pages)+1}/{(len(user_stats)+items_per_page-1)//items_per_page}", icon_url=self.bot.user.avatar.url)
             pages.append(embed)
         
         if not pages:
             embed = nextcord.Embed(
-                title="Wordle Leaderboard",
+                title="Wordle Global Leaderboard",
                 description="No stats available yet.",
                 color=nextcord.Color.blue()
             )
+            embed.set_footer(text="Compass Wordle", icon_url=self.bot.user.avatar.url)
             await message.reply(embed=embed)
             return
         
