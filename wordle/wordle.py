@@ -42,6 +42,7 @@ class Wordle(commands.Cog):
             return
         word = random.choice(WORD_LIST)
         self.active_games[channel_id] = {'word': word, 'guesses': []}
+        collection.insert_one({"_id": channel_id, "word": word, "guesses": []})
         await message.reply("Wordle game started! Use 'guess [word]' to play.")
 
     async def end_wordle(self,message):
@@ -51,6 +52,7 @@ class Wordle(commands.Cog):
             return
         word = self.active_games[channel_id]['word']
         del self.active_games[channel_id]
+        collection.delete_one({"_id": channel_id})
         await message.reply(f"Wordle game ended. The word was: **{word.upper()}**")
 
     def create_wordle_image(self, guesses, answer):
@@ -117,12 +119,10 @@ class Wordle(commands.Cog):
         if word == answer:
             del self.active_games[channel_id]
             await message.reply(file=file, content="Congratulations! You guessed the word! 🎉")
-        elif len(game['guesses']) >= 6:
-            del self.active_games[channel_id]
-            await message.reply(file=file, content=f"Game over! The word was **{answer.upper()}**.")
+            collection.delete_one({"_id": channel_id})
         else:
             await message.reply(file=file)
-
+            collection.update_one({"_id": channel_id}, {"$set": {"guesses": game['guesses']}})
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot:
