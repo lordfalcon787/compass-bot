@@ -94,7 +94,7 @@ class Wordle(commands.Cog):
                 w = bbox[2] - bbox[0]
                 h = bbox[3] - bbox[1]
                 text_x = x0 + (box_size - w) / 2
-                text_y = y0
+                text_y = y0 + (box_size - h) / 4
                 draw.text((text_x, text_y), guess[col].upper(), font=font, fill=white)
         buf = io.BytesIO()
         img.save(buf, format='PNG')
