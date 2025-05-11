@@ -14,6 +14,9 @@ collection = db["Wordle"]
 with open('words.json') as f:
     WORD_LIST = json.load(f)
 
+with open('valid_words.json') as f:
+    VALID_WORDS = json.load(f)
+
 class Wordle(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -30,12 +33,12 @@ class Wordle(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Wordle cog loaded.")
-        await self.load_cache()
+        await self.update_cache()
 
     async def new_wordle(self,message):
         channel_id = message.channel.id
         if channel_id in self.active_games:
-            await message.reply("A Wordle game is already active in this channel! Use 'end wordle' to stop it.", ephemeral=True)
+            await message.reply("A Wordle game is already active in this channel! Use 'end wordle' to stop it.")
             return
         word = random.choice(WORD_LIST)
         self.active_games[channel_id] = {'word': word, 'guesses': []}
@@ -44,7 +47,7 @@ class Wordle(commands.Cog):
     async def end_wordle(self,message):
         channel_id = message.channel.id
         if channel_id not in self.active_games:
-            await message.reply("No active Wordle game in this channel.", ephemeral=True)
+            await message.reply("No active Wordle game in this channel.")
             return
         word = self.active_games[channel_id]['word']
         del self.active_games[channel_id]
@@ -99,8 +102,8 @@ class Wordle(commands.Cog):
         word = message.content.lower().split(" ")[1]
         if channel_id not in self.active_games:
             return
-        if len(word) != 5 or word not in WORD_LIST:
-            await message.reply("Please guess a valid 5-letter word from the word list.", ephemeral=True)
+        if len(word) != 5 or word not in VALID_WORDS:
+            await message.reply("Please guess a valid 5-letter word from the word list.")
             return
         game = self.active_games[channel_id]
         game['guesses'].append(word)
