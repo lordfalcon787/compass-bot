@@ -27,8 +27,9 @@ class Wordle(commands.Cog):
     async def update_cache(self):
         docs = collection.find({})
         for doc in docs:
+            id = doc["_id"]
             doc.pop("_id")
-            self.active_games[doc["_id"]] = doc
+            self.active_games[id] = doc
 
     @commands.Cog.listener()
     async def on_ready(self):
