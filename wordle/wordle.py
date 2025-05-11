@@ -3,7 +3,7 @@ from nextcord.ext import commands, tasks
 from utils.mongo_connection import MongoConnection
 import random
 import json
-import os
+import asyncio
 from PIL import Image, ImageDraw, ImageFont
 import io
 
@@ -20,7 +20,7 @@ with open('valid_words.json') as f:
 class Wordle(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.cache = {}
+        self.lock = asyncio.Lock()
         self.active_games = {}
 
     @tasks.loop(hours=1)
@@ -28,7 +28,7 @@ class Wordle(commands.Cog):
         docs = collection.find({})
         for doc in docs:
             doc.pop("_id")
-            self.cache[doc["_id"]] = doc
+            self.active_games[doc["_id"]] = doc
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -38,12 +38,12 @@ class Wordle(commands.Cog):
     async def new_wordle(self,message):
         channel_id = message.channel.id
         if channel_id in self.active_games:
-            await message.reply("A Wordle game is already active in this channel! Use 'end wordle' to stop it.")
+            await message.reply("A wordle game is already active in this channel! Use 'end wordle' to stop it.")
             return
         word = random.choice(WORD_LIST)
         self.active_games[channel_id] = {'word': word, 'guesses': []}
         collection.insert_one({"_id": channel_id, "word": word, "guesses": []})
-        await message.reply("Wordle game started! Use 'guess [word]' to play.")
+        await message.reply("A new wordle game has been started! Type `guess [your guess]` to start playing!")
 
     async def end_wordle(self,message):
         channel_id = message.channel.id
@@ -53,7 +53,7 @@ class Wordle(commands.Cog):
         word = self.active_games[channel_id]['word']
         del self.active_games[channel_id]
         collection.delete_one({"_id": channel_id})
-        await message.reply(f"Wordle game ended. The word was: **{word.upper()}**")
+        await message.reply(f"Ended the current game. The word was: **{word.upper()}**")
 
     def create_wordle_image(self, guesses, answer):
         box_size = 400
@@ -109,30 +109,36 @@ class Wordle(commands.Cog):
         if channel_id not in self.active_games:
             return
         if len(word) != 5 or word not in VALID_WORDS:
-            await message.reply("Please guess a valid 5-letter word from the word list.")
+            await message.reply("That is not a valid word.")
             return
-        game = self.active_games[channel_id]
-        game['guesses'].append(word)
-        answer = game['word']
-        image_buf = self.create_wordle_image([word], answer)
-        file = nextcord.File(image_buf, filename="wordle.png")
-        if word == answer:
-            del self.active_games[channel_id]
-            await message.reply(file=file, content="Congratulations! You guessed the word! 🎉")
-            collection.delete_one({"_id": channel_id})
-        else:
-            await message.reply(file=file)
-            collection.update_one({"_id": channel_id}, {"$set": {"guesses": game['guesses']}})
+        async with self.lock:
+            if channel_id not in self.active_games:
+                return   
+            game = self.active_games[channel_id]
+            game['guesses'].append(word)
+            answer = game['word']
+            image_buf = self.create_wordle_image([word], answer)
+            file = nextcord.File(image_buf, filename="wordle.png")
+            if word == answer:
+                del self.active_games[channel_id]
+                await message.reply(file=file, content=f"Correct! You guessed it in **{len(game['guesses'])}** tries.")
+                collection.delete_one({"_id": channel_id})
+            else:
+                await message.reply(file=file)
+                collection.update_one({"_id": channel_id}, {"$set": {"guesses": game['guesses']}})
+    
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot:
             return
+        if not message.content:
+            return
         if message.content.lower() == "new wordle":
-            await self.new_wordle(message)
+            asyncio.create_task(self.new_wordle(message))
         elif message.content.lower() == "end wordle":
-            await self.end_wordle(message)
+            asyncio.create_task(self.end_wordle(message))
         elif message.content.lower().startswith("guess "):
-            await self.guess(message)
+            asyncio.create_task(self.guess(message))
 
 def setup(bot):
     bot.add_cog(Wordle(bot))
