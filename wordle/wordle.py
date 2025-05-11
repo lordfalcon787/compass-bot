@@ -112,6 +112,9 @@ class Wordle(commands.Cog):
         if len(word) != 5 or word not in VALID_WORDS:
             await message.reply("That is not a valid word.")
             return
+        if word in self.active_games[channel_id]['guesses']:
+            await message.reply("You already guessed that word.")
+            return
         async with self.lock:
             if channel_id not in self.active_games:
                 return   
