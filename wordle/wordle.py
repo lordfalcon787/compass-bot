@@ -90,7 +90,9 @@ class Wordle(commands.Cog):
                 x1 = x0 + box_size
                 y1 = y0 + box_size
                 draw.rectangle([x0, y0, x1, y1], fill=colors[col], outline=None)
-                w, h = draw.textsize(guess[col].upper(), font=font)
+                bbox = draw.textbbox((0, 0), guess[col].upper(), font=font)
+                w = bbox[2] - bbox[0]
+                h = bbox[3] - bbox[1]
                 draw.text((x0 + (box_size - w) / 2, y0 + (box_size - h) / 2), guess[col].upper(), font=font, fill=white)
         buf = io.BytesIO()
         img.save(buf, format='PNG')
