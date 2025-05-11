@@ -54,14 +54,14 @@ class Wordle(commands.Cog):
         await message.reply(f"Wordle game ended. The word was: **{word.upper()}**")
 
     def create_wordle_image(self, guesses, answer):
-        box_size = 100
-        spacing = 10
-        font_size = 60
+        box_size = 200
+        spacing = 20
+        font_size = 120
         width = box_size * 5 + spacing * 6
         height = (box_size + spacing) * len(guesses) + spacing
-        green = (83, 141, 78)
-        yellow = (181, 159, 59)
-        gray = (58, 58, 60)
+        green = (106, 170, 100)
+        yellow = (201, 180, 88)
+        gray = (120, 124, 126)
         white = (215, 218, 220)
         black = (0, 0, 0)
         img = Image.new('RGB', (width, height), color=black)
@@ -94,7 +94,7 @@ class Wordle(commands.Cog):
                 w = bbox[2] - bbox[0]
                 h = bbox[3] - bbox[1]
                 text_x = x0 + (box_size - w) / 2
-                text_y = y0 + (box_size - h) / 2 - h * 0.1
+                text_y = y0 + (box_size - h) / 2
                 draw.text((text_x, text_y), guess[col].upper(), font=font, fill=white)
         buf = io.BytesIO()
         img.save(buf, format='PNG')
