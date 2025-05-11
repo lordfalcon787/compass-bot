@@ -138,7 +138,7 @@ class Wordle(commands.Cog):
         collection.update_one({"_id": "wordle_stats"}, {"$inc": {f"{user.id}.guesses": 1}}, upsert=True)
 
     async def wordle_stats(self, message):
-        user = message.author.id
+        user = message.author
         stats = collection.find_one({"_id": "wordle_stats"})
         if not stats:
             await message.reply("No wordle stats found.")
@@ -170,16 +170,11 @@ class Wordle(commands.Cog):
             for idx, (user_id, user_data) in enumerate(page_stats, start=i+1):
                 try:
                     user = await self.bot.fetch_user(int(user_id))
-                    username = user.name
                 except:
-                    username = f"User {user_id}"
+                    return
                 
                 points = user_data.get('points', 0)
-                wins = user_data.get('wins', 0)
-                guesses = user_data.get('guesses', 0)
-                
-                page_content += f"**{idx}. {username}** - {points} points\n"
-                page_content += f"   Wins: {wins} | Guesses: {guesses}\n"
+                page_content += f"{idx}. {user.mention} - {points} Points\n"
             
             embed = nextcord.Embed(
                 title="Wordle Leaderboard",
