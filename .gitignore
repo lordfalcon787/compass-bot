@@ -1,3 +1,5 @@
 .DS_Store
 json_files/beta_config.json
 json_files/config.json
+dashboard/.env
+dashboard/*
