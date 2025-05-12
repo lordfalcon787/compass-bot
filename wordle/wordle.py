@@ -154,7 +154,8 @@ class Wordle(commands.Cog):
         points = stats.get(str(user.id), {}).get('points', 0)
         wins = stats.get(str(user.id), {}).get('wins', 0)
         guesses = stats.get(str(user.id), {}).get('guesses', 0)
-        embed = nextcord.Embed(description=f"- Points: {points}\n- Total Correct Guesses: {wins}\n- Total Guesses: {guesses}\n- Average Guesses per Correct Word: {guesses / wins if wins > 0 else 0}")
+        average_guesses = guesses / wins if wins > 0 else 0
+        embed = nextcord.Embed(description=f"- Points: {points}\n- Total Correct Guesses: {wins}\n- Total Guesses: {guesses}\n- Average Guesses per Correct Word: {average_guesses:.2f}")
         embed.set_author(name=f"{user.name}'s Wordle Stats", icon_url=user.avatar.url)
         embed.set_footer(text="Compass Wordle", icon_url=self.bot.user.avatar.url)
         await message.reply(embed=embed, mention_author=False)
