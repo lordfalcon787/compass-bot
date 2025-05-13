@@ -147,7 +147,7 @@ class Wordle(commands.Cog):
 
     async def wordle_stats(self, message):
         user = None
-        if len(message.content.split(" ")) > 1:
+        if len(message.content.split(" ")) > 2:
             user = message.content.split(" ")[2]
             user = user.replace("<@", "").replace(">", "")
             user = await self.bot.fetch_user(int(user))
