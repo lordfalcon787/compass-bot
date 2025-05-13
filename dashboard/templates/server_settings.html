@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div class="flex items-center space-x-4">
+            {% if current_server.icon %}
+            <img src="https://cdn.discordapp.com/icons/{{ current_server.id }}/{{ current_server.icon }}.png" alt="{{ current_server.name }}" class="w-16 h-16 rounded-full">
+            {% else %}
+            <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+                <span class="text-2xl text-gray-500">{{ current_server.name[0] }}</span>
+            </div>
+            {% endif %}
+            <div>
+                <h1 class="text-3xl font-semibold text-gray-900 tracking-wide">{{ current_server.name }}</h1>
+                <p class="server-id text-sm text-gray-500 tracking-wide">Server ID: {{ current_server.id }}</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
+                <img src="{{ user.avatar }}" alt="Profile" class="w-8 h-8 rounded-full">
+                <span class="text-sm tracking-wide">{{ user.name }}</span>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn bg-indigo-700 hover:bg-indigo-800 px-3 py-2 rounded-md text-sm tracking-wide">
+                Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px">
+                <button class="tab-btn active px-6 py-3 text-sm font-medium tracking-wide" data-tab="moderation">
+                    Moderation
+                </button>
+                <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide" data-tab="payout">
+                    Payout System
+                </button>
+                <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide" data-tab="auto-responder">
+                    Auto-Responder
+                </button>
+            </nav>
+        </div>
+
+        <div class="p-6">
+            <div id="moderation" class="tab-content active">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4 tracking-wide">Moderation Settings</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Moderator Roles</label>
+                        <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Log Channel</label>
+                        <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="payout" class="tab-content hidden">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4 tracking-wide">Payout System Settings</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Payout Channel</label>
+                        <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Minimum Payout Amount</label>
+                        <input type="number" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide" placeholder="Enter minimum amount">
+                    </div>
+                </div>
+            </div>
+
+            <div id="auto-responder" class="tab-content hidden">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4 tracking-wide">Auto-Responder Settings</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Response Channel</label>
+                        <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Custom Responses</label>
+                        <textarea class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide" rows="4" placeholder="Enter trigger:response pairs"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+            <button class="btn bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition duration-150 ease-in-out tracking-wide">
+                Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.add('hidden'));
+
+            btn.classList.add('active');
+            const tabId = btn.getAttribute('data-tab');
+            document.getElementById(tabId).classList.remove('hidden');
+        });
+    });
+
+    const serverId = '{{ current_server.id }}';
+    fetch(`/api/guild/${serverId}/config`)
+        .then(response => response.json())
+        .then(config => {
+            console.log('Loaded config:', config);
+        });
+
+    Promise.all([
+        fetch(`/api/guild/${serverId}/roles`).then(r => r.json()),
+        fetch(`/api/guild/${serverId}/channels`).then(r => r.json())
+    ]).then(([roles, channels]) => {
+        console.log('Loaded roles:', roles);
+        console.log('Loaded channels:', channels);
+    });
+});
+</script>
+
+<style>
+.tab-btn {
+    color: #6B7280;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-btn.active {
+    color: #4F46E5;
+    border-bottom-color: #4F46E5;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+</style>
+{% endblock %}

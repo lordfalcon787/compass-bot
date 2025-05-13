@@ -2,4 +2,7 @@
 json_files/beta_config.json
 json_files/config.json
 dashboard/.env
-dashboard/*
+dashboard/static/
+dashboard/utils
+dashboard/venv
+dashboard/oauth.py

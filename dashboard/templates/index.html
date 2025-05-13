@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% set home = True %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[60vh] relative z-10">
+    <h1 class="text-5xl font-extrabold mb-4" style="color: #fff; text-shadow: 0 2px 16px #0008;">Welcome to Compass Dashboard</h1>
+    <p class="text-2xl mb-8 font-poppins" style="color: #e0e0e0; text-shadow: 0 1px 8px #0006;">Configure your Compass server settings with the Web Dashboard</p>
+    <div class="flex gap-4 mb-8">
+        {% if authorized %}
+            <a href="{{ url_for('dashboard') }}" class="button flex items-center justify-center">
+                <i class="fas fa-tachometer-alt mr-2"></i>
+                Go to Dashboard
+            </a>
+        {% elif discord_url %}
+            <a href="{{ discord_url }}" class="button flex items-center justify-center">
+                <i class="fab fa-discord mr-2"></i>
+                Login with Discord
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 gap-8 md:grid-cols-3 relative z-10">
+    <div class="card flex flex-col items-center text-center">
+        <i class="fas fa-cog text-3xl mb-2"></i>
+        <h3 class="text-xl font-bold mb-1">Easy Configuration</h3>
+        <p class="text-base text-gray-200 font-poppins">Configure your server settings with ease with a modern and intuitive interface</p>
+    </div>
+    <div class="card flex flex-col items-center text-center">
+        <i class="fas fa-shield-alt text-3xl mb-2"></i>
+        <h3 class="text-xl font-bold mb-1">Various Features</h3>
+        <p class="text-base text-gray-200 font-poppins">Configure payout management, auctions, moderation, staff lists, wordle, and more!</p>
+    </div>
+    <div class="card flex flex-col items-center text-center">
+        <i class="fas fa-server text-3xl mb-2"></i>
+        <h3 class="text-xl font-bold mb-1">Multi-Server Support</h3>
+        <p class="text-base text-gray-200 font-poppins">Manage settings and configurations for systems for all your servers in one place</p>
+    </div>
+</div>
+{% endblock %} 

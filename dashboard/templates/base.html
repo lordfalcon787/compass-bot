@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compass Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='1.0') }}">
+</head>
+<body class="{% if home %}home{% endif %}">
+    <nav class="text-white shadow-lg" style="background: linear-gradient(90deg, rgba(20,30,30,0.98) 0%, rgba(30,40,40,0.98) 60%, rgba(40,30,20,0.98) 100%);">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{{ url_for('index') }}" class="flex-shrink-0 flex items-center">
+                        <img src="https://i.imgur.com/KWp3TJ2.jpeg" alt="Compass Logo" class="h-8 w-8 rounded-full mr-2" />
+                        <span class="font-bold text-xl">Compass Dashboard</span>
+                    </a>
+                </div>
+                <div class="flex items-center">
+                    {% if authorized %}
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-2">
+                                <img src="{{ user.avatar }}" alt="Profile" class="w-8 h-8 rounded-full">
+                                <span class="text-sm">{{ user.name }}</span>
+                            </div>
+                            <a href="{{ url_for('logout') }}" class="bg-indigo-700 hover:bg-indigo-800 px-3 py-2 rounded-md text-sm font-medium">
+                                Logout
+                            </a>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="bg-indigo-700 hover:bg-indigo-800 px-3 py-2 rounded-md text-sm font-medium">
+                            Login with Discord
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% set home = False %}
+
+{% block content %}
+<div x-data="dashboard()" class="space-y-6">
+    <div class="card">
+        <h2 class="text-2xl font-bold mb-4">Select Server</h2>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {% for guild in guilds %}
+            <div class="relative rounded-lg border border-gray-700 bg-opacity-60 bg-gray-900 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-indigo-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 cursor-pointer"
+                 @click="selectServer('{{ guild.id }}', '{{ guild.name }}')"
+                 :class="{'border-indigo-400': selectedServer === '{{ guild.id }}'}">
+                {% if guild.icon %}
+                    <img class="h-10 w-10 rounded-full" src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png" alt="{{ guild.name }}">
+                {% else %}
+                    <div class="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center">
+                        <i class="fas fa-server text-gray-400"></i>
+                    </div>
+                {% endif %}
+                <div class="flex-1 min-w-0">
+                    <p class="text-lg font-semibold text-white">{{ guild.name }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div x-show="selectedServer" class="card">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold">
+                <span x-text="'Configure ' + selectedServerName"></span>
+            </h2>
+            <button @click="saveConfig" class="button flex items-center">
+                <i class="fas fa-save mr-2"></i>
+                Save Changes
+            </button>
+        </div>
+
+        <div class="border-b border-gray-700">
+            <nav class="-mb-px flex space-x-8">
+                <button @click="activeTab = 'moderation'" 
+                        :class="{'border-indigo-400 text-indigo-200': activeTab === 'moderation', 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500': activeTab !== 'moderation'}"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg">
+                    <i class="fas fa-shield-alt mr-2"></i>
+                    Moderation
+                </button>
+                <button @click="activeTab = 'payout'" 
+                        :class="{'border-indigo-400 text-indigo-200': activeTab === 'payout', 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500': activeTab !== 'payout'}"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg">
+                    <i class="fas fa-money-bill-wave mr-2"></i>
+                    Payout System
+                </button>
+                <button @click="activeTab = 'ar'" 
+                        :class="{'border-indigo-400 text-indigo-200': activeTab === 'ar', 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500': activeTab !== 'ar'}"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg">
+                    <i class="fas fa-comment-dots mr-2"></i>
+                    Auto-Responder
+                </button>
+            </nav>
+        </div>
+
+        <div class="mt-6">
+            <div x-show="activeTab === 'moderation'" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        <label class="block text-base font-semibold mb-2">Warn Roles</label>
+                        <div class="mt-1">
+                            <select multiple class="w-full" x-model="config.moderation.warn">
+                                <template x-for="role in availableRoles" :key="role.id">
+                                    <option :value="role.id" x-text="role.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="activeTab === 'payout'" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        <label class="block text-base font-semibold mb-2">Payout Channel</label>
+                        <div class="mt-1">
+                            <select class="w-full" x-model="config.payout.channel">
+                                <template x-for="channel in availableChannels" :key="channel.id">
+                                    <option :value="channel.id" x-text="channel.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="activeTab === 'ar'" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        <label class="block text-base font-semibold mb-2">Link Allowed Roles</label>
+                        <div class="mt-1">
+                            <select multiple class="w-full" x-model="config.ar.link_allowed">
+                                <template x-for="role in availableRoles" :key="role.id">
+                                    <option :value="role.id" x-text="role.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function dashboard() {
+    return {
+        selectedServer: null,
+        selectedServerName: '',
+        activeTab: 'moderation',
+        config: {
+            moderation: {
+                warn: [],
+                timeout: [],
+                kick: [],
+                ban: [],
+                logs: null
+            },
+            payout: {
+                channel: null,
+                claim: null,
+                queue: null,
+                root: null
+            },
+            ar: {
+                link_allowed: [],
+                words_allowed: [],
+                allowed: []
+            }
+        },
+        availableRoles: [],
+        availableChannels: [],
+
+        async selectServer(serverId, serverName) {
+            this.selectedServer = serverId;
+            this.selectedServerName = serverName;
+            
+            const response = await fetch(`/api/guild/${serverId}/config`);
+            const data = await response.json();
+            
+            Object.assign(this.config, data);
+            
+            this.availableRoles = [];
+            this.availableChannels = [];
+        },
+
+        async saveConfig() {
+            const response = await fetch(`/api/guild/${this.selectedServer}/config`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(this.config)
+            });
+            
+            if (response.ok) {
+                alert('Configuration saved successfully!');
+            } else {
+                alert('Error saving configuration');
+            }
+        }
+    }
+}
+</script>
+{% endblock %}
