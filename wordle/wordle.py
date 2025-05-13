@@ -146,7 +146,13 @@ class Wordle(commands.Cog):
         collection.update_one({"_id": "wordle_stats"}, {"$inc": {f"{user.id}.guesses": 1}}, upsert=True)
 
     async def wordle_stats(self, message):
-        user = message.author
+        user = None
+        if len(message.content.split(" ")) > 1:
+            user = message.content.split(" ")[2]
+            user = user.replace("<@", "").replace(">", "")
+            user = await self.bot.fetch_user(int(user))
+        else:
+            user = message.author
         stats = collection.find_one({"_id": "wordle_stats"})
         if not stats:
             await message.reply("No wordle stats found.")
@@ -257,10 +263,10 @@ class Wordle(commands.Cog):
         elif message.content.lower().startswith("guess "):
             asyncio.create_task(self.guess(message))
             return
-        elif message.content.lower() == "wordle stats" or message.content.lower() == "wordle statistics":
+        elif message.content.startswith("wordle stats") or message.content.startswith("wordle statistics"):
             asyncio.create_task(self.wordle_stats(message))
             return
-        elif message.content.lower() == "wordle leaderboard" or message.content.lower() == "wordle top":
+        elif message.content.startswith("wordle leaderboard") or message.content.startswith("wordle top"):
             asyncio.create_task(self.wordle_leaderboard(message))
             return
         
