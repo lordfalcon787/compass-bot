@@ -56,9 +56,6 @@ class misc(commands.Cog):
                    message: str,
                    channel: Optional[nextcord.TextChannel] = None, 
                    reply: Optional[str] = SlashOption(description="Enter a message ID to reply to the user.", required=False)):
-        if interaction.user.id == 1141919105272787006:
-            await interaction.response.send_message("L froggy nuh uh.", ephemeral=True)
-            return
         if not interaction.user.guild_permissions.administrator and interaction.user.id != 748339732605436055:
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
             return
