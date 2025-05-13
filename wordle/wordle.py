@@ -100,7 +100,7 @@ class Wordle(commands.Cog):
                 text_y = y0 + (box_size - h) / 4
                 draw.text((text_x, text_y), guess[col].upper(), font=font, fill=white)
         buf = io.BytesIO()
-        img.save(buf, format='PNG')
+        img.save(buf, format='JPEG', quality=100)
         buf.seek(0)
         return buf
 
