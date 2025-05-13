@@ -22,15 +22,15 @@ jobs:
         run: |
           mkdir -p compass/cogs
           mkdir -p compass/utils
-          find . -type f -name "*.py" ! -name "bot.py" ! -name "mongo_connection.py" ! -path "./compass/*" -exec cp {} compass/cogs/ \;
-          find . -type f -name "bot.py" ! -path "./compass/*" -exec cp {} compass/ \;
-          find . -type f -name "mongo_connection.py" ! -path "./compass/*" -exec cp {} compass/utils/ \;
-          find . -type f -name "*.json" ! -name "items.json" ! -name "settings.json" ! -name "prefixes.json" ! -path "./compass/*" ! -path "./.git/*" -exec cp {} compass/ \;
-          find . -type f -name "README.md" ! -path "./compass/*" -exec cp {} compass/ \;
-          find . -type f -name "requirements.txt" ! -path "./compass/*" -exec cp {} compass/ \;
-          find . -type f -name "*.ttf" ! -path "./compass/*" -exec cp {} compass/ \;
-          find . -type f -name "config.json" ! -path "./compass-config/*" -exec cp {} compass/ \;
-          find . -type f -name "update.sh" ! -path "./compass-config/*" -exec cp {} compass/ \;
+          find . -type f -name "*.py" ! -name "bot.py" ! -name "mongo_connection.py" ! -path "./compass/*" ! -path "./dashboard/*" -exec cp {} compass/cogs/ \;
+          find . -type f -name "bot.py" ! -path "./compass/*" ! -path "./dashboard/*" -exec cp {} compass/ \;
+          find . -type f -name "mongo_connection.py" ! -path "./compass/*" ! -path "./dashboard/*" -exec cp {} compass/utils/ \;
+          find . -type f -name "*.json" ! -name "items.json" ! -name "settings.json" ! -name "prefixes.json" ! -path "./compass/*" ! -path "./.git/*" ! -path "./dashboard/*" -exec cp {} compass/ \;
+          find . -type f -name "README.md" ! -path "./compass/*" ! -path "./dashboard/*" -exec cp {} compass/ \;
+          find . -type f -name "requirements.txt" ! -path "./compass/*" ! -path "./dashboard/*" -exec cp {} compass/ \;
+          find . -type f -name "*.ttf" ! -path "./compass/*" ! -path "./dashboard/*" -exec cp {} compass/ \;
+          find . -type f -name "config.json" ! -path "./compass-config/*" ! -path "./dashboard/*" -exec cp {} compass/ \;
+          find . -type f -name "update.sh" ! -path "./compass-config/*" ! -path "./dashboard/*" -exec cp {} compass/ \;
 
       - name: Push to compass-official repository
         run: |
