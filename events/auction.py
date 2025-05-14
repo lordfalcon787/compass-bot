@@ -44,6 +44,7 @@ class PrecisionExtractor:
                 scan_component(component)
 
         return results
+
 class Use(nextcord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -54,6 +55,7 @@ class Auction(commands.Cog):
         self.cache = {}
         self.sticky_bid_locks = {}
         self.guide_locks = {}
+        self.extractor = PrecisionExtractor()
         self.queue_payout_lock = asyncio.Lock()
         
     def get_guild_lock(self, guild_id, lock_dict):
