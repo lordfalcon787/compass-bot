@@ -1,99 +1,388 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-8 font-poppins">
     <div class="flex justify-between items-center mb-8">
         <div class="flex items-center space-x-4">
             {% if current_server.icon %}
-            <img src="https://cdn.discordapp.com/icons/{{ current_server.id }}/{{ current_server.icon }}.png" alt="{{ current_server.name }}" class="w-16 h-16 rounded-full">
+            <img src="https://cdn.discordapp.com/icons/{{ current_server.id }}/{{ current_server.icon }}.png" alt="{{ current_server.name }}" class="w-16 h-16 rounded-full shadow-lg">
             {% else %}
-            <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                <span class="text-2xl text-gray-500">{{ current_server.name[0] }}</span>
+            <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center shadow-lg">
+                <span class="text-2xl text-gray-500 font-medium">{{ current_server.name[0] }}</span>
             </div>
             {% endif %}
             <div>
                 <h1 class="text-3xl font-semibold text-gray-900 tracking-wide">{{ current_server.name }}</h1>
-                <p class="server-id text-sm text-gray-500 tracking-wide">Server ID: {{ current_server.id }}</p>
+                <p class="server-id text-sm text-gray-500 tracking-wide font-medium">Server ID: {{ current_server.id }}</p>
             </div>
         </div>
         <div class="flex items-center space-x-4">
+            <a href="{{ url_for('dashboard') }}" class="back-btn group bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-all duration-200 tracking-wide font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center space-x-2">
+                <i class="fas fa-arrow-left text-gray-600 group-hover:text-gray-700 transition-colors duration-200"></i>
+                <span>Back to Servers</span>
+                <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-200 rounded-lg"></div>
+            </a>
             <div class="flex items-center space-x-2">
-                <img src="{{ user.avatar }}" alt="Profile" class="w-8 h-8 rounded-full">
-                <span class="text-sm tracking-wide">{{ user.name }}</span>
+                <img src="{{ user.avatar }}" alt="Profile" class="w-8 h-8 rounded-full shadow-md">
+                <span class="text-sm font-medium tracking-wide">{{ user.name }}</span>
             </div>
-            <a href="{{ url_for('logout') }}" class="btn bg-indigo-700 hover:bg-indigo-800 px-3 py-2 rounded-md text-sm tracking-wide">
+            <a href="{{ url_for('logout') }}" class="btn bg-indigo-700 hover:bg-indigo-800 px-3 py-2 rounded-md text-sm tracking-wide text-white shadow-md transition-all duration-200 hover:shadow-lg font-medium">
                 Logout
             </a>
         </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="border-b border-gray-200">
-            <nav class="flex -mb-px">
-                <button class="tab-btn active px-6 py-3 text-sm font-medium tracking-wide" data-tab="moderation">
-                    Moderation
-                </button>
-                <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide" data-tab="payout">
-                    Payout System
-                </button>
-                <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide" data-tab="auto-responder">
-                    Auto-Responder
-                </button>
-            </nav>
-        </div>
-
-        <div class="p-6">
-            <div id="moderation" class="tab-content active">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4 tracking-wide">Moderation Settings</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Moderator Roles</label>
-                        <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Log Channel</label>
-                        <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
-                        </select>
-                    </div>
-                </div>
+    <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+        <div class="flex">
+            <!-- Vertical Tabs -->
+            <div class="w-64 border-r border-gray-200 bg-gray-50">
+                <nav class="flex flex-col py-2">
+                    <button class="tab-btn active px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="moderation">
+                        <i class="fas fa-shield-alt w-5 text-center"></i>
+                        <span>Moderation</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="payout">
+                        <i class="fas fa-money-bill-wave w-5 text-center"></i>
+                        <span>Payout System</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="auto-responder">
+                        <i class="fas fa-comment-dots w-5 text-center"></i>
+                        <span>Auto-Responder</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="highlight">
+                        <i class="fas fa-highlighter w-5 text-center"></i>
+                        <span>Highlight</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="auction">
+                        <i class="fas fa-gavel w-5 text-center"></i>
+                        <span>Auction</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="auto-lock">
+                        <i class="fas fa-lock w-5 text-center"></i>
+                        <span>Auto-Lock</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="suggestions">
+                        <i class="fas fa-lightbulb w-5 text-center"></i>
+                        <span>Suggestions</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="mafia-logs">
+                        <i class="fas fa-scroll w-5 text-center"></i>
+                        <span>Mafia Logs</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="counting">
+                        <i class="fas fa-calculator w-5 text-center"></i>
+                        <span>Counting</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="strikes">
+                        <i class="fas fa-exclamation-triangle w-5 text-center"></i>
+                        <span>Strikes</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="utility">
+                        <i class="fas fa-tools w-5 text-center"></i>
+                        <span>Utility</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="staff-list">
+                        <i class="fas fa-users-cog w-5 text-center"></i>
+                        <span>Staff List</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="pcms">
+                        <i class="fas fa-user-shield w-5 text-center"></i>
+                        <span>PCMS</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="afk">
+                        <i class="fas fa-clock w-5 text-center"></i>
+                        <span>AFK</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="quarantine">
+                        <i class="fas fa-user-lock w-5 text-center"></i>
+                        <span>Quarantine</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3 text-sm font-medium tracking-wide text-left flex items-center space-x-3 transition-all duration-200" data-tab="perks">
+                        <i class="fas fa-star w-5 text-center"></i>
+                        <span>Perks</span>
+                    </button>
+                </nav>
             </div>
 
-            <div id="payout" class="tab-content hidden">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4 tracking-wide">Payout System Settings</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Payout Channel</label>
-                        <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Minimum Payout Amount</label>
-                        <input type="number" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide" placeholder="Enter minimum amount">
-                    </div>
-                </div>
-            </div>
-
-            <div id="auto-responder" class="tab-content hidden">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4 tracking-wide">Auto-Responder Settings</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Response Channel</label>
-                        <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Custom Responses</label>
-                        <textarea class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide" rows="4" placeholder="Enter trigger:response pairs"></textarea>
+            <!-- Content Area -->
+            <div class="flex-1 p-6 relative min-h-[600px]">
+                <div id="moderation" class="tab-content active transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-6 tracking-wide">Moderation Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Moderator Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide font-medium">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Log Channel</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <button class="btn bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition duration-150 ease-in-out tracking-wide">
-                Save Changes
-            </button>
+                <div id="payout" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Payout System Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Payout Channel</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Claim Channel</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Queue Channel</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Payout Role</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="auto-responder" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Auto-Responder Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Link Allowed Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Words Allowed Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">AR Allowed Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="highlight" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Highlight Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Access Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="auction" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Auction Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Auction Channel</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Auction End Role</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Auction Managers</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="lock-on-end" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="lock-on-end" class="ml-2 block text-sm text-gray-900">Lock Channel on Auction End</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="auto-lock" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Auto-Lock Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Valid Channels</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="auto-lock-enabled" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="auto-lock-enabled" class="ml-2 block text-sm text-gray-900">Enable Auto-Lock</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="suggestions" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Suggestions Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Suggestions Channel</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Suggestion Role</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">No Suggestions Role</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="mafia-logs" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Mafia Logs Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Mafia Logs Channel</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="counting" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Counting Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Counting Channel</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="strikes" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Strikes Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Strike Log Channel</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Strike Announce Channel</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="utility" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Utility Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Poll Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Lock Access Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Player Role</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Event Manager Role</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Role Command Access Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="staff-list" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Staff List Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Staff List Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="pcms" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">PCMS Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">PCMS Roles and Values</label>
+                            <div id="pcms-roles" class="space-y-2">
+                                <!-- Dynamic PCMS roles will be added here -->
+                            </div>
+                            <button class="mt-2 btn bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition duration-150 ease-in-out tracking-wide">
+                                Add Role
+                            </button>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Requirements</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="afk" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">AFK Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">AFK Allowed Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="quarantine" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Quarantine Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Quarantine Role</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="perks" class="tab-content hidden transition-all duration-300 ease-in-out">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Perks Settings</h2>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Snipe Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Changes Button -->
+                <div class="absolute bottom-6 right-6">
+                    <button class="save-btn group bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition-all duration-200 tracking-wide font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center space-x-2">
+                        <i class="fas fa-save text-lg"></i>
+                        <span>Save Changes</span>
+                        <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-200 rounded-lg"></div>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -103,16 +392,39 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    function switchTab(tabId) {
+        // Hide all tab contents
+        tabContents.forEach(content => {
+            content.classList.remove('active');
+            content.classList.add('hidden');
+        });
+
+        // Remove active class from all buttons
+        tabBtns.forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Show selected tab content and activate button
+        const selectedContent = document.getElementById(tabId);
+        const selectedBtn = document.querySelector(`[data-tab="${tabId}"]`);
+        
+        if (selectedContent && selectedBtn) {
+            selectedContent.classList.remove('hidden');
+            selectedContent.classList.add('active');
+            selectedBtn.classList.add('active');
+        }
+    }
+
+    // Add click event listeners to all tab buttons
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            tabBtns.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(c => c.classList.add('hidden'));
-
-            btn.classList.add('active');
             const tabId = btn.getAttribute('data-tab');
-            document.getElementById(tabId).classList.remove('hidden');
+            switchTab(tabId);
         });
     });
+
+    // Show moderation tab by default
+    switchTab('moderation');
 
     const serverId = '{{ current_server.id }}';
     fetch(`/api/guild/${serverId}/config`)
@@ -132,22 +444,154 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+.font-poppins {
+    font-family: 'Poppins', sans-serif;
+}
+
 .tab-btn {
-    color: #6B7280;
-    border-bottom: 2px solid transparent;
+    color: #4B5563;
+    border-left: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s ease-in-out;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+}
+
+.tab-btn:hover {
+    background-color: #EEF2FF;
+    color: #4F46E5;
+    transform: translateX(4px);
 }
 
 .tab-btn.active {
     color: #4F46E5;
-    border-bottom-color: #4F46E5;
+    border-left-color: #4F46E5;
+    background-color: #EEF2FF;
+    font-weight: 600;
+}
+
+.tab-btn i {
+    color: #6B7280;
+    transition: color 0.2s ease-in-out;
+}
+
+.tab-btn:hover i,
+.tab-btn.active i {
+    color: #4F46E5;
 }
 
 .tab-content {
     display: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease-in-out;
 }
 
 .tab-content.active {
     display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+select {
+    transition: all 0.2s ease-in-out;
+    font-family: 'Poppins', sans-serif;
+}
+
+select:focus {
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.btn {
+    transition: all 0.2s ease-in-out;
+    font-family: 'Poppins', sans-serif;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Additional typography styles */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+}
+
+label {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Ensure consistent font weights */
+.font-medium {
+    font-weight: 500;
+}
+
+.font-semibold {
+    font-weight: 600;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.save-btn {
+    position: relative;
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+}
+
+.save-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.save-btn:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(20, 20);
+        opacity: 0;
+    }
+}
+
+.back-btn {
+    position: relative;
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+}
+
+.back-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.back-btn:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
 }
 </style>
 {% endblock %}

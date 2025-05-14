@@ -4,16 +4,53 @@ from oauth import Oauth
 from utils.mongo_connection import MongoConnection
 from functools import wraps
 import requests
+from pymongo.errors import ServerSelectionTimeoutError
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "1264646464646464646"
 
-mongo = MongoConnection.get_instance()
-db = mongo.get_db()
-configuration = db["Configuration"]
+DEFAULT_CONFIG = {
+    "moderation": {
+        "warn": [],
+        "timeout": [],
+        "kick": [],
+        "ban": [],
+        "logs": None
+    },
+    "payout": {
+        "channel": None,
+        "claim": None,
+        "queue": None,
+        "role": None
+    },
+    "auto_responder": {
+        "link_allowed": [],
+        "words_allowed": [],
+        "allowed": []
+    }
+}
+
+try:
+    mongo = MongoConnection.get_instance()
+    db = mongo.get_db()
+    configuration = db["Configuration"]
+except Exception as e:
+    print(f"Warning: MongoDB connection failed: {e}")
+    configuration = None
 
 BOT_CLIENT_ID = "1291996619490984037"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+@app.context_processor
+def inject_user():
+    authorized = 'user_logged_in_compass_dashboard' in session
+    return {
+        'authorized': authorized,
+        'user': {
+            'name': session.get('user_logged_in_compass_dashboard'),
+            'avatar': session.get('user_avatar')
+        } if authorized else None
+    }
 
 def check_bot_in_guild(guild_id, access_token):
     try:
@@ -72,39 +109,58 @@ def dashboard():
         guild['bot_present'] = check_bot_in_guild(guild['id'], session['access_token'])
     
     return render_template("dashboard.html", 
-                         user=Oauth.get_user_json(session['access_token']), 
-                         guilds=guilds)
+                         user={
+                             'name': session.get('user_logged_in_compass_dashboard'),
+                             'avatar': session.get('user_avatar')
+                         },
+                         guilds=guilds,
+                         client_id=BOT_CLIENT_ID)
 
-@app.route("/server/<server_id>/settings")
+@app.route("/server/<guild_id>/settings")
 @login_required
-def server_settings(server_id):
-    current_server = next((guild for guild in session['admin_guilds'] if guild['id'] == server_id), None)
+def server_settings(guild_id):
+    current_server = next((guild for guild in session['admin_guilds'] if guild['id'] == guild_id), None)
     if not current_server:
         return redirect(url_for("dashboard"))
     
-    if not check_bot_in_guild(server_id, session['access_token']):
+    if not check_bot_in_guild(guild_id, session['access_token']):
         return redirect(url_for("dashboard"))
     
     return render_template("server_settings.html",
                          current_server=current_server,
-                         guilds=session['admin_guilds'])
+                         user={
+                             'name': session.get('user_logged_in_compass_dashboard'),
+                             'avatar': session.get('user_avatar')
+                         })
 
 @app.route("/api/guild/<server_id>/config", methods=['GET'])
 @login_required
 def get_guild_config(server_id):
-    config = configuration.find_one({"guild_id": server_id})
-    return jsonify(config.get("settings", {}) if config else {})
+    try:
+        if configuration:
+            config = configuration.find_one({"guild_id": server_id})
+            if config:
+                return jsonify(config.get("settings", DEFAULT_CONFIG))
+        return jsonify(DEFAULT_CONFIG)
+    except Exception as e:
+        print(f"Error getting config: {e}")
+        return jsonify(DEFAULT_CONFIG)
 
 @app.route("/api/guild/<server_id>/config", methods=['POST'])
 @login_required
 def save_guild_config(server_id):
-    config_data = request.json
-    configuration.update_one(
-        {"guild_id": server_id},
-        {"$set": {"settings": config_data}},
-        upsert=True
-    )
-    return jsonify({"status": "success"})
+    try:
+        if configuration:
+            config_data = request.json
+            configuration.update_one(
+                {"guild_id": server_id},
+                {"$set": {"settings": config_data}},
+                upsert=True
+            )
+        return jsonify({"status": "success"})
+    except Exception as e:
+        print(f"Error saving config: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route("/api/guild/<server_id>/roles")
 @login_required

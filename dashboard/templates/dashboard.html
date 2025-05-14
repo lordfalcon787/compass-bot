@@ -8,18 +8,33 @@
         <h2 class="text-2xl font-bold mb-4">Select Server</h2>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {% for guild in guilds %}
-            <div class="relative rounded-lg border border-gray-700 bg-opacity-60 bg-gray-900 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-indigo-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500 cursor-pointer"
-                 @click="selectServer('{{ guild.id }}', '{{ guild.name }}')"
+            <div class="relative rounded-lg border border-gray-700 bg-opacity-60 bg-gray-900 px-6 py-5 shadow-sm hover:border-indigo-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
                  :class="{'border-indigo-400': selectedServer === '{{ guild.id }}'}">
-                {% if guild.icon %}
-                    <img class="h-10 w-10 rounded-full" src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png" alt="{{ guild.name }}">
-                {% else %}
-                    <div class="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center">
-                        <i class="fas fa-server text-gray-400"></i>
+                <div class="flex items-center space-x-3 mb-4">
+                    {% if guild.icon %}
+                        <img class="h-10 w-10 rounded-full" src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png" alt="{{ guild.name }}">
+                    {% else %}
+                        <div class="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center">
+                            <i class="fas fa-server text-gray-400"></i>
+                        </div>
+                    {% endif %}
+                    <div class="flex-1 min-w-0">
+                        <p class="text-lg font-semibold text-white">{{ guild.name }}</p>
                     </div>
-                {% endif %}
-                <div class="flex-1 min-w-0">
-                    <p class="text-lg font-semibold text-white">{{ guild.name }}</p>
+                </div>
+                <div class="flex justify-center">
+                    {% if guild.bot_present %}
+                    <a href="{{ url_for('server_settings', guild_id=guild.id) }}" class="button bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition duration-150 ease-in-out">
+                        <i class="fas fa-cog mr-2"></i>
+                        Manage Server
+                    </a>
+                    {% else %}
+                    <a href="https://discord.com/api/oauth2/authorize?client_id={{ client_id }}&permissions=8&scope=bot%20applications.commands&guild_id={{ guild.id }}" 
+                       class="button bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition duration-150 ease-in-out">
+                        <i class="fas fa-plus mr-2"></i>
+                        Invite Bot
+                    </a>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}

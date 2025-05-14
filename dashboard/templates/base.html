@@ -14,7 +14,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <a href="{{ url_for('index') }}" class="flex-shrink-0 flex items-center">
-                        <img src="https://i.imgur.com/KWp3TJ2.jpeg" alt="Compass Logo" class="h-8 w-8 rounded-full mr-2" />
+                        <img src="{{ url_for('static', filename='images/avatar.jpg') }}" alt="Compass Logo" class="h-8 w-8 rounded-full mr-2 shadow-md" />
                         <span class="font-bold text-xl">Compass Dashboard</span>
                     </a>
                 </div>
