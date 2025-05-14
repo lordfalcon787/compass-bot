@@ -582,6 +582,9 @@ class Auction(commands.Cog):
             return
         content = " ".join(content_pieces)
         print(content)
+        content = content.split("Successfully")[1]
+        content = content.split("**")[0]
+        content = f"Successfully {content}**"
         emoji = content.split(" ")[3]
         amt = content.split(" ")[2]
         amt = amt.replace(",", "")
