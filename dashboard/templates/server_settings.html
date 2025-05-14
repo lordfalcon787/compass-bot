@@ -111,13 +111,27 @@
                     <div class="space-y-6">
                         <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
                             <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Moderator Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide font-medium">
-                            </select>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide font-medium"></select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Warn Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide font-medium"></select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Timeout Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide font-medium"></select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Kick Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide font-medium"></select>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Ban Roles</label>
+                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide font-medium"></select>
                         </div>
                         <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
                             <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Log Channel</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
-                            </select>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide"></select>
                         </div>
                     </div>
                 </div>
@@ -439,6 +453,34 @@ document.addEventListener('DOMContentLoaded', function() {
     ]).then(([roles, channels]) => {
         console.log('Loaded roles:', roles);
         console.log('Loaded channels:', channels);
+
+        // Populate all role selects
+        document.querySelectorAll('select[multiple]').forEach(select => {
+            // Only fill if not for channels (we'll handle those below)
+            if (!select.closest('.bg-gray-50')?.innerHTML.includes('Channel')) {
+                select.innerHTML = '';
+                roles.forEach(role => {
+                    const option = document.createElement('option');
+                    option.value = role.id;
+                    option.textContent = role.name;
+                    select.appendChild(option);
+                });
+            }
+        });
+
+        // Populate all single channel selects
+        document.querySelectorAll('select:not([multiple])').forEach(select => {
+            select.innerHTML = '';
+            channels.forEach(channel => {
+                // Only add text/voice channels
+                if (channel.type === 0 || channel.type === 2) {
+                    const option = document.createElement('option');
+                    option.value = channel.id;
+                    option.textContent = channel.name;
+                    select.appendChild(option);
+                }
+            });
+        });
     });
 });
 </script>

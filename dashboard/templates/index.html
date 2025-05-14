@@ -4,38 +4,55 @@
 
 {% block content %}
 <div class="flex flex-col items-center justify-center min-h-[60vh] relative z-10">
-    <h1 class="text-5xl font-extrabold mb-4" style="color: #fff; text-shadow: 0 2px 16px #0008;">Welcome to Compass Dashboard</h1>
-    <p class="text-2xl mb-8 font-poppins" style="color: #e0e0e0; text-shadow: 0 1px 8px #0006;">Configure your Compass server settings with the Web Dashboard</p>
+    <h1 class="text-5xl font-extrabold mb-4 font-poppins tracking-tight text-white" style="text-shadow: 0 2px 16px #0008;">Welcome to Compass Dashboard</h1>
+    <p class="text-2xl mb-8 font-poppins text-gray-300" style="text-shadow: 0 1px 8px #0006;">Configure your Compass server settings with the Web Dashboard</p>
     <div class="flex gap-4 mb-8">
         {% if authorized %}
-            <a href="{{ url_for('dashboard') }}" class="button flex items-center justify-center">
-                <i class="fas fa-tachometer-alt mr-2"></i>
-                Go to Dashboard
+            <a href="{{ url_for('dashboard') }}" class="group relative inline-flex items-center justify-center px-8 py-3 font-poppins font-medium tracking-wide text-white transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none">
+                <span class="absolute inset-0 w-full h-full transition duration-300 ease-out transform translate-x-1 translate-y-1 bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-indigo-600 to-purple-600 border-2 border-white group-hover:bg-gradient-to-r group-hover:from-indigo-700 group-hover:to-purple-700"></span>
+                <span class="relative flex items-center">
+                    <i class="fas fa-tachometer-alt mr-2"></i>
+                    Go to Dashboard
+                </span>
             </a>
         {% elif discord_url %}
-            <a href="{{ discord_url }}" class="button flex items-center justify-center">
-                <i class="fab fa-discord mr-2"></i>
-                Login with Discord
+            <a href="{{ discord_url }}" class="group relative inline-flex items-center justify-center px-8 py-3 font-poppins font-medium tracking-wide text-white transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none">
+                <span class="absolute inset-0 w-full h-full transition duration-300 ease-out transform translate-x-1 translate-y-1 bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-indigo-600 to-purple-600 border-2 border-white group-hover:bg-gradient-to-r group-hover:from-indigo-700 group-hover:to-purple-700"></span>
+                <span class="relative flex items-center">
+                    <i class="fab fa-discord mr-2"></i>
+                    Login with Discord
+                </span>
             </a>
         {% endif %}
     </div>
 </div>
 
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 gap-8 md:grid-cols-3 relative z-10">
-    <div class="card flex flex-col items-center text-center">
-        <i class="fas fa-cog text-3xl mb-2"></i>
-        <h3 class="text-xl font-bold mb-1">Easy Configuration</h3>
-        <p class="text-base text-gray-200 font-poppins">Configure your server settings with ease with a modern and intuitive interface</p>
+    <div class="group relative bg-gray-800 p-6 rounded-2xl border border-gray-700/50 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 text-center">
+        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div class="relative">
+            <i class="fas fa-cog text-3xl mb-4 text-indigo-400 group-hover:text-indigo-300 transition-colors duration-300"></i>
+            <h3 class="text-xl font-bold mb-2 font-poppins text-white">Easy Configuration</h3>
+            <p class="text-base text-gray-300 font-roboto">Configure your server settings with ease with a modern and intuitive interface</p>
+        </div>
     </div>
-    <div class="card flex flex-col items-center text-center">
-        <i class="fas fa-shield-alt text-3xl mb-2"></i>
-        <h3 class="text-xl font-bold mb-1">Various Features</h3>
-        <p class="text-base text-gray-200 font-poppins">Configure payout management, auctions, moderation, staff lists, wordle, and more!</p>
+    <div class="group relative bg-gray-800 p-6 rounded-2xl border border-gray-700/50 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 text-center">
+        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div class="relative">
+            <i class="fas fa-shield-alt text-3xl mb-4 text-indigo-400 group-hover:text-indigo-300 transition-colors duration-300"></i>
+            <h3 class="text-xl font-bold mb-2 font-poppins text-white">Various Features</h3>
+            <p class="text-base text-gray-300 font-roboto">Configure payout management, auctions, moderation, staff lists, wordle, and more!</p>
+        </div>
     </div>
-    <div class="card flex flex-col items-center text-center">
-        <i class="fas fa-server text-3xl mb-2"></i>
-        <h3 class="text-xl font-bold mb-1">Multi-Server Support</h3>
-        <p class="text-base text-gray-200 font-poppins">Manage settings and configurations for systems for all your servers in one place</p>
+    <div class="group relative bg-gray-800 p-6 rounded-2xl border border-gray-700/50 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 text-center">
+        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div class="relative">
+            <i class="fas fa-server text-3xl mb-4 text-indigo-400 group-hover:text-indigo-300 transition-colors duration-300"></i>
+            <h3 class="text-xl font-bold mb-2 font-poppins text-white">Multi-Server Support</h3>
+            <p class="text-base text-gray-300 font-roboto">Manage settings and configurations for systems for all your servers in one place</p>
+        </div>
     </div>
 </div>
 {% endblock %} 

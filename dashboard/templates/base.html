@@ -4,33 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Compass Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='1.0') }}">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        .nav-brand {
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: -0.5px;
+        }
+        .nav-link {
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: 0.3px;
+        }
+        .nav-button {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            transition: all 0.3s ease;
+        }
+        .nav-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+    </style>
 </head>
 <body class="{% if home %}home{% endif %}">
-    <nav class="text-white shadow-lg" style="background: linear-gradient(90deg, rgba(20,30,30,0.98) 0%, rgba(30,40,40,0.98) 60%, rgba(40,30,20,0.98) 100%);">
+    <nav class="text-white shadow-lg backdrop-blur-md" style="background: linear-gradient(90deg, rgba(17,24,39,0.95) 0%, rgba(31,41,55,0.95) 100%);">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <a href="{{ url_for('index') }}" class="flex-shrink-0 flex items-center">
-                        <img src="{{ url_for('static', filename='images/avatar.jpg') }}" alt="Compass Logo" class="h-8 w-8 rounded-full mr-2 shadow-md" />
-                        <span class="font-bold text-xl">Compass Dashboard</span>
+                    <a href="{{ url_for('index') }}" class="flex-shrink-0 flex items-center group">
+                        <img src="{{ url_for('static', filename='images/avatar.jpg') }}" alt="Compass Logo" class="h-8 w-8 rounded-full mr-2 shadow-md ring-2 ring-indigo-500/50 group-hover:ring-indigo-400 transition-all duration-300" />
+                        <span class="nav-brand font-bold text-xl text-white">Compass Dashboard</span>
                     </a>
                 </div>
                 <div class="flex items-center">
                     {% if authorized %}
                         <div class="flex items-center space-x-4">
                             <div class="flex items-center space-x-2">
-                                <img src="{{ user.avatar }}" alt="Profile" class="w-8 h-8 rounded-full">
-                                <span class="text-sm">{{ user.name }}</span>
+                                <img src="{{ user.avatar }}" alt="Profile" class="w-8 h-8 rounded-full ring-2 ring-indigo-500/50 hover:ring-indigo-400 transition-all duration-300">
+                                <span class="text-sm nav-link text-gray-200">{{ user.name }}</span>
                             </div>
-                            <a href="{{ url_for('logout') }}" class="bg-indigo-700 hover:bg-indigo-800 px-3 py-2 rounded-md text-sm font-medium">
+                            <a href="{{ url_for('logout') }}" class="nav-button px-4 py-2 rounded-lg text-sm font-medium text-white">
                                 Logout
                             </a>
                         </div>
                     {% else %}
-                        <a href="{{ url_for('login') }}" class="bg-indigo-700 hover:bg-indigo-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <a href="{{ url_for('login') }}" class="nav-button px-4 py-2 rounded-lg text-sm font-medium text-white">
                             Login with Discord
                         </a>
                     {% endif %}
