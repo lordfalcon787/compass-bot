@@ -521,9 +521,7 @@ class Auction(commands.Cog):
         if not content_pieces:
             await message.add_reaction(RED_X)
             return
-        print(content_pieces)
         content = " ".join(content_pieces)
-        print(content)
         if "successfully donated" not in content.lower():
             await message.add_reaction(RED_X)
             return
@@ -574,21 +572,21 @@ class Auction(commands.Cog):
     async def start_auction(self, message, channel_id, seller):
         collection2 = db["Items"]
         channel = self.bot.get_channel(channel_id)
-        msg = await channel.fetch_message(message.id)
-        await msg.add_reaction(GREEN_CHECK)
-        content_pieces = await self.extract(msg)
+        await message.add_reaction(GREEN_CHECK)
+        content_pieces = await self.extract(message)
         if not content_pieces:
             return
-        content = " ".join(content_pieces)
-        content = content.split("Successfully")[1]
-        content = f"Successfully {content}"
+        content = " ".join(content_pieces)  
+        print("1")
         emoji = content.split(" ")[3]
         amt = content.split(" ")[2]
         amt = amt.replace(",", "")
         amt = amt.replace("*", "")
         amt = int(amt)
+        print(amt)
         item = content.split("> ")[1]
         item = item.replace("*", "")
+        print(item)
         if emoji.startswith("<a"):
             ending = "gif"
         else:
@@ -596,19 +594,28 @@ class Auction(commands.Cog):
         emoji = emoji.split(":")[2]
         emoji = emoji.replace(">", "")
         emoji = f"https://cdn.discordapp.com/emojis/{emoji}.{ending}?size=2048"
+        print("2")
         embed = nextcord.Embed(title=f"Auction Started")
         item_value = collection2.find_one({"_id": item})
+        print("3")
         if not item_value:
             item_value = "Unknown"
         else:
             item_value = item_value["price"]
             item_value = amt * item_value
+        print("4")
         collection.insert_one({"_id": channel_id, "Asset": f"{amt} {item}", "Seller": seller, "Buyer": None, "Price": 1, "Image": emoji, "Sticky": False, "Value": item_value})
+        print("5")
         embed.description = f"`Asset` | {amt} {item} \n `Seller` | <@{seller}> \n `Buyer` | None \n `Price` | ⏣ 1 \n `Item Value` | ⏣ {item_value:,}"
+        print("6")
         embed.set_thumbnail(url=emoji)
+        print("7")
         embed.set_footer(text=f"Is it worth it?")
+        print("8")
         embed.color = GRAY
+        print("9")
         await channel.send(embed=embed)
+        print("10")
 
     async def unlock(self, message):
         overwrites = message.channel.overwrites_for(message.guild.default_role)
