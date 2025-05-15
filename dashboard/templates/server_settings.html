@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+<!-- Add these in the head section -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 {% block content %}
 <div class="container mx-auto px-4 py-8 font-poppins">
     <div class="flex justify-between items-center mb-8">
@@ -109,29 +114,59 @@
                 <div id="moderation" class="tab-content active transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-semibold text-gray-900 mb-6 tracking-wide">Moderation Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="moderator_roles">
                             <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Moderator Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide font-medium"></select>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
+                            </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="warn_roles">
                             <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Warn Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide font-medium"></select>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
+                            </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="timeout_roles">
                             <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Timeout Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide font-medium"></select>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
+                            </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="kick_roles">
                             <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Kick Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide font-medium"></select>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
+                            </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="ban_roles">
                             <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Ban Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide font-medium"></select>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
+                            </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="log_channel">
                             <label class="block text-sm font-medium text-gray-700 mb-2 tracking-wide">Log Channel</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide"></select>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 channel-select">
+                            </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -139,25 +174,41 @@
                 <div id="payout" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Payout System Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="payout_channel">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Payout Channel</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 channel-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="claim_channel">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Claim Channel</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 channel-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="queue_channel">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Queue Channel</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 channel-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="payout_role">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Payout Role</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -165,20 +216,32 @@
                 <div id="auto-responder" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Auto-Responder Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="link_allowed_roles">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Link Allowed Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="words_allowed_roles">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Words Allowed Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="ar_allowed_roles">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">AR Allowed Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -186,10 +249,14 @@
                 <div id="highlight" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Highlight Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="highlight_roles">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Access Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -197,24 +264,43 @@
                 <div id="auction" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Auction Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="auction_channel">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Auction Channel</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 channel-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="auction_end_role">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Auction End Role</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="auction_managers">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Auction Managers</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" id="lock-on-end" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                            <label for="lock-on-end" class="ml-2 block text-sm text-gray-900">Lock Channel on Auction End</label>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="lock_on_end">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Lock Channel on Auction End</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2">
+                                <option value="true">Enabled</option>
+                                <option value="false">Disabled</option>
+                            </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -222,14 +308,25 @@
                 <div id="auto-lock" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Auto-Lock Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="auto_lock_channels">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Valid Channels</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 channel-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" id="auto-lock-enabled" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                            <label for="auto-lock-enabled" class="ml-2 block text-sm text-gray-900">Enable Auto-Lock</label>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="auto_lock_enabled">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Enable Auto-Lock</label>
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2">
+                                <option value="true">Enabled</option>
+                                <option value="false">Disabled</option>
+                            </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -237,20 +334,32 @@
                 <div id="suggestions" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Suggestions Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="suggestions_channel">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Suggestions Channel</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 channel-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="suggestion_role">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Suggestion Role</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="no_suggestions_role">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">No Suggestions Role</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -258,10 +367,14 @@
                 <div id="mafia-logs" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Mafia Logs Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="mafia_logs_channel">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Mafia Logs Channel</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 channel-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -269,10 +382,14 @@
                 <div id="counting" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Counting Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="counting_channel">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Counting Channel</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 channel-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -280,15 +397,23 @@
                 <div id="strikes" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Strikes Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="strike_log_channel">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Strike Log Channel</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="strike_announce_channel">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Strike Announce Channel</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -296,30 +421,50 @@
                 <div id="utility" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Utility Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="poll_roles">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Poll Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="lock_access_roles">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Lock Access Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="player_role">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Player Role</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="event_manager_role">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Event Manager Role</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="role_cmd_access_roles">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Role Command Access Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -327,10 +472,14 @@
                 <div id="staff-list" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Staff List Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="staff_list_roles">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Staff List Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -338,19 +487,27 @@
                 <div id="pcms" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">PCMS Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="pcms_roles">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">PCMS Roles and Values</label>
                             <div id="pcms-roles" class="space-y-2">
                                 <!-- Dynamic PCMS roles will be added here -->
+                            </div>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
                             </div>
                             <button class="mt-2 btn bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition duration-150 ease-in-out tracking-wide">
                                 Add Role
                             </button>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="pcms_requirements">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Requirements</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -358,10 +515,14 @@
                 <div id="afk" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">AFK Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="afk_allowed_roles">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">AFK Allowed Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -369,10 +530,14 @@
                 <div id="quarantine" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Quarantine Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="quarantine_role">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Quarantine Role</label>
-                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -380,10 +545,14 @@
                 <div id="perks" class="tab-content hidden transition-all duration-300 ease-in-out">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 tracking-wide">Perks Settings</h2>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm" data-config-key="snipe_roles">
                             <label class="block text-sm font-semibold text-gray-700 mb-2 tracking-wide">Snipe Roles</label>
-                            <select multiple class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide">
+                            <select class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 tracking-wide select2 role-select">
                             </select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <span class="current-value">Loading...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -445,6 +614,78 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(config => {
             console.log('Loaded config:', config);
+            
+            // Helper function to update current value display
+            function updateCurrentValue(key, value) {
+                console.log(`Updating ${key} with value:`, value);
+                const currentValueElement = document.querySelector(`[data-config-key="${key}"] .current-value`);
+                console.log(`Found element for ${key}:`, currentValueElement);
+                if (currentValueElement) {
+                    if (Array.isArray(value)) {
+                        currentValueElement.textContent = value.length ? value.join(', ') : 'None';
+                    } else if (typeof value === 'object' && value !== null) {
+                        // Handle nested objects like auto_lock
+                        if (key === 'auto_lock_channels' && value.channels) {
+                            currentValueElement.textContent = value.channels.length ? value.channels.join(', ') : 'None';
+                        } else {
+                            currentValueElement.textContent = JSON.stringify(value);
+                        }
+                    } else {
+                        currentValueElement.textContent = value || 'None';
+                    }
+                }
+            }
+
+            // Handle moderation settings
+            if (config.moderation) {
+                console.log('Processing moderation settings:', config.moderation);
+                updateCurrentValue('warn_roles', config.moderation.warn || []);
+                updateCurrentValue('timeout_roles', config.moderation.timeout || []);
+                updateCurrentValue('kick_roles', config.moderation.kick || []);
+                updateCurrentValue('ban_roles', config.moderation.ban || []);
+                updateCurrentValue('log_channel', config.moderation.logs);
+            }
+
+            // Handle payout settings
+            updateCurrentValue('payout_channel', config.payout);
+            updateCurrentValue('claim_channel', config.claim);
+            updateCurrentValue('queue_channel', config.queue);
+            updateCurrentValue('payout_role', config.root);
+
+            // Handle auto-responder settings
+            if (config.auto_responder) {
+                console.log('Processing auto-responder settings:', config.auto_responder);
+                updateCurrentValue('link_allowed_roles', config.auto_responder.link_allowed || []);
+                updateCurrentValue('words_allowed_roles', config.auto_responder.words_allowed || []);
+                updateCurrentValue('ar_allowed_roles', config.auto_responder.allowed || []);
+            }
+
+            // Handle other settings
+            updateCurrentValue('highlight_roles', config.highlight || []);
+            updateCurrentValue('auction_channel', config.auction);
+            updateCurrentValue('auction_end_role', config.auction_role);
+            updateCurrentValue('auction_managers', config.auction_manager || []);
+            updateCurrentValue('lock_on_end', config.auction_lock_on_end);
+            updateCurrentValue('auto_lock_channels', config.auto_lock?.channels || []);
+            updateCurrentValue('auto_lock_enabled', config.auto_lock?.status);
+            updateCurrentValue('suggestions_channel', config.suggestions);
+            updateCurrentValue('suggestion_role', config.suggestion_role);
+            updateCurrentValue('no_suggestions_role', config.no_suggestions);
+            updateCurrentValue('mafia_logs_channel', config.mafia_logs);
+            updateCurrentValue('counting_channel', config.counting);
+            updateCurrentValue('strike_log_channel', config.strike_log);
+            updateCurrentValue('strike_announce_channel', config.strike_announce);
+            updateCurrentValue('poll_roles', config.poll_role || []);
+            updateCurrentValue('lock_access_roles', config.lock_role || []);
+            updateCurrentValue('player_role', config.player_role);
+            updateCurrentValue('event_manager_role', config.event_manager_role);
+            updateCurrentValue('role_cmd_access_roles', config.role_cmd_access_roles || []);
+            updateCurrentValue('staff_list_roles', config.staff_list_roles || []);
+            updateCurrentValue('pcms_roles', config.pcms);
+            updateCurrentValue('pcms_requirements', config.pcms_reqs || []);
+            updateCurrentValue('afk_allowed_roles', config.afk || []);
+            updateCurrentValue('quarantine_role', config.quarantine);
+            updateCurrentValue('snipe_roles', config.perks?.snipe || []);
         });
 
     Promise.all([
@@ -455,21 +696,18 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Loaded channels:', channels);
 
         // Populate all role selects
-        document.querySelectorAll('select[multiple]').forEach(select => {
-            // Only fill if not for channels (we'll handle those below)
-            if (!select.closest('.bg-gray-50')?.innerHTML.includes('Channel')) {
-                select.innerHTML = '';
-                roles.forEach(role => {
-                    const option = document.createElement('option');
-                    option.value = role.id;
-                    option.textContent = role.name;
-                    select.appendChild(option);
-                });
-            }
+        document.querySelectorAll('select.role-select').forEach(select => {
+            select.innerHTML = '';
+            roles.forEach(role => {
+                const option = document.createElement('option');
+                option.value = role.id;
+                option.textContent = role.name;
+                select.appendChild(option);
+            });
         });
 
-        // Populate all single channel selects
-        document.querySelectorAll('select:not([multiple])').forEach(select => {
+        // Populate all channel selects
+        document.querySelectorAll('select.channel-select').forEach(select => {
             select.innerHTML = '';
             channels.forEach(channel => {
                 // Only add text/voice channels
@@ -482,6 +720,53 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+
+    // Initialize Select2 for all select elements
+    $('.select2').select2({
+        theme: 'tailwind',
+        width: '100%',
+        placeholder: 'Select options',
+        allowClear: true,
+        closeOnSelect: false,
+        templateResult: formatOption,
+        templateSelection: formatOption
+    });
+
+    // Custom formatting for Select2 options
+    function formatOption(option) {
+        if (!option.id) return option.text;
+        return $(`<span class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-indigo-500"></span>
+            <span>${option.text}</span>
+        </span>`);
+    }
+
+    // Add custom styles for Select2
+    const style = document.createElement('style');
+    style.textContent = `
+        .select2-container--tailwind .select2-selection--multiple {
+            @apply border-gray-300 rounded-md shadow-sm;
+            min-height: 38px;
+        }
+        .select2-container--tailwind .select2-selection--multiple .select2-selection__choice {
+            @apply bg-indigo-100 text-indigo-700 rounded-md px-2 py-1 m-1;
+            border: none;
+        }
+        .select2-container--tailwind .select2-selection--multiple .select2-selection__choice__remove {
+            @apply text-indigo-500 hover:text-indigo-700 ml-1;
+            border: none;
+        }
+        .select2-container--tailwind .select2-dropdown {
+            @apply border-gray-300 rounded-md shadow-lg;
+        }
+        .select2-container--tailwind .select2-results__option--highlighted {
+            @apply bg-indigo-100 text-indigo-700;
+        }
+        .select2-container--tailwind .select2-results__option--selected {
+            @apply bg-indigo-500 text-white;
+        }
+    `;
+    document.head.appendChild(style);
 });
 </script>
 
@@ -634,6 +919,68 @@ label {
 
 .back-btn:focus:not(:active)::after {
     animation: ripple 1s ease-out;
+}
+
+/* Select2 Custom Styles */
+.select2-container--tailwind .select2-selection--multiple {
+    border-color: #D1D5DB;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    min-height: 38px;
+}
+
+.select2-container--tailwind .select2-selection--multiple .select2-selection__choice {
+    background-color: #EEF2FF;
+    color: #4F46E5;
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    margin: 0.25rem;
+    border: none;
+}
+
+.select2-container--tailwind .select2-selection--multiple .select2-selection__choice__remove {
+    color: #4F46E5;
+    margin-left: 0.25rem;
+    border: none;
+}
+
+.select2-container--tailwind .select2-selection--multiple .select2-selection__choice__remove:hover {
+    color: #4338CA;
+}
+
+.select2-container--tailwind .select2-dropdown {
+    border-color: #D1D5DB;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.select2-container--tailwind .select2-results__option--highlighted {
+    background-color: #EEF2FF;
+    color: #4F46E5;
+}
+
+.select2-container--tailwind .select2-results__option--selected {
+    background-color: #4F46E5;
+    color: white;
+}
+
+.select2-container--tailwind .select2-search__field {
+    border: none !important;
+    padding: 0.5rem !important;
+}
+
+.select2-container--tailwind .select2-selection--multiple .select2-selection__rendered {
+    padding: 0.25rem;
+}
+
+.select2-container--tailwind .select2-selection--multiple .select2-selection__choice {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.select2-container--tailwind .select2-selection--multiple .select2-selection__choice__remove {
+    order: 2;
 }
 </style>
 {% endblock %}

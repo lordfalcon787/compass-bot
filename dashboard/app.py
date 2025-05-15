@@ -137,10 +137,32 @@ def server_settings(guild_id):
 @login_required
 def get_guild_config(server_id):
     try:
-        if configuration:
-            config = configuration.find_one({"guild_id": server_id})
+        if configuration is not None:
+            config = configuration.find_one({"_id": "config"})
             if config:
-                return jsonify(config.get("settings", DEFAULT_CONFIG))
+                guild_config = {}
+                for setting_type, guild_settings in config.items():
+                    if setting_type != "_id":
+                        if setting_type == "moderation":
+                            guild_config[setting_type] = {}
+                            for action in ["warn", "timeout", "kick", "ban", "logs"]:
+                                if action in guild_settings and server_id in guild_settings[action]:
+                                    guild_config[setting_type][action] = guild_settings[action][server_id]
+                                elif action in DEFAULT_CONFIG.get("moderation", {}):
+                                    guild_config[setting_type][action] = DEFAULT_CONFIG["moderation"][action]
+                        elif setting_type == "perks":
+                            guild_config[setting_type] = {}
+                            if "snipe" in guild_settings and server_id in guild_settings["snipe"]:
+                                guild_config[setting_type]["snipe"] = guild_settings["snipe"][server_id]
+                            elif "snipe" in DEFAULT_CONFIG.get("perks", {}):
+                                guild_config[setting_type]["snipe"] = DEFAULT_CONFIG["perks"]["snipe"]
+                        else:
+                            if server_id in guild_settings:
+                                guild_config[setting_type] = guild_settings[server_id]
+                            elif setting_type in DEFAULT_CONFIG:
+                                guild_config[setting_type] = DEFAULT_CONFIG[setting_type]
+                print(guild_config)
+                return jsonify(guild_config)
         return jsonify(DEFAULT_CONFIG)
     except Exception as e:
         print(f"Error getting config: {e}")
@@ -150,11 +172,36 @@ def get_guild_config(server_id):
 @login_required
 def save_guild_config(server_id):
     try:
-        if configuration:
+        if configuration is not None:
+            print("Saving config")
             config_data = request.json
+            
+            current_config = configuration.find_one({"_id": "config"}) or {}
+            
+            for setting_type, settings in config_data.items():
+                if setting_type == "moderation":
+                    if setting_type not in current_config:
+                        current_config[setting_type] = {}
+                    for action in ["warn", "timeout", "kick", "ban", "logs"]:
+                        if action in settings:
+                            if action not in current_config[setting_type]:
+                                current_config[setting_type][action] = {}
+                            current_config[setting_type][action][server_id] = settings[action]
+                elif setting_type == "perks":
+                    if setting_type not in current_config:
+                        current_config[setting_type] = {}
+                    if "snipe" in settings:
+                        if "snipe" not in current_config[setting_type]:
+                            current_config[setting_type]["snipe"] = {}
+                        current_config[setting_type]["snipe"][server_id] = settings["snipe"]
+                else:
+                    if setting_type not in current_config:
+                        current_config[setting_type] = {}
+                    current_config[setting_type][server_id] = settings
+            
             configuration.update_one(
-                {"guild_id": server_id},
-                {"$set": {"settings": config_data}},
+                {"_id": "config"},
+                {"$set": current_config},
                 upsert=True
             )
         return jsonify({"status": "success"})
@@ -165,16 +212,63 @@ def save_guild_config(server_id):
 @app.route("/api/guild/<server_id>/roles")
 @login_required
 def get_guild_roles(server_id):
-    headers = {"Authorization": f"Bearer {session['access_token']}"}
-    response = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/roles", headers=headers)
-    return jsonify(response.json())
+    try:
+        headers = {"Authorization": f"Bot {BOT_TOKEN}"}
+        response = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/roles", headers=headers)
+        if response.status_code == 200:
+            roles = response.json()
+            roles.sort(key=lambda x: x.get('position', 0), reverse=True)
+            return jsonify(roles)
+        return jsonify([])
+    except Exception as e:
+        print(f"Error getting roles: {e}")
+        return jsonify([])
 
 @app.route("/api/guild/<server_id>/channels")
 @login_required
 def get_guild_channels(server_id):
-    headers = {"Authorization": f"Bearer {session['access_token']}"}
-    response = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/channels", headers=headers)
-    return jsonify(response.json())
+    try:
+        headers = {"Authorization": f"Bot {BOT_TOKEN}"}
+        response = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/channels", headers=headers)
+        if response.status_code == 200:
+            channels = response.json()
+            text_channels = [channel for channel in channels if channel.get('type') == 0]
+            text_channels.sort(key=lambda x: x.get('position', 0))
+            return jsonify(text_channels)
+        return jsonify([])
+    except Exception as e:
+        print(f"Error getting channels: {e}")
+        return jsonify([])
+
+@app.route("/api/guild/<server_id>/roles/<role_id>")
+@login_required
+def get_guild_role(server_id, role_id):
+    try:
+        headers = {"Authorization": f"Bot {BOT_TOKEN}"}
+        response = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/roles", headers=headers)
+        if response.status_code == 200:
+            roles = response.json()
+            role = next((role for role in roles if str(role['id']) == str(role_id)), None)
+            return jsonify(role if role else {})
+        return jsonify({})
+    except Exception as e:
+        print(f"Error getting role: {e}")
+        return jsonify({})
+
+@app.route("/api/guild/<server_id>/channels/<channel_id>")
+@login_required
+def get_guild_channel(server_id, channel_id):
+    try:
+        headers = {"Authorization": f"Bot {BOT_TOKEN}"}
+        response = requests.get(f"https://discord.com/api/v10/guilds/{server_id}/channels", headers=headers)
+        if response.status_code == 200:
+            channels = response.json()
+            channel = next((channel for channel in channels if str(channel['id']) == str(channel_id)), None)
+            return jsonify(channel if channel else {})
+        return jsonify({})
+    except Exception as e:
+        print(f"Error getting channel: {e}")
+        return jsonify({})
 
 @app.route("/logout")
 def logout():
