@@ -30,10 +30,35 @@
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
         }
+        .tos-privacy-btn {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            transition: all 0.2s cubic-bezier(.4,0,.2,1);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+        }
+        .tos-privacy-btn:hover {
+            transform: scale(1.07);
+            box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25);
+            z-index: 2;
+        }
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            background: linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%);
+        }
     </style>
 </head>
 <body class="{% if home %}home{% endif %}">
-    <nav class="text-white shadow-lg backdrop-blur-md" style="background: linear-gradient(90deg, rgba(17,24,39,0.95) 0%, rgba(31,41,55,0.95) 100%);">
+    {% if not no_gradient %}
+    <div class="gradient-bg"></div>
+    {% endif %}
+    <nav class="text-white shadow-lg backdrop-blur-md" style="background: linear-gradient(90deg, rgba(17,24,39,0.95) 0%, rgba(31,41,55,0.95) 100%); z-index: 10; position: relative;">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
@@ -41,6 +66,10 @@
                         <img src="{{ url_for('static', filename='images/avatar.jpg') }}" alt="Compass Logo" class="h-8 w-8 rounded-full mr-2 shadow-md ring-2 ring-indigo-500/50 group-hover:ring-indigo-400 transition-all duration-300" />
                         <span class="nav-brand font-bold text-xl text-white">Compass Dashboard</span>
                     </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/terms" class="tos-privacy-btn inline-block bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold px-4 py-1.5 rounded-lg shadow-md hover:from-indigo-600 hover:to-purple-600 transition-all duration-200">Terms of Service</a>
+                    <a href="/privacy" class="tos-privacy-btn inline-block bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-semibold px-4 py-1.5 rounded-lg shadow-md hover:from-indigo-600 hover:to-pink-600 transition-all duration-200 ml-2">Privacy Policy</a>
                 </div>
                 <div class="flex items-center">
                     {% if authorized %}

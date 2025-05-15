@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+.tos-bg {
+    min-height: 100vh;
+    width: 100%;
+    /* background: linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%); */
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Poppins', sans-serif;
+    z-index: 0;
+}
+.tos-card {
+    background: rgba(24,24,28,0.95);
+    border-radius: 2rem;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+    padding: 3rem 2.5rem;
+    max-width: 700px;
+    width: 100%;
+    margin: 0;
+    z-index: 1;
+}
+.tos-heading {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    letter-spacing: 0.02em;
+    color: #3730a3;
+    font-family: 'Poppins', sans-serif;
+}
+.tos-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    color: #4f46e5;
+}
+.tos-section {
+    margin-bottom: 1.2rem;
+}
+.tos-updated {
+    font-size: 1rem;
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+</style>
+<div class="tos-bg">
+  <div class="tos-card">
+    <div class="tos-heading">TERMS OF SERVICE</div>
+    <div class="tos-updated">Last Updated: 03/20/2025</div>
+    <div class="tos-section">
+      <span class="tos-section-title">1. AGREEMENT TO TERMS</span><br>
+      These Terms of Service ("Terms") constitute a legally binding agreement made between you, whether personally or on behalf of an entity ("you"), and the owner of Compass ("we," "us," or "our"), concerning your access to and use of the Compass Discord bot ("Compass"). By accessing or using Compass, you agree that you have read, understood, and agreed to be bound by these Terms. If you do not agree, you must discontinue use of Compass immediately.
+    </div>
+    <div class="tos-section">
+      <span class="tos-section-title">2. INTELLECTUAL PROPERTY RIGHTS</span><br>
+      All modules, features, scripts, and content within Compass, including but not limited to software, text, graphics, and any other proprietary materials ("Modules"), are owned by and remain the exclusive property of the owner. You acknowledge that unauthorized reproduction, modification, distribution, or exploitation of any Module is strictly prohibited.
+    </div>
+    <div class="tos-section">
+      <span class="tos-section-title">3. LICENSE AND USAGE</span><br>
+      Subject to your compliance with these Terms, we grant you a limited, non-exclusive, revocable, and non-transferable license to access and use Compass for personal or authorized business purposes. Any usage of Compass's Modules must include clear and proper attribution to the owner. Unauthorized commercial use is strictly prohibited without prior written consent.
+    </div>
+    <div class="tos-section">
+      <span class="tos-section-title">4. USER RESTRICTIONS</span><br>
+      By using Compass, you agree that you shall not:<br>
+      <ul style="margin-left:1.5em;list-style:disc;">
+        <li>Claim ownership over any Module or feature of Compass;</li>
+        <li>Distribute, sell, lease, sublicense, or commercially exploit Compass or any of its components without explicit authorization;</li>
+        <li>Modify, reverse-engineer, or create derivative works based on Compass;</li>
+        <li>Engage in any activity that disrupts, harms, or degrades the functionality of Compass;</li>
+        <li>Violate any applicable laws or regulations in connection with your use of Compass.</li>
+      </ul>
+    </div>
+    <div class="tos-section">
+      <span class="tos-section-title">5. DISCLAIMER OF WARRANTIES</span><br>
+      Compass is provided on an "as-is" and "as-available" basis. We disclaim all warranties, express or implied, including but not limited to merchantability, fitness for a particular purpose, and non-infringement. We do not guarantee that Compass will be uninterrupted, error-free, or free of harmful components.
+    </div>
+    <div class="tos-section">
+      <span class="tos-section-title">6. LIMITATION OF LIABILITY</span><br>
+      To the maximum extent permitted by law, in no event shall we be liable for any indirect, incidental, consequential, or punitive damages, including but not limited to loss of profits, data, or business opportunities, arising from your use or inability to use Compass.
+    </div>
+    <div class="tos-section">
+      <span class="tos-section-title">7. MODIFICATIONS TO TERMS</span><br>
+      We reserve the right to modify these Terms at any time. Any updates will be posted with the "Last Updated" date revised accordingly. Continued use of Compass after modifications constitutes your acceptance of the revised Terms.
+    </div>
+    <div class="tos-section">
+      <span class="tos-section-title">8. TERMINATION</span><br>
+      We reserve the right to suspend or terminate your access to Compass at our sole discretion, without prior notice, if you violate these Terms or engage in any activity that we deem harmful or unlawful.
+    </div>
+    <div class="tos-section">
+      <span class="tos-section-title">9. GOVERNING LAW</span><br>
+      These Terms shall be governed and construed in accordance with the laws of the United States, without regard to its conflict of law principles. Any disputes arising from these Terms shall be resolved in the competent courts of the United States.
+    </div>
+    <div class="tos-section">
+      <span class="tos-section-title">10. CONTACT INFORMATION</span><br>
+      If you have any questions about these Terms, please contact us through official channels.
+    </div>
+  </div>
+</div>
+{% endblock %} 

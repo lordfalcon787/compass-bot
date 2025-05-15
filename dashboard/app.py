@@ -4,7 +4,6 @@ from oauth import Oauth
 from utils.mongo_connection import MongoConnection
 from functools import wraps
 import requests
-from pymongo.errors import ServerSelectionTimeoutError
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "1264646464646464646"
@@ -81,7 +80,8 @@ def index():
                          user={
                              'name': session.get('user_logged_in_compass_dashboard'),
                              'avatar': session.get('user_avatar')
-                         } if authorized else None)
+                         } if authorized else None,
+                         no_gradient=True)
 
 @app.route("/login")
 def login():
@@ -114,11 +114,18 @@ def dashboard():
                              'avatar': session.get('user_avatar')
                          },
                          guilds=guilds,
-                         client_id=BOT_CLIENT_ID)
+                         client_id=BOT_CLIENT_ID,
+                         no_gradient=True)
 
 @app.route("/server/<guild_id>/settings")
 @login_required
 def server_settings(guild_id):
+    # Redirect to the v2 settings page
+    return redirect(url_for("server_settings_v2", guild_id=guild_id))
+
+@app.route("/server/<guild_id>/settings/v2")
+@login_required
+def server_settings_v2(guild_id):
     current_server = next((guild for guild in session['admin_guilds'] if guild['id'] == guild_id), None)
     if not current_server:
         return redirect(url_for("dashboard"))
@@ -126,12 +133,16 @@ def server_settings(guild_id):
     if not check_bot_in_guild(guild_id, session['access_token']):
         return redirect(url_for("dashboard"))
     
-    return render_template("server_settings.html",
+    config_data = get_guild_config(guild_id)
+    
+    return render_template("server_settings_v2.html",
                          current_server=current_server,
                          user={
                              'name': session.get('user_logged_in_compass_dashboard'),
                              'avatar': session.get('user_avatar')
-                         })
+                         },
+                         server_config=config_data,
+                         no_gradient=True)
 
 @app.route("/api/guild/<server_id>/config", methods=['GET'])
 @login_required
@@ -147,22 +158,46 @@ def get_guild_config(server_id):
                             guild_config[setting_type] = {}
                             for action in ["warn", "timeout", "kick", "ban", "logs"]:
                                 if action in guild_settings and server_id in guild_settings[action]:
-                                    guild_config[setting_type][action] = guild_settings[action][server_id]
+                                    value = guild_settings[action][server_id]
+                                    if isinstance(value, (list, tuple)):
+                                        guild_config[setting_type][action] = [str(x) for x in value]
+                                    else:
+                                        guild_config[setting_type][action] = str(value)
                                 elif action in DEFAULT_CONFIG.get("moderation", {}):
-                                    guild_config[setting_type][action] = DEFAULT_CONFIG["moderation"][action]
+                                    value = DEFAULT_CONFIG["moderation"][action]
+                                    if isinstance(value, (list, tuple)):
+                                        guild_config[setting_type][action] = [str(x) for x in value]
+                                    else:
+                                        guild_config[setting_type][action] = str(value)
                         elif setting_type == "perks":
                             guild_config[setting_type] = {}
                             if "snipe" in guild_settings and server_id in guild_settings["snipe"]:
-                                guild_config[setting_type]["snipe"] = guild_settings["snipe"][server_id]
+                                value = guild_settings["snipe"][server_id]
+                                if isinstance(value, (list, tuple)):
+                                    guild_config[setting_type]["snipe"] = [str(x) for x in value]
+                                else:
+                                    guild_config[setting_type]["snipe"] = str(value)
                             elif "snipe" in DEFAULT_CONFIG.get("perks", {}):
-                                guild_config[setting_type]["snipe"] = DEFAULT_CONFIG["perks"]["snipe"]
+                                value = DEFAULT_CONFIG["perks"]["snipe"]
+                                if isinstance(value, (list, tuple)):
+                                    guild_config[setting_type]["snipe"] = [str(x) for x in value]
+                                else:
+                                    guild_config[setting_type]["snipe"] = str(value)
                         else:
                             if server_id in guild_settings:
-                                guild_config[setting_type] = guild_settings[server_id]
+                                value = guild_settings[server_id]
+                                if isinstance(value, (list, tuple)):
+                                    guild_config[setting_type] = [str(x) for x in value]
+                                else:
+                                    guild_config[setting_type] = str(value)
                             elif setting_type in DEFAULT_CONFIG:
-                                guild_config[setting_type] = DEFAULT_CONFIG[setting_type]
+                                value = DEFAULT_CONFIG[setting_type]
+                                if isinstance(value, (list, tuple)):
+                                    guild_config[setting_type] = [str(x) for x in value]
+                                else:
+                                    guild_config[setting_type] = str(value)
                 print(guild_config)
-                return jsonify(guild_config)
+                return guild_config
         return jsonify(DEFAULT_CONFIG)
     except Exception as e:
         print(f"Error getting config: {e}")
@@ -274,6 +309,14 @@ def get_guild_channel(server_id, channel_id):
 def logout():
     session.clear()
     return redirect(url_for("index"))
+
+@app.route("/terms")
+def terms_of_service():
+    return render_template("terms_of_service.html")
+
+@app.route("/privacy")
+def privacy_policy():
+    return render_template("privacy_policy.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

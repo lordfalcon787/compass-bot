@@ -1,0 +1,574 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Success notification toast -->
+    <div id="success-toast" class="fixed top-4 right-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-md transform transition-transform duration-300 translate-x-full z-50 flex items-center">
+        <div class="text-green-500 rounded-full bg-white p-1 mr-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+        <span>Settings saved successfully!</span>
+    </div>
+    
+    <div class="flex justify-between items-center mb-8">
+        <div class="flex items-center space-x-4">
+            {% if current_server.icon %}
+            <img src="https://cdn.discordapp.com/icons/{{ current_server.id }}/{{ current_server.icon }}.png" alt="{{ current_server.name }}" class="w-16 h-16 rounded-full shadow-lg">
+            {% else %}
+            <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center shadow-lg">
+                <span class="text-2xl text-gray-500 font-medium">{{ current_server.name[0] }}</span>
+            </div>
+            {% endif %}
+            <div>
+                <h1 class="text-3xl font-semibold text-gray-900">{{ current_server.name }}</h1>
+                <p class="text-sm text-gray-500">Server ID: {{ current_server.id }}</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <a href="{{ url_for('dashboard') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Servers</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100">
+        <div class="flex">
+            <!-- Vertical Tabs -->
+            <div class="w-64 border-r border-gray-200 bg-gray-50">
+                <nav class="flex flex-col py-4">
+                    <button class="tab-btn active px-6 py-3 text-sm font-medium text-left flex items-center space-x-3 transition-all duration-200 hover:bg-gray-100" data-tab="moderation">
+                        <i class="fas fa-shield-alt w-5 text-center"></i>
+                        <span>Moderation</span>
+                    </button>
+                    <!-- Additional tabs can be added here -->
+                </nav>
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 p-6 relative min-h-[600px]">
+                <div id="moderation" class="tab-content active">
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-6">Moderation Settings</h2>
+                    
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-5 rounded-lg shadow-sm" data-config-key="warn_roles">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Warn Roles</label>
+                            <select id="warn-roles-select" class="role-select" multiple placeholder="Select roles..."></select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <div class="current-value flex flex-wrap items-center mt-1">
+                                    <div class="animate-pulse h-7 bg-gray-200 rounded-full w-24"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-5 rounded-lg shadow-sm" data-config-key="timeout_roles">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Timeout Roles</label>
+                            <select id="timeout-roles-select" class="role-select" multiple placeholder="Select roles..."></select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <div class="current-value flex flex-wrap items-center mt-1">
+                                    <div class="animate-pulse h-7 bg-gray-200 rounded-full w-24 mr-2"></div>
+                                    <div class="animate-pulse h-7 bg-gray-200 rounded-full w-28 mr-2"></div>
+                                    <div class="animate-pulse h-7 bg-gray-200 rounded-full w-20"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-5 rounded-lg shadow-sm" data-config-key="kick_roles">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Kick Roles</label>
+                            <select id="kick-roles-select" class="role-select" multiple placeholder="Select roles..."></select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <div class="current-value flex flex-wrap items-center mt-1">
+                                    <div class="animate-pulse h-7 bg-gray-200 rounded-full w-24 mr-2"></div>
+                                    <div class="animate-pulse h-7 bg-gray-200 rounded-full w-20"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-5 rounded-lg shadow-sm" data-config-key="ban_roles">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Ban Roles</label>
+                            <select id="ban-roles-select" class="role-select" multiple placeholder="Select roles..."></select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <div class="current-value flex flex-wrap items-center mt-1">
+                                    <div class="animate-pulse h-7 bg-gray-200 rounded-full w-24 mr-2"></div>
+                                    <div class="animate-pulse h-7 bg-gray-200 rounded-full w-20"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-5 rounded-lg shadow-sm" data-config-key="log_channel">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Log Channel</label>
+                            <select id="log-channel-select" class="channel-select" placeholder="Select a channel..."></select>
+                            <div class="mt-2 text-sm text-gray-500">
+                                <span class="font-medium">Current:</span>
+                                <div class="current-value mt-1">
+                                    <div class="animate-pulse h-7 bg-gray-200 rounded-full w-32"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 flex justify-end">
+                            <button id="save-btn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 font-medium">
+                                Save Settings
+                            </button>
+                            <div id="loading-indicator" class="hidden ml-4 flex items-center">
+                                <div class="loading-spinner mr-2"></div>
+                                <span class="text-sm text-gray-600">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Tom Select CSS -->
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+<!-- Custom Tom Select CSS -->
+<link href="{{ url_for('static', filename='css/tom-select-custom.css') }}" rel="stylesheet">
+<!-- Tom Select JS -->
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const serverId = '{{ current_server.id }}';
+        let serverConfig = {};
+        let roles = [];
+        let channels = [];
+        let tomSelectInstances = {};
+        
+        // Show/hide loading indicator
+        function showLoading() {
+            document.getElementById('loading-indicator').classList.remove('hidden');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading-indicator').classList.add('hidden');
+        }
+        
+        // Tab switching
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                
+                // Remove active class from all tabs and content
+                tabBtns.forEach(btn => btn.classList.remove('active', 'bg-indigo-50', 'text-indigo-700'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to selected tab and content
+                this.classList.add('active', 'bg-indigo-50', 'text-indigo-700');
+                document.getElementById(tabName).classList.add('active');
+            });
+        });
+        
+        function fetchConfig() {
+            return fetch(`/api/guild/${serverId}/config`)
+                .then(response => {
+                    console.log("console log:", response)
+                    return response.json()
+                })
+                .then(data => {
+                    console.log("Fetched config from server:", data);
+                    serverConfig = data;
+                    return data;
+                })
+                .catch(error => {
+                    console.error('Error fetching config:', error);
+                    return {};
+                });
+        }
+        
+        // Fetch server roles
+        function fetchRoles() {
+            return fetch(`/api/guild/${serverId}/roles`)
+                .then(response => response.json())
+                .then(data => {
+                    roles = data;
+                    return data;
+                })
+                .catch(error => {
+                    console.error('Error fetching roles:', error);
+                    return [];
+                });
+        }
+        
+        // Fetch server channels
+        function fetchChannels() {
+            return fetch(`/api/guild/${serverId}/channels`)
+                .then(response => response.json())
+                .then(data => {
+                    channels = data;
+                    return data;
+                })
+                .catch(error => {
+                    console.error('Error fetching channels:', error);
+                    return [];
+                });
+        }
+        
+        // Initialize role select dropdowns with TomSelect
+        function initRoleSelects() {
+            document.querySelectorAll('.role-select').forEach(select => {
+                const id = select.id;
+                const options = roles.map(role => {
+                    return {
+                        value: role.id,
+                        text: role.name,
+                        color: role.color ? '#' + role.color.toString(16).padStart(6, '0') : '#99AAB5'
+                    };
+                });
+
+                // Get the appropriate values from serverConfig based on the select ID
+                let selectedValues = [];
+                if (id === 'warn-roles-select' && serverConfig?.moderation?.warn) {
+                    selectedValues = serverConfig.moderation.warn;
+                    let newSelectedValues = [];
+                    for (const item of selectedValues) {
+                        const option = options.find(opt => String(opt.value) === String(item));
+                        if (option) {
+                            newSelectedValues.push(option.value);
+                        }
+                    }
+                    selectedValues = newSelectedValues;
+                } else if (id === 'timeout-roles-select' && serverConfig?.moderation?.timeout) {
+                    selectedValues = serverConfig.moderation.timeout;
+                    let newSelectedValues = [];
+                    for (const item of selectedValues) {
+                        const option = options.find(opt => String(opt.value) === String(item));
+                        if (option) {
+                            newSelectedValues.push(option.value);
+                        }
+                    }
+                    selectedValues = newSelectedValues;
+                } else if (id === 'kick-roles-select' && serverConfig?.moderation?.kick) {
+                    selectedValues = serverConfig.moderation.kick;
+                    let newSelectedValues = [];
+                    for (const item of selectedValues) {
+                        const option = options.find(opt => String(opt.value) === String(item));
+                        if (option) {
+                            newSelectedValues.push(option.value);
+                        }
+                    }
+                    selectedValues = newSelectedValues;
+                } else if (id === 'ban-roles-select' && serverConfig?.moderation?.ban) {
+                    selectedValues = serverConfig.moderation.ban;
+                    let newSelectedValues = [];
+                    for (const item of selectedValues) {
+                        const option = options.find(opt => String(opt.value) === String(item));
+                        if (option) {
+                            newSelectedValues.push(option.value);
+                        }
+                    }
+                    selectedValues = newSelectedValues;
+                }
+
+                tomSelectInstances[id] = new TomSelect(select, {
+                    options: options,
+                    items: selectedValues,
+                    valueField: 'value',
+                    labelField: 'text',
+                    searchField: 'text',
+                    create: false,
+                    maxItems: 20,
+                    render: {
+                        option: function(data, escape) {
+                            return `<div class="py-2 px-3">
+                                <div class="flex items-center">
+                                    <span class="w-3 h-3 rounded-full mr-2" style="background-color: ${escape(data.color)}"></span>
+                                    <span>${escape(data.text)}</span>
+                                </div>
+                            </div>`;
+                        },
+                        item: function(data, escape) {
+                            return `<div class="item py-1 px-2 flex items-center">
+                                <span class="w-2 h-2 rounded-full mr-1" style="background-color: ${escape(data.color)}"></span>
+                                <span>${escape(data.text)}</span>
+                            </div>`;
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Initialize channel select dropdowns with TomSelect
+        function initChannelSelects() {
+            document.querySelectorAll('.channel-select').forEach(select => {
+                const id = select.id;
+                const options = channels.map(channel => {
+                    return {
+                        value: channel.id,
+                        text: channel.name
+                    };
+                });
+                
+                // Properly handle the log channel value
+                let selectedValues = [];
+                if (id === 'log-channel-select' && serverConfig?.moderation?.logs) {
+                    // Make sure we're working with an array
+                    const logChannel = String(serverConfig.moderation.logs);
+                    console.log('Log channel from config:', logChannel);
+                    console.log('Available channel options:', options.map(o => ({id: o.value, name: o.text})));
+                    
+                    // Find matching option using exact string comparison
+                    const option = options.find(opt => String(opt.value) === logChannel);
+                    console.log('Found matching option:', option);
+                    
+                    if (option) {
+                        selectedValues.push(option.value);
+                    } else {
+                        console.log('No matching option found for log channel:', logChannel);
+                        // If no match found, still show the original value
+                        console.log('Adding original value as fallback');
+                        selectedValues.push(logChannel);
+                    }
+                }
+                
+                tomSelectInstances[id] = new TomSelect(select, {
+                    options: options,
+                    items: selectedValues,
+                    valueField: 'value',
+                    labelField: 'text',
+                    searchField: 'text',
+                    create: false,
+                    maxItems: 1,
+                    render: {
+                        option: function(data, escape) {
+                            return `<div class="py-2 px-3">
+                                <div class="flex items-center">
+                                    <span class="mr-2">#</span>
+                                    <span>${escape(data.text)}</span>
+                                </div>
+                            </div>`;
+                        },
+                        item: function(data, escape) {
+                            return `<div class="item py-1 px-2 flex items-center">
+                                <span class="mr-1">#</span>
+                                <span>${escape(data.text)}</span>
+                            </div>`;
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Update UI with current values from config
+        function updateCurrentValues() {
+            if (serverConfig && serverConfig.moderation) {
+                console.log('Updating current values with config:', serverConfig.moderation);
+                console.log (serverConfig)
+                updateCurrentValueText('warn_roles', serverConfig.moderation.warn || []);
+                updateCurrentValueText('timeout_roles', serverConfig.moderation.timeout || []);
+                updateCurrentValueText('kick_roles', serverConfig.moderation.kick || []);
+                updateCurrentValueText('ban_roles', serverConfig.moderation.ban || []);
+                
+                if (serverConfig.moderation.logs) {
+                    console.log('Log channel value for display:', String(serverConfig.moderation.logs), typeof serverConfig.moderation.logs);
+                    // Ensure we're using the exact string representation
+                    updateCurrentValueText('log_channel', [String(serverConfig.moderation.logs)]);
+                }
+            }
+        }
+        
+        // Update the "Current" text display
+        function updateCurrentValueText(configKey, values) {
+            const container = document.querySelector(`[data-config-key="${configKey}"]`);
+            if (!container) return;
+            
+            const currentValueContainer = container.querySelector('.current-value');
+            if (!currentValueContainer) return;
+            
+            if (!values || values.length === 0) {
+                currentValueContainer.textContent = 'None';
+                return;
+            }
+            
+            if (configKey.includes('role')) {
+                currentValueContainer.innerHTML = ''; // Clear existing content
+                
+                values.forEach((roleId) => {
+                    const role = roles.find(r => String(r.id) === String(roleId));
+                    if (role) {
+                        // Create role display with color dot
+                        const roleColor = role.color ? '#' + role.color.toString(16).padStart(6, '0') : '#99AAB5';
+                        
+                        // Create role badge div
+                        const roleBadge = document.createElement('div');
+                        roleBadge.className = 'inline-flex items-center bg-gray-100 rounded-full px-3 py-1 text-sm mr-2 mb-2 shadow-sm';
+                        
+                        // Create color dot span
+                        const colorDot = document.createElement('span');
+                        colorDot.className = 'inline-block w-2 h-2 rounded-full mr-2';
+                        colorDot.style.backgroundColor = roleColor;
+                        
+                        // Create role name span
+                        const roleName = document.createElement('span');
+                        roleName.className = 'font-medium';
+                        roleName.textContent = role.name;
+                        
+                        // Assemble
+                        roleBadge.appendChild(colorDot);
+                        roleBadge.appendChild(roleName);
+                        currentValueContainer.appendChild(roleBadge);
+                    } else {
+                        // If role not found, just show the ID
+                        const roleBadge = document.createElement('div');
+                        roleBadge.className = 'inline-flex items-center bg-gray-100 rounded-full px-3 py-1 text-sm mr-2 mb-2 shadow-sm';
+                        
+                        const colorDot = document.createElement('span');
+                        colorDot.className = 'inline-block w-2 h-2 rounded-full mr-2';
+                        colorDot.style.backgroundColor = '#99AAB5';
+                        
+                        const roleName = document.createElement('span');
+                        roleName.className = 'font-medium';
+                        roleName.textContent = roleId;
+                        
+                        roleBadge.appendChild(colorDot);
+                        roleBadge.appendChild(roleName);
+                        currentValueContainer.appendChild(roleBadge);
+                    }
+                });
+            } else if (configKey.includes('channel')) {
+                const channelId = Array.isArray(values) ? values[0] : values;
+                console.log('Updating current text for channel ID:', channelId, typeof channelId);
+                console.log('Available channels:', channels.map(c => ({id: c.id, name: c.name})));
+                
+                // Use String comparison to find the channel
+                const channel = channels.find(c => String(c.id) === String(channelId));
+                console.log('Found channel:', channel);
+                
+                currentValueContainer.innerHTML = '';
+                
+                const channelBadge = document.createElement('div');
+                channelBadge.className = 'inline-flex items-center bg-gray-100 rounded-full px-3 py-1 text-sm shadow-sm';
+                
+                const hashSymbol = document.createElement('span');
+                hashSymbol.className = 'text-gray-500 mr-1';
+                hashSymbol.textContent = '#';
+                
+                const channelName = document.createElement('span');
+                channelName.className = 'font-medium';
+                if (channel) {
+                    channelName.textContent = channel.name;
+                } else {
+                    // If channel not found, show the exact string representation of the ID
+                    channelName.textContent = String(channelId);
+                }
+                
+                channelBadge.appendChild(hashSymbol);
+                channelBadge.appendChild(channelName);
+                currentValueContainer.appendChild(channelBadge);
+            } else {
+                currentValueContainer.textContent = values.join(', ');
+            }
+        }
+        
+        // Show success toast
+        function showSuccessToast() {
+            const toast = document.getElementById('success-toast');
+            toast.classList.remove('translate-x-full');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+        
+        // Save button click handler
+        document.getElementById('save-btn').addEventListener('click', function() {
+            // Prepare the data to save
+            const configToSave = {
+                moderation: {
+                    warn: tomSelectInstances['warn-roles-select'] ? tomSelectInstances['warn-roles-select'].getValue() : [],
+                    timeout: tomSelectInstances['timeout-roles-select'] ? tomSelectInstances['timeout-roles-select'].getValue() : [],
+                    kick: tomSelectInstances['kick-roles-select'] ? tomSelectInstances['kick-roles-select'].getValue() : [],
+                    ban: tomSelectInstances['ban-roles-select'] ? tomSelectInstances['ban-roles-select'].getValue() : [],
+                    logs: tomSelectInstances['log-channel-select'] ? String(tomSelectInstances['log-channel-select'].getValue()[0]) : null
+                }
+            };
+            
+            console.log('Saving config:', configToSave);
+            
+            // Send the data to the server
+            showLoading();
+            fetch(`/api/guild/${serverId}/config`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(configToSave)
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.status === 'success') {
+                    // Show success toast
+                    showSuccessToast();
+                    
+                    // Refresh configuration
+                    fetchConfig().then(newConfig => {
+                        serverConfig = newConfig;
+                        updateCurrentValues();
+                    });
+                } else {
+                    alert('Error saving settings');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving config:', error);
+                hideLoading();
+                alert('Error saving settings');
+            });
+        });
+        
+        // Initialize everything using Promise chain to ensure correct order
+        showLoading(); // Show loading indicator before fetching data
+        Promise.all([fetchConfig(), fetchRoles(), fetchChannels()])
+            .then(([configData, rolesData, channelsData]) => {
+                // Store the config data first
+                serverConfig = configData;
+                
+                // Initialize the selects with pre-populated values
+                initRoleSelects();
+                initChannelSelects();
+                
+                // Then update the current values display
+                updateCurrentValues();
+                
+                // Hide loading indicator when all operations are complete
+                hideLoading();
+            })
+            .catch(error => {
+                console.error('Error initializing the settings page:', error);
+                // Hide loading indicator
+                hideLoading();
+                
+                // Show error message to user
+                const errorToast = document.createElement('div');
+                errorToast.className = 'fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-md z-50 flex items-center';
+                errorToast.innerHTML = `
+                    <div class="text-red-500 rounded-full bg-white p-1 mr-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </div>
+                    <span>Error loading settings. Please try refreshing the page.</span>
+                `;
+                document.body.appendChild(errorToast);
+                
+                setTimeout(() => {
+                    errorToast.remove();
+                }, 5000);
+            });
+    });
+</script>
+{% endblock %}
