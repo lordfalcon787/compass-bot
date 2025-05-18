@@ -243,7 +243,7 @@ class misc(commands.Cog):
         await message.edit(embed=embed)
         await interaction.followup.send("Embed edited.", ephemeral=True)
 
-    @embed_slash.subcommand(name="create", description="Create an embed", contexts=[0, 1, 2])
+    @embed_slash.subcommand(name="create", description="Create an embed")
     @application_checks.guild_only()
     async def embed_slash_create(self, interaction: nextcord.Interaction, 
                    title: str = SlashOption(description="Enter a title for the embed", required=True),
