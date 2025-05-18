@@ -65,6 +65,8 @@ class PollManager:
         
         try:
             await message.edit(view=view)
+        except nextcord.Forbidden:
+            await message.interaction.edit_original_message(view=view)
         except Exception as e:
             print(f"Failed to update poll {message.id}: {e}")
 
@@ -551,8 +553,10 @@ class Poll(commands.Cog):
                         custom_id=f"pollanon_choice_{i}"
                     )
                     view.add_item(button)
-            
-            await message.edit(view=view)
+            try:
+                await message.edit(view=view)
+            except:
+                await message.interaction.edit_original_message(view=view)
 
     @commands.Cog.listener()
     async def on_interaction(self, interaction: nextcord.Interaction):
