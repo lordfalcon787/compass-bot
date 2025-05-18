@@ -287,23 +287,30 @@ class Poll(commands.Cog):
         if not interaction.user.guild_permissions.administrator:
             await interaction.send("You do not have permission to use this command.", ephemeral=True)
             return
-
+        print("1")
         doc = collection.find_one({"_id": poll_id})
         if not doc:
             await interaction.send("Poll not found", ephemeral=True)
             return
+        print("2")
         view = nextcord.ui.View()
+        print("3")
         for i in range(10):
             choice_key = f"choice_{i}"
             text_key = f"choice_{i}_text"
+            print("4")
             if choice_key not in doc or text_key not in doc:
                 continue
+            print("5")
             choice_text = doc[text_key]
             choice_votes = len(doc[choice_key])
+            print("6")
             button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label=f"{choice_text} [{choice_votes}]", custom_id=f"poll_choice_disabled_{i}", disabled=True)
+            print("7")
             view.add_item(button)
-        channel = self.bot.get_channel(interaction.channel.id)
-        poll_msg = await channel.fetch_message(poll_id)
+        print("8")
+        poll_msg = await interaction.channel.fetch_message(poll_id)
+        print("9")
         await poll_msg.edit(view=view)
         await interaction.send("Poll ended.", ephemeral=True)
 
