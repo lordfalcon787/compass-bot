@@ -374,9 +374,16 @@ class Poll(commands.Cog):
         for i, choice in enumerate(choices):
             button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label=f"{choice} [0]", custom_id=f"pollanon_choice_{i}")
             view.add_item(button)
-
-        message2 = await interaction.channel.send(embed=embed, view=view)
-        await interaction.response.send_message("Poll created", ephemeral=True)
+        if interaction.guild is not None:
+            try:
+                message2 = await interaction.channel.send(embed=embed, view=view)
+                await interaction.response.send_message("Poll created", ephemeral=True)
+            except:
+                await interaction.response.send_message("You do not have permission to send messages in this channel.", ephemeral=True)
+                return
+        else:
+            await interaction.response.send_message("Poll created", ephemeral=True)
+            message2 = await interaction.followup.send(embed=embed, view=view)
 
         poll_data = {
             "_id": str(message2.id),
@@ -459,9 +466,16 @@ class Poll(commands.Cog):
         for i, choice in enumerate(choices):
             button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label=f"{choice} [0]", custom_id=f"poll_choice_{i}")
             view.add_item(button)
-
-        message2 = await interaction.channel.send(embed=embed, view=view)
-        await interaction.response.send_message("Poll created", ephemeral=True)
+        if interaction.guild is not None:
+            try:
+                message2 = await interaction.channel.send(embed=embed, view=view)
+                await interaction.response.send_message("Poll created", ephemeral=True)
+            except:
+                await interaction.response.send_message("You do not have permission to send messages in this channel.", ephemeral=True)
+                return
+        else:
+            await interaction.response.send_message("Poll created", ephemeral=True)
+            message2 = await interaction.followup.send(embed=embed, view=view)
 
         poll_data = {
             "_id": str(message2.id),
