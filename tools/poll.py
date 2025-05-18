@@ -280,7 +280,6 @@ class Poll(commands.Cog):
         
 
     @poll.subcommand(name="end", description="End a poll")
-    @application_checks.guild_only()
     @application_checks.check(ban_check)
     async def poll_end(self, interaction: nextcord.Interaction, poll_id: str = SlashOption(description="The message ID of the poll to end")):
         await interaction.response.defer(ephemeral=True)
@@ -315,7 +314,6 @@ class Poll(commands.Cog):
         await interaction.send("Poll ended.", ephemeral=True)
 
     @poll.subcommand(name="anonymous", description="Create an anonymous poll")
-    @application_checks.guild_only()
     @application_checks.check(ban_check)
     async def poll_anonymous(
         self,
@@ -398,7 +396,6 @@ class Poll(commands.Cog):
         
 
     @poll.subcommand(name="create", description="Create a poll with up to 10 choices")
-    @application_checks.guild_only()
     @application_checks.check(ban_check)
     async def poll_create(
         self,
