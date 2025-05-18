@@ -233,7 +233,7 @@ def save_guild_config(server_id):
                     if setting_type not in current_config:
                         current_config[setting_type] = {}
                     current_config[setting_type][server_id] = settings
-            
+                    
             configuration.update_one(
                 {"_id": "config"},
                 {"$set": current_config},
