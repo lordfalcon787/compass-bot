@@ -382,8 +382,8 @@ class Poll(commands.Cog):
                 await interaction.response.send_message("You do not have permission to send messages in this channel.", ephemeral=True)
                 return
         else:
-            await interaction.response.send_message("Poll created", ephemeral=True)
-            message2 = await interaction.followup.send(embed=embed, view=view)
+            message2 = await interaction.response.send_message(embed=embed, view=view)
+            await interaction.followup.send("Poll created", ephemeral=True)
 
         poll_data = {
             "_id": str(message2.id),
@@ -474,9 +474,8 @@ class Poll(commands.Cog):
                 await interaction.response.send_message("You do not have permission to send messages in this channel.", ephemeral=True)
                 return
         else:
-            await interaction.response.send_message("Poll created", ephemeral=True)
-            message2 = await interaction.followup.send(embed=embed, view=view)
-
+            message2 = await interaction.response.send_message(embed=embed, view=view)
+            await interaction.followup.send("Poll created", ephemeral=True)
         poll_data = {
             "_id": str(message2.id),
             "title": title,
