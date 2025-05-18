@@ -66,7 +66,8 @@ class PollManager:
         try:
             await message.edit(view=view)
         except nextcord.Forbidden:
-            await message.interaction.edit_original_message(view=view)
+            message2 = await message.channel.get_partial_message(message.id)
+            await message2.edit(view=view)
         except Exception as e:
             print(f"Failed to update poll {message.id}: {e}")
 
