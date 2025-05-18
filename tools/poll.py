@@ -65,9 +65,6 @@ class PollManager:
         
         try:
             await message.edit(view=view)
-        except nextcord.Forbidden:
-            message2 = message.channel.get_partial_message(message.id)
-            await message2.edit(view=view)
         except Exception as e:
             print(f"Failed to update poll {message.id}: {e}")
 
@@ -249,7 +246,7 @@ class Poll(commands.Cog):
         else:
             return True
         
-    @nextcord.slash_command(name="poll", description="Create a poll with up to 10 choices", contexts=[0, 1, 2], integration_types=[0, 1])
+    @nextcord.slash_command(name="poll", description="Create a poll with up to 10 choices")
     @application_checks.guild_only()
     @application_checks.check(ban_check)
     async def poll(self, interaction: nextcord.Interaction):
@@ -283,40 +280,35 @@ class Poll(commands.Cog):
         
 
     @poll.subcommand(name="end", description="End a poll")
+    @application_checks.guild_only()
     @application_checks.check(ban_check)
     async def poll_end(self, interaction: nextcord.Interaction, poll_id: str = SlashOption(description="The message ID of the poll to end")):
         await interaction.response.defer(ephemeral=True)
         if not interaction.user.guild_permissions.administrator:
             await interaction.send("You do not have permission to use this command.", ephemeral=True)
             return
-        print("1")
+
         doc = collection.find_one({"_id": poll_id})
         if not doc:
             await interaction.send("Poll not found", ephemeral=True)
             return
-        print("2")
         view = nextcord.ui.View()
-        print("3")
         for i in range(10):
             choice_key = f"choice_{i}"
             text_key = f"choice_{i}_text"
-            print("4")
             if choice_key not in doc or text_key not in doc:
                 continue
-            print("5")
             choice_text = doc[text_key]
             choice_votes = len(doc[choice_key])
-            print("6")
             button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label=f"{choice_text} [{choice_votes}]", custom_id=f"poll_choice_disabled_{i}", disabled=True)
-            print("7")
             view.add_item(button)
-        print("8")
-        poll_msg = await interaction.channel.fetch_message(poll_id)
-        print("9")
+        channel = self.bot.get_channel(interaction.channel.id)
+        poll_msg = await channel.fetch_message(poll_id)
         await poll_msg.edit(view=view)
         await interaction.send("Poll ended.", ephemeral=True)
 
     @poll.subcommand(name="anonymous", description="Create an anonymous poll")
+    @application_checks.guild_only()
     @application_checks.check(ban_check)
     async def poll_anonymous(
         self,
@@ -338,26 +330,25 @@ class Poll(commands.Cog):
         choices = [choice1, choice2, choice3, choice4, choice5, choice6, choice7, choice8, choice9, choice10]
         choices = [choice for choice in choices if choice is not None]
 
-        if interaction.guild is not None:
-            config = configuration.find_one({"_id": "config"})
-            guild = str(interaction.guild.id)
-            poll_role = config["poll_role"]
-            if guild in poll_role:
-                poll_role = poll_role[guild]
-            else:
-                poll_role = [11]
+        config = configuration.find_one({"_id": "config"})
+        guild = str(interaction.guild.id)
+        poll_role = config["poll_role"]
+        if guild in poll_role:
+            poll_role = poll_role[guild]
+        else:
+            poll_role = [11]
 
-            user_roles = [role.id for role in interaction.user.roles]
-            bool = False
+        user_roles = [role.id for role in interaction.user.roles]
+        bool = False
 
-            for pollrole in poll_role:
-                if pollrole in user_roles:
-                    bool = True
-                    break
+        for pollrole in poll_role:
+            if pollrole in user_roles:
+                bool = True
+                break
 
-            if not interaction.user.guild_permissions.administrator and not bool:
-                await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
-                return
+        if not interaction.user.guild_permissions.administrator and not bool:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
 
         if len(choices) < 2:
             await interaction.response.send_message("You need to provide at least 2 choices for the poll.", ephemeral=True)
@@ -377,17 +368,9 @@ class Poll(commands.Cog):
         for i, choice in enumerate(choices):
             button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label=f"{choice} [0]", custom_id=f"pollanon_choice_{i}")
             view.add_item(button)
-        if interaction.guild is not None:
-            try:
-                message2 = await interaction.channel.send(embed=embed, view=view)
-                await interaction.response.send_message("Poll created", ephemeral=True)
-            except:
-                await interaction.response.send_message("You do not have permission to send messages in this channel.", ephemeral=True)
-                return
-        else:
-            await interaction.response.send_message(embed=embed, view=view)
-            message2 = await interaction.original_message()
-            await interaction.followup.send("Poll created", ephemeral=True)
+
+        message2 = await interaction.channel.send(embed=embed, view=view)
+        await interaction.response.send_message("Poll created", ephemeral=True)
 
         poll_data = {
             "_id": str(message2.id),
@@ -407,6 +390,7 @@ class Poll(commands.Cog):
         
 
     @poll.subcommand(name="create", description="Create a poll with up to 10 choices")
+    @application_checks.guild_only()
     @application_checks.check(ban_check)
     async def poll_create(
         self,
@@ -429,21 +413,25 @@ class Poll(commands.Cog):
         choices = [choice1, choice2, choice3, choice4, choice5, choice6, choice7, choice8, choice9, choice10]
         choices = [choice for choice in choices if choice is not None]
 
-        if interaction.guild is not None:
-            config = configuration.find_one({"_id": "config"})
-            guild = str(interaction.guild.id)
-            poll_role = config["poll_role"]
-            if guild in poll_role:
-                poll_role = poll_role[guild]
-            else:
-                poll_role = [11]
+        config = configuration.find_one({"_id": "config"})
+        guild = str(interaction.guild.id)
+        poll_role = config["poll_role"]
+        if guild in poll_role:
+            poll_role = poll_role[guild]
+        else:
+            poll_role = [11]
 
-            user_roles = [role.id for role in interaction.user.roles]
-            has_permission = any(pollrole in user_roles for pollrole in poll_role)
+        user_roles = [role.id for role in interaction.user.roles]
+        bool = False
 
-            if not interaction.user.guild_permissions.administrator and not has_permission:
-                await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
-                return
+        for pollrole in poll_role:
+            if pollrole in user_roles:
+                bool = True
+                break
+
+        if not interaction.user.guild_permissions.administrator and not bool:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
 
         if len(choices) < 2:
             await interaction.response.send_message("You need to provide at least 2 choices for the poll.", ephemeral=True)
@@ -470,17 +458,10 @@ class Poll(commands.Cog):
         for i, choice in enumerate(choices):
             button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label=f"{choice} [0]", custom_id=f"poll_choice_{i}")
             view.add_item(button)
-        if interaction.guild is not None:
-            try:
-                message2 = await interaction.channel.send(embed=embed, view=view)
-                await interaction.response.send_message("Poll created", ephemeral=True)
-            except:
-                await interaction.response.send_message("You do not have permission to send messages in this channel.", ephemeral=True)
-                return
-        else:
-            await interaction.response.send_message(embed=embed, view=view)
-            message2 = await interaction.original_message()
-            await interaction.followup.send("Poll created", ephemeral=True)
+
+        message2 = await interaction.channel.send(embed=embed, view=view)
+        await interaction.response.send_message("Poll created", ephemeral=True)
+
         poll_data = {
             "_id": str(message2.id),
             "title": title,
@@ -556,10 +537,8 @@ class Poll(commands.Cog):
                         custom_id=f"pollanon_choice_{i}"
                     )
                     view.add_item(button)
-            try:
-                await message.edit(view=view)
-            except:
-                await message.interaction.edit_original_message(view=view)
+            
+            await message.edit(view=view)
 
     @commands.Cog.listener()
     async def on_interaction(self, interaction: nextcord.Interaction):
