@@ -337,25 +337,26 @@ class Poll(commands.Cog):
         choices = [choice1, choice2, choice3, choice4, choice5, choice6, choice7, choice8, choice9, choice10]
         choices = [choice for choice in choices if choice is not None]
 
-        config = configuration.find_one({"_id": "config"})
-        guild = str(interaction.guild.id)
-        poll_role = config["poll_role"]
-        if guild in poll_role:
-            poll_role = poll_role[guild]
-        else:
-            poll_role = [11]
+        if interaction.guild is not None:
+            config = configuration.find_one({"_id": "config"})
+            guild = str(interaction.guild.id)
+            poll_role = config["poll_role"]
+            if guild in poll_role:
+                poll_role = poll_role[guild]
+            else:
+                poll_role = [11]
 
-        user_roles = [role.id for role in interaction.user.roles]
-        bool = False
+            user_roles = [role.id for role in interaction.user.roles]
+            bool = False
 
-        for pollrole in poll_role:
-            if pollrole in user_roles:
-                bool = True
-                break
+            for pollrole in poll_role:
+                if pollrole in user_roles:
+                    bool = True
+                    break
 
-        if not interaction.user.guild_permissions.administrator and not bool:
-            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
-            return
+            if not interaction.user.guild_permissions.administrator and not bool:
+                await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+                return
 
         if len(choices) < 2:
             await interaction.response.send_message("You need to provide at least 2 choices for the poll.", ephemeral=True)
@@ -420,25 +421,21 @@ class Poll(commands.Cog):
         choices = [choice1, choice2, choice3, choice4, choice5, choice6, choice7, choice8, choice9, choice10]
         choices = [choice for choice in choices if choice is not None]
 
-        config = configuration.find_one({"_id": "config"})
-        guild = str(interaction.guild.id)
-        poll_role = config["poll_role"]
-        if guild in poll_role:
-            poll_role = poll_role[guild]
-        else:
-            poll_role = [11]
+        if interaction.guild is not None:
+            config = configuration.find_one({"_id": "config"})
+            guild = str(interaction.guild.id)
+            poll_role = config["poll_role"]
+            if guild in poll_role:
+                poll_role = poll_role[guild]
+            else:
+                poll_role = [11]
 
-        user_roles = [role.id for role in interaction.user.roles]
-        bool = False
+            user_roles = [role.id for role in interaction.user.roles]
+            has_permission = any(pollrole in user_roles for pollrole in poll_role)
 
-        for pollrole in poll_role:
-            if pollrole in user_roles:
-                bool = True
-                break
-
-        if not interaction.user.guild_permissions.administrator and not bool:
-            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
-            return
+            if not interaction.user.guild_permissions.administrator and not has_permission:
+                await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+                return
 
         if len(choices) < 2:
             await interaction.response.send_message("You need to provide at least 2 choices for the poll.", ephemeral=True)
