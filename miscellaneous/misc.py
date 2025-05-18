@@ -178,7 +178,7 @@ class misc(commands.Cog):
         img_byte_arr.seek(0)
         return img_byte_arr
 
-    @nextcord.slash_command(name="ship", description="Check the compatibility between two users")
+    @nextcord.slash_command(name="ship", description="Check the compatibility between two users", contexts=[0, 1, 2])
     async def ship(self, interaction: nextcord.Interaction, 
                   user1: nextcord.Member = SlashOption(description="The first user to ship", required=True),
                   user2: Optional[nextcord.Member] = SlashOption(description="The second user to ship", required=False)):
@@ -197,7 +197,7 @@ class misc(commands.Cog):
         file = nextcord.File(fp=image_bytes, filename="ship.png")
         await interaction.followup.send(file=file, embed=embed)
 
-    @nextcord.slash_command(name="embed")
+    @nextcord.slash_command(name="embed", contexts=[0, 1, 2])
     @application_checks.guild_only()
     async def embed_slash(self, interaction: nextcord.Interaction):
         pass
@@ -243,7 +243,7 @@ class misc(commands.Cog):
         await message.edit(embed=embed)
         await interaction.followup.send("Embed edited.", ephemeral=True)
 
-    @embed_slash.subcommand(name="create", description="Create an embed")
+    @embed_slash.subcommand(name="create", description="Create an embed", contexts=[0, 1, 2])
     @application_checks.guild_only()
     async def embed_slash_create(self, interaction: nextcord.Interaction, 
                    title: str = SlashOption(description="Enter a title for the embed", required=True),

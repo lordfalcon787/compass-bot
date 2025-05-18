@@ -18,7 +18,7 @@ class Calculator(commands.Cog):
     async def on_ready(self):
         print("Calculator cog loaded")
 
-    @nextcord.slash_command(name="itemcalc", description="Calculate the value of an item(s).")
+    @nextcord.slash_command(name="itemcalc", description="Calculate the value of an item(s).", contexts=[0, 1, 2])
     async def itemcalc(self, interaction: nextcord.Interaction, item: str = SlashOption(description="The item(s) to calculate. Format: [quantity] [item name]")):
         item = item.lower()
         await interaction.response.defer(ephemeral=False)
