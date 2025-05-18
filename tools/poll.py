@@ -246,7 +246,7 @@ class Poll(commands.Cog):
         else:
             return True
         
-    @nextcord.slash_command(name="poll", description="Create a poll with up to 10 choices", contexts=[0, 1, 2])
+    @nextcord.slash_command(name="poll", description="Create a poll with up to 10 choices", contexts=[0, 1, 2], integration_types=[0, 1])
     @application_checks.guild_only()
     @application_checks.check(ban_check)
     async def poll(self, interaction: nextcord.Interaction):

@@ -1,7 +1,8 @@
 import nextcord
 import random
 import nextcord.ext.commands
-from nextcord.ext import commands, application_checks
+
+from nextcord.ext import commands, application_check
 from typing import Optional
 from nextcord import SlashOption
 from utils.mongo_connection import MongoConnection
@@ -197,7 +198,7 @@ class misc(commands.Cog):
         file = nextcord.File(fp=image_bytes, filename="ship.png")
         await interaction.followup.send(file=file, embed=embed)
 
-    @nextcord.slash_command(name="embed", contexts=[0, 1, 2])
+    @nextcord.slash_command(name="embed", contexts=[0, 1, 2], integration_types=[0, 1])
     @application_checks.guild_only()
     async def embed_slash(self, interaction: nextcord.Interaction):
         pass

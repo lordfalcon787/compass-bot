@@ -96,6 +96,7 @@ async def ban_check(interaction: nextcord.Interaction):
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
+    await bot.tree.sync()
     try:
         client.admin.command('ping')
         print("Pinged your deployment. You successfully connected to MongoDB!")
