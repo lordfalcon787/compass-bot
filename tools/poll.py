@@ -299,7 +299,13 @@ class Poll(commands.Cog):
             if choice_key not in doc or text_key not in doc:
                 continue
             choice_text = doc[text_key]
-            choice_votes = len(doc[choice_key])
+            choice_votes = doc[choice_key]
+            if isinstance(choice_votes, list):
+                choice_votes = len(choice_votes)
+            elif isinstance(choice_votes, int):
+                choice_votes = choice_votes
+            else:
+                choice_votes = 0
             button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label=f"{choice_text} [{choice_votes}]", custom_id=f"poll_choice_disabled_{i}", disabled=True)
             view.add_item(button)
         channel = self.bot.get_channel(interaction.channel.id)
