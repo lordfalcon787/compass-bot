@@ -312,7 +312,7 @@ class Poll(commands.Cog):
         poll_msg = await channel.fetch_message(poll_id)
         await poll_msg.edit(view=view)
         await interaction.send("Poll ended.", ephemeral=True)
-
+        
     @poll.subcommand(name="anonymous", description="Create an anonymous poll")
     @application_checks.guild_only()
     @application_checks.check(ban_check)
