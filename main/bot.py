@@ -3,6 +3,7 @@ import json
 import psutil
 import asyncio
 import re
+from systems.transcript import create_channel_transcript
 
 from datetime import datetime, timedelta
 from nextcord.ext import commands
@@ -519,6 +520,13 @@ async def prefix_cmd(ctx):
 async def latency_cmd(ctx):
     latency = bot.latency * 1000
     await ctx.send(f"Pong! {latency} milliseconds.")
+
+@bot.command(name="transcript")
+async def transcript_cmd(ctx):
+    if ctx.author.id != BOT_OWNER:
+        return
+    transcript = await create_channel_transcript(ctx.channel, limit=100)
+    await ctx.send(file=transcript)
 
 if __name__ == "__main__":
     try:
