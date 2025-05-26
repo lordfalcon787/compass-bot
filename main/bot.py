@@ -3,7 +3,7 @@ import json
 import psutil
 import asyncio
 import re
-from systems.transcript import create_channel_transcript
+from cogs.transcript import create_channel_transcript
 
 from datetime import datetime, timedelta
 from nextcord.ext import commands
