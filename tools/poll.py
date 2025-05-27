@@ -621,7 +621,7 @@ class Poll(commands.Cog):
             return
         elif not message.embeds[0].footer:
             return
-        elif not message.embeds[0].footer.text.startswith("Poll created by"):
+        elif not message.embeds[0].footer.text.startswith("Poll created by") and not message.embeds[0].footer.text.startswith("Admin poll created by"):
             return
         elif "anonymous" in message.embeds[0].footer.text:
             await payload.member.send("This poll is anonymous. You are unable to see the results.")
@@ -634,7 +634,7 @@ class Poll(commands.Cog):
 
         poll = collection.find_one({"_id": poll_id})
         if poll:
-            anon = poll["anonymous"]
+            anon = poll.get("anonymous", False)
             if anon:
                 user = await self.bot.fetch_user(payload.user_id)
                 if user:
@@ -646,21 +646,37 @@ class Poll(commands.Cog):
                 return
             
             choice_data = []
-            for i in range(10):
-                choice_key = f"choice_{i}"
-                choice_text_key = f"choice_{i}_text"
-                if choice_key in poll and choice_text_key in poll:
-                    choice_text = poll[choice_text_key]
-                    voters = poll[choice_key]
-                    
+            # Handle binary polls
+            if poll.get("binary", False):
+                yes_voters = poll.get("yes", [])
+                no_voters = poll.get("no", [])
+                abstain_voters = poll.get("abstain", [])
+                
+                for choice_text, voters in [("Yes", yes_voters), ("No", no_voters), ("Abstain", abstain_voters)]:
                     voter_strings = []
                     for voter_id in voters:
                         user = await self.bot.fetch_user(int(voter_id))
                         if user:
                             voter_strings.append(f"`{user.name}` | <@{user.id}>")
-                    
                     if voter_strings:
                         choice_data.append((choice_text, voter_strings))
+            else:
+                # Handle regular polls
+                for i in range(10):
+                    choice_key = f"choice_{i}"
+                    choice_text_key = f"choice_{i}_text"
+                    if choice_key in poll and choice_text_key in poll:
+                        choice_text = poll[choice_text_key]
+                        voters = poll[choice_key]
+                        
+                        voter_strings = []
+                        for voter_id in voters:
+                            user = await self.bot.fetch_user(int(voter_id))
+                            if user:
+                                voter_strings.append(f"`{user.name}` | <@{user.id}>")
+                        
+                        if voter_strings:
+                            choice_data.append((choice_text, voter_strings))
 
             # Split into pages of 5 choices each
             pages = []
