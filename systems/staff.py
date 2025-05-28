@@ -173,7 +173,7 @@ class stafflist(commands.Cog):
 
     async def rc_staff_list(self, ctx):
         staff_roles = {
-            "1366838238056288286": "Head Admin",
+            "1366838238056288286": "Head Administrator",
             "1205270486519517204": "Server Head",
             "1205270486502867030": "Administrator",
             "1205270486490292251": "Head Moderator",
