@@ -49,7 +49,7 @@ class Moderation(commands.Cog):
                             pass
                         for role in roles:
                             role_object = guild.get_role(int(role))
-                            if role_object:
+                            if role_object and role_object not in member_roles:
                                 member_roles.append(role_object)
                         await member.edit(roles=member_roles)
                         collection.update_one({"_id": f"ebl_1205270486230110330"}, {"$unset": {str(member.id): ""}})
