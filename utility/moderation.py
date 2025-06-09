@@ -57,6 +57,29 @@ class Moderation(commands.Cog):
             print(f"Error in check_ebl: {e}")
             return
 
+    @commands.command(name="nd")
+    async def nd_cmd(self, ctx, member: nextcord.Member = None):
+        if ctx.guild.id != 1205270486230110330:
+            return
+        author_roles = [role.id for role in ctx.author.roles]
+        if 1209039929372315670 not in author_roles:
+            await ctx.reply("You do not have permission to use this command.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        if member is None:
+            await ctx.reply("Correct usage: `!nd @member`", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        role = ctx.guild.get_role(1264605728195350620)
+        if role not in member.roles:
+            await member.add_roles(role)
+            await ctx.reply(f"Added `No Drops` role to **{member.name}**", mention_author=False)
+            await ctx.message.add_reaction(GREEN_CHECK)
+        else:
+            await member.remove_roles(role)
+            await ctx.reply(f"Removed `No Drops` role from **{member.name}**", mention_author=False)
+            await ctx.message.add_reaction(GREEN_CHECK)
+
     @commands.command(name="warn")
     async def warn_cmd(self, ctx, member: nextcord.Member = None, *, reason: str = "No reason provided"):
         if member is None:
