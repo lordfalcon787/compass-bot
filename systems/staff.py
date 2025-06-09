@@ -91,11 +91,123 @@ class stafflist(commands.Cog):
         await ctx.message.clear_reactions()
         await ctx.reply(embed = embed, mention_author=False)
         await ctx.message.add_reaction(GREEN_CHECK)
-        
-        
-        
-        
-        
+
+    @commands.command(name="modpromote")
+    async def modpromote(self, ctx, member: nextcord.Member = None):
+        if ctx.guild.id != 1205270486230110330:
+            await ctx.send("This command is only available in the Robbing Central server.")
+            return
+        await ctx.message.add_reaction(LOADING)
+        if member is None:
+            await ctx.send("Please specify a member to promote.")
+            return
+        if not ctx.author.guild_permissions.administrator:
+            await ctx.message.clear_reactions()
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"You do not have permission to promote this member.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        if member.guild_permissions.administrator:
+            await ctx.message.clear_reactions()
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"You do not have permission to promote this member.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        if member.top_role.position >= ctx.author.top_role.position:
+            await ctx.message.clear_reactions()
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"You do not have permission to promote this member.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        array = ["Moderator", "Administrator"]
+        roles = member.roles
+        name_roles = [role.name for role in roles]
+        if "✧ Event Manager" not in name_roles:
+            await self.promote(ctx, member)
+            return
+        new_roles = []
+        for role in roles:
+            if not any(r for r in array if r in role.name):
+                new_roles.append(role)
+        removed_roles = len(roles) - len(new_roles)
+        retained_roles = len(new_roles) - 1
+        if len(new_roles) == len(roles):
+            await ctx.message.clear_reactions()
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"No dangerous roles to remove were found.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        try:
+            await member.edit(roles=new_roles)
+        except:
+            await ctx.message.clear_reactions()
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"An error occurred while promoting the member.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        embed = nextcord.Embed(title = f"Successfully promoted to `Member`", description = f"Flagged and removed `{removed_roles}` roles from {member.mention} with `{retained_roles}` retained.", color=65280)
+        await ctx.message.clear_reactions()
+        await ctx.reply(embed = embed, mention_author=False)
+        await ctx.message.add_reaction(GREEN_CHECK)
+
+    @commands.command(name="emanpromote")
+    async def emanpromote(self, ctx, member: nextcord.Member = None):
+        if ctx.guild.id != 1205270486230110330:
+            await ctx.send("This command is only available in the Robbing Central server.")
+            return
+        await ctx.message.add_reaction(LOADING)
+        if member is None:
+            await ctx.send("Please specify a member to promote.")
+            return
+        if not ctx.author.guild_permissions.administrator:
+            await ctx.message.clear_reactions()
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"You do not have permission to promote this member.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        if member.guild_permissions.administrator:
+            await ctx.message.clear_reactions()
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"You do not have permission to promote this member.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        if member.top_role.position >= ctx.author.top_role.position:
+            await ctx.message.clear_reactions()
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"You do not have permission to promote this member.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        array = ["Giveaway Manager", "Event Manager", "GarticMod"]
+        roles = member.roles
+        name_roles = [role.name for role in roles]
+        if "Moderator" not in any(role for role in name_roles):
+            await self.promote(ctx, member)
+            return
+        new_roles = []
+        for role in roles:
+            if not any(r for r in array if r in role.name):
+                new_roles.append(role)
+        removed_roles = len(roles) - len(new_roles)
+        retained_roles = len(new_roles) - 1
+        if len(new_roles) == len(roles):
+            await ctx.message.clear_reactions()
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"No dangerous roles to remove were found.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        try:
+            await member.edit(roles=new_roles)
+        except:
+            await ctx.message.clear_reactions()
+            embed = nextcord.Embed(title = "Promotion Failed", description = f"An error occurred while promoting the member.", color=16711680)
+            await ctx.reply(embed = embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        embed = nextcord.Embed(title = f"Successfully promoted to `Member`", description = f"Flagged and removed `{removed_roles}` roles from {member.mention} with `{retained_roles}` retained.", color=65280)
+        await ctx.message.clear_reactions()
+        await ctx.reply(embed = embed, mention_author=False)
+        await ctx.message.add_reaction(GREEN_CHECK)
+            
     @commands.command(name="kstaff")
     async def kstaff(self, ctx):
         if ctx.guild.id != 1205270486230110330:
