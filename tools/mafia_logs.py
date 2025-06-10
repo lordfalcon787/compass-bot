@@ -8,6 +8,7 @@ MAFIA_BOTS = [
     758999095070687284,
     511786918783090688,
 ]
+GREEN_CHECK = "<:green_check2:1291173532432203816>"
 
 from utils.mongo_connection import MongoConnection
 
@@ -57,6 +58,7 @@ class MafiaLogs(commands.Cog):
         if not channel:
             return
         await channel.send(embed=embed, file=transcript)
+        await message.add_reaction(GREEN_CHECK)
 
     async def get_mafia_game_info(self, message):
         members = []
