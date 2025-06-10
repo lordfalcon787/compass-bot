@@ -1,6 +1,6 @@
 import nextcord
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 import html
 import re
 import base64
@@ -598,7 +598,7 @@ class TranscriptGenerator:
                                        channel: nextcord.TextChannel,
                                        limit: Optional[int] = None,
                                        after: Optional[datetime] = None,
-                                       before: Optional[datetime] = None) -> nextcord.File:
+                                       before: Optional[datetime] = None) -> Tuple[nextcord.File, List[nextcord.Message]]:
         """
         Generate an HTML transcript file for a Discord channel.
         
@@ -609,20 +609,74 @@ class TranscriptGenerator:
             before: Only include messages before this datetime
             
         Returns:
-            nextcord.File object containing the HTML transcript
+            Tuple containing:
+            - nextcord.File object containing the HTML transcript
+            - List of nextcord.Message objects from the channel
         """
-        html_content = await self.generate_transcript(channel, limit, after, before)
+        # Collect messages first
+        messages: List[nextcord.Message] = []
+        async for message in channel.history(limit=limit, after=after, before=before):
+            messages.append(message)
+        
+        # Reverse to get chronological order
+        messages.reverse()
+        
+        # Generate HTML content using the collected messages
+        html_parts = [
+            '<!DOCTYPE html>',
+            '<html lang="en">',
+            '<head>',
+            '<meta charset="UTF-8">',
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
+            f'<title>Transcript - #{channel.name}</title>',
+            self.css_styles,
+            '</head>',
+            '<body>',
+            '<div class="transcript-container">',
+            '<div class="header">',
+            '<div class="header-icon">#</div>',
+            '<div class="header-info">',
+            f'<h1>#{self._escape_html(channel.name)}</h1>',
+            f'<p>{len(messages)} messages • Generated on {datetime.now().strftime("%B %d, %Y at %I:%M %p")}</p>',
+            '</div>',
+            '</div>',
+            '<div class="messages-container">'
+        ]
+        
+        current_date = None
+        for message in messages:
+            # Add date divider if needed
+            message_date = message.created_at.date()
+            if current_date != message_date:
+                current_date = message_date
+                html_parts.append('<div class="divider">')
+                html_parts.append(f'<span class="divider-text">{message_date.strftime("%B %d, %Y")}</span>')
+                html_parts.append('</div>')
+            
+            # Add message
+            html_parts.append(self._generate_message_html(message))
+        
+        html_parts.extend([
+            '</div>',
+            '</div>',
+            '</body>',
+            '</html>'
+        ])
+        
+        html_content = ''.join(html_parts)
         
         # Create file
         buffer = BytesIO(html_content.encode('utf-8'))
         buffer.seek(0)
         
         filename = f"transcript-{channel.name}-{datetime.now().strftime('%Y%m%d-%H%M%S')}.html"
-        return nextcord.File(buffer, filename=filename)
+        file = nextcord.File(buffer, filename=filename)
+        
+        return file, messages
 
 
 # Example usage function
-async def create_channel_transcript(channel: nextcord.TextChannel, **kwargs) -> nextcord.File:
+async def create_channel_transcript(channel: nextcord.TextChannel, **kwargs) -> Tuple[nextcord.File, List[nextcord.Message]]:
     """
     Create a transcript file for a Discord channel.
     
@@ -631,7 +685,9 @@ async def create_channel_transcript(channel: nextcord.TextChannel, **kwargs) -> 
         **kwargs: Additional arguments for transcript generation (limit, after, before)
         
     Returns:
-        nextcord.File containing the HTML transcript
+        Tuple containing:
+        - nextcord.File containing the HTML transcript
+        - List of nextcord.Message objects from the channel
     """
     generator = TranscriptGenerator()
     return await generator.generate_transcript_file(channel, **kwargs)
