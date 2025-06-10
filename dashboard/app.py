@@ -301,12 +301,13 @@ def get_guild_config(server_id):
                 else:
                     guild_config["perks"] = {"snipe": []}
                 
-                # Handle auto_responder settings
+                # Handle auto_responder settings (from separate ar_config document)
                 auto_responder_config = {}
+                ar_config = configuration.find_one({"_id": "ar_config"}) if configuration is not None else {}
                 ar_mappings = {"link_allowed": "link_allowed", "words_allowed": "words_allowed", "allowed": "allowed"}
                 for backend_key, frontend_key in ar_mappings.items():
-                    if backend_key in config and server_id in config[backend_key]:
-                        value = config[backend_key][server_id]
+                    if ar_config and backend_key in ar_config and server_id in ar_config[backend_key]:
+                        value = ar_config[backend_key][server_id]
                         if isinstance(value, (list, tuple)):
                             auto_responder_config[frontend_key] = [str(x) for x in value]
                         else:
@@ -327,17 +328,29 @@ def get_guild_config(server_id):
                 
                 # Handle auction settings
                 auction_config = {}
-                auction_mappings = {"auction": "channel", "auction_role": "role", "auction_manager": "manager", "lock_on_end": "lock_on_end"}
+                auction_mappings = {"auction": "channel", "auction_role": "role", "auction_manager": "manager", "auction_lock_on_end": "lock_on_end"}
                 for backend_key, frontend_key in auction_mappings.items():
                     if backend_key in config and server_id in config[backend_key]:
                         value = config[backend_key][server_id]
                         if frontend_key == "lock_on_end":
                             auction_config[frontend_key] = bool(value)
+                        elif frontend_key == "manager":
+                            # Handle manager as array of roles
+                            if isinstance(value, (list, tuple)):
+                                auction_config[frontend_key] = [str(x) for x in value]
+                            else:
+                                auction_config[frontend_key] = []
+                        elif frontend_key == "role":
+                            # Handle single role
+                            auction_config[frontend_key] = str(value) if value else None
                         else:
+                            # Handle channel
                             auction_config[frontend_key] = str(value) if value else None
                     else:
                         if frontend_key == "lock_on_end":
                             auction_config[frontend_key] = False
+                        elif frontend_key == "manager":
+                            auction_config[frontend_key] = []
                         else:
                             auction_config[frontend_key] = None
                 guild_config["auction"] = auction_config
@@ -380,8 +393,8 @@ def get_guild_config(server_id):
                     pcms_data = config["pcms"][server_id]
                     if isinstance(pcms_data, dict):
                         pcms_config["roles"] = {str(k): v for k, v in pcms_data.items()}
-                if "pcms_requirements" in config and server_id in config["pcms_requirements"]:
-                    value = config["pcms_requirements"][server_id]
+                if "pcms_reqs" in config and server_id in config["pcms_reqs"]:
+                    value = config["pcms_reqs"][server_id]
                     if isinstance(value, (list, tuple)):
                         pcms_config["requirements"] = [str(x) for x in value]
                 guild_config["pcms"] = pcms_config
@@ -540,17 +553,26 @@ def save_guild_config(server_id):
                             del current_config[setting_type]["snipe"][server_id]
                 
                 elif setting_type == "auto_responder":
+                    # Handle auto responder settings (separate ar_config document)
+                    ar_config = configuration.find_one({"_id": "ar_config"}) or {}
                     ar_mappings = {"link_allowed": "link_allowed", "words_allowed": "words_allowed", "allowed": "allowed"}
                     for frontend_key, backend_key in ar_mappings.items():
                         if frontend_key in settings:
-                            if backend_key not in current_config:
-                                current_config[backend_key] = {}
+                            if backend_key not in ar_config:
+                                ar_config[backend_key] = {}
                             value = settings[frontend_key]
                             if isinstance(value, list) and value:
-                                current_config[backend_key][server_id] = [int(role_id) for role_id in value if role_id]
+                                ar_config[backend_key][server_id] = [int(role_id) for role_id in value if role_id]
                             else:
-                                if server_id in current_config[backend_key]:
-                                    del current_config[backend_key][server_id]
+                                if server_id in ar_config[backend_key]:
+                                    del ar_config[backend_key][server_id]
+                    
+                    # Save the ar_config document
+                    configuration.update_one(
+                        {"_id": "ar_config"},
+                        {"$set": ar_config},
+                        upsert=True
+                    )
                 
                 elif setting_type == "auto_lock":
                     value_enabled = settings.get("enabled")
@@ -571,7 +593,7 @@ def save_guild_config(server_id):
                         current_config["auto_lock"][server_id]["channels"] = []
                 
                 elif setting_type == "auction":
-                    auction_mappings = {"channel": "auction", "role": "auction_role", "manager": "auction_manager", "lock_on_end": "lock_on_end"}
+                    auction_mappings = {"channel": "auction", "role": "auction_role", "manager": "auction_manager", "lock_on_end": "auction_lock_on_end"}
                     for frontend_key, backend_key in auction_mappings.items():
                         if frontend_key in settings:
                             if backend_key not in current_config:
@@ -583,7 +605,15 @@ def save_guild_config(server_id):
                                 else:
                                     if server_id in current_config[backend_key]:
                                         del current_config[backend_key][server_id]
+                            elif frontend_key == "manager":
+                                # Handle manager as array of roles
+                                if isinstance(value, list) and value:
+                                    current_config[backend_key][server_id] = [int(role_id) for role_id in value if role_id]
+                                else:
+                                    if server_id in current_config[backend_key]:
+                                        del current_config[backend_key][server_id]
                             else:
+                                # Handle single values (channel, role)
                                 if value and value != "null":
                                     current_config[backend_key][server_id] = int(value)
                                 else:
@@ -643,13 +673,13 @@ def save_guild_config(server_id):
                     else:
                         if server_id in current_config["pcms"]:
                             del current_config["pcms"][server_id]
-                    if "pcms_requirements" not in current_config:
-                        current_config["pcms_requirements"] = {}
+                    if "pcms_reqs" not in current_config:
+                        current_config["pcms_reqs"] = {}
                     if isinstance(value_reqs, list) and value_reqs:
-                        current_config["pcms_requirements"][server_id] = [int(role_id) for role_id in value_reqs if role_id]
+                        current_config["pcms_reqs"][server_id] = [int(role_id) for role_id in value_reqs if role_id]
                     else:
-                        if server_id in current_config["pcms_requirements"]:
-                            del current_config["pcms_requirements"][server_id]
+                        if server_id in current_config["pcms_reqs"]:
+                            del current_config["pcms_reqs"][server_id]
                 
                 elif setting_type == "afk":
                     value = settings.get("roles")

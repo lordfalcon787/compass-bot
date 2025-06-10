@@ -52,6 +52,92 @@
             pointer-events: none;
             background: linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%);
         }
+        
+        /* Hamburger menu styles */
+        .hamburger {
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            transition: all 0.25s;
+            position: relative;
+        }
+        
+        .hamburger-line {
+            display: block;
+            height: 3px;
+            width: 100%;
+            border-radius: 10px;
+            background: white;
+            transition: all 0.25s;
+            position: absolute;
+        }
+        
+        .hamburger-line:nth-child(1) {
+            top: 0;
+        }
+        
+        .hamburger-line:nth-child(2) {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .hamburger-line:nth-child(3) {
+            bottom: 0;
+        }
+        
+        .hamburger.active .hamburger-line:nth-child(1) {
+            top: 50%;
+            transform: translateY(-50%) rotate(45deg);
+        }
+        
+        .hamburger.active .hamburger-line:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active .hamburger-line:nth-child(3) {
+            bottom: 50%;
+            transform: translateY(50%) rotate(-45deg);
+        }
+        
+        /* Mobile menu styles */
+        .mobile-menu {
+            position: fixed;
+            top: 64px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 64px);
+            background: linear-gradient(135deg, rgba(17,24,39,0.98) 0%, rgba(31,41,55,0.98) 100%);
+            backdrop-filter: blur(10px);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+            z-index: 50;
+            overflow-y: auto;
+        }
+        
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+        
+        .mobile-menu-item {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+        }
+        
+        .mobile-menu-item:hover {
+            background: rgba(79, 70, 229, 0.2);
+            padding-left: 2rem;
+        }
+        
+        .mobile-menu-item i {
+            width: 20px;
+            margin-right: 12px;
+        }
     </style>
 </head>
 <body class="{% if home %}home{% endif %}">
@@ -61,29 +147,43 @@
     <nav class="text-white shadow-lg backdrop-blur-md" style="background: linear-gradient(90deg, rgba(17,24,39,0.95) 0%, rgba(31,41,55,0.95) 100%); z-index: 10; position: relative;">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
+                <!-- Left side - Logo and Hamburger -->
                 <div class="flex items-center">
+                    <!-- Hamburger Menu Button -->
+                    <button id="hamburger-btn" class="hamburger mr-6 p-2 hover:bg-white/10 rounded-lg transition-colors duration-200">
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                    </button>
+                    
+                    <!-- Logo -->
                     <a href="{{ url_for('index') }}" class="flex-shrink-0 flex items-center group">
                         <img src="{{ url_for('static', filename='images/avatar.jpg') }}" alt="Compass Logo" class="h-8 w-8 rounded-full mr-2 shadow-md ring-2 ring-indigo-500/50 group-hover:ring-indigo-400 transition-all duration-300" />
-                        <span class="nav-brand font-bold text-xl text-white">Compass Dashboard</span>
+                        <span class="nav-brand font-bold text-xl text-white hidden sm:block">Compass Dashboard</span>
+                        <span class="nav-brand font-bold text-lg text-white block sm:hidden">Compass</span>
                     </a>
                 </div>
-                <div class="flex items-center space-x-4">
+
+                <!-- Desktop Navigation (hidden on mobile) -->
+                <div class="hidden lg:flex items-center space-x-4">
                     <a href="/terms" class="tos-privacy-btn inline-block bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold px-4 py-1.5 rounded-lg shadow-md hover:from-indigo-600 hover:to-purple-600 transition-all duration-200">Terms of Service</a>
                     <a href="/privacy" class="tos-privacy-btn inline-block bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-semibold px-4 py-1.5 rounded-lg shadow-md hover:from-indigo-600 hover:to-pink-600 transition-all duration-200 ml-2">Privacy Policy</a>
                 </div>
-                <div class="flex items-center">
+
+                <!-- Right side - User info -->
+                <div class="flex items-center min-w-0">
                     {% if authorized %}
-                        <div class="flex items-center space-x-4">
-                            <div class="flex items-center space-x-2">
-                                <img src="{{ user.avatar }}" alt="Profile" class="w-8 h-8 rounded-full ring-2 ring-indigo-500/50 hover:ring-indigo-400 transition-all duration-300">
-                                <span class="text-sm nav-link text-gray-200">{{ user.name }}</span>
+                        <div class="flex items-center space-x-2 lg:space-x-4 min-w-0">
+                            <div class="flex items-center space-x-2 min-w-0">
+                                <img src="{{ user.avatar }}" alt="Profile" class="w-8 h-8 rounded-full ring-2 ring-indigo-500/50 hover:ring-indigo-400 transition-all duration-300 flex-shrink-0">
+                                <span class="text-sm nav-link text-gray-200 hidden md:block truncate">{{ user.name }}</span>
                             </div>
-                            <a href="{{ url_for('logout') }}" class="nav-button px-4 py-2 rounded-lg text-sm font-medium text-white">
+                            <a href="{{ url_for('logout') }}" class="nav-button px-3 py-2 lg:px-4 rounded-lg text-sm font-medium text-white whitespace-nowrap flex-shrink-0">
                                 Logout
                             </a>
                         </div>
                     {% else %}
-                        <a href="{{ url_for('login') }}" class="nav-button px-4 py-2 rounded-lg text-sm font-medium text-white">
+                        <a href="{{ url_for('login') }}" class="nav-button px-3 py-2 lg:px-4 rounded-lg text-sm font-medium text-white whitespace-nowrap flex-shrink-0">
                             Login with Discord
                         </a>
                     {% endif %}
@@ -91,6 +191,58 @@
             </div>
         </div>
     </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="mobile-menu">
+        <div class="py-4">
+            <!-- Navigation Links -->
+            <a href="{{ url_for('index') }}" class="mobile-menu-item">
+                <i class="fas fa-home"></i>
+                Home
+            </a>
+            
+            {% if authorized %}
+                <a href="{{ url_for('dashboard') }}" class="mobile-menu-item">
+                    <i class="fas fa-server"></i>
+                    Server Dashboard
+                </a>
+            {% endif %}
+            
+            <a href="/terms" class="mobile-menu-item">
+                <i class="fas fa-file-contract"></i>
+                Terms of Service
+            </a>
+            
+            <a href="/privacy" class="mobile-menu-item">
+                <i class="fas fa-shield-alt"></i>
+                Privacy Policy
+            </a>
+            
+            <!-- User Actions -->
+            <div class="border-t border-white/10 mt-4 pt-4">
+                {% if authorized %}
+                    <div class="px-6 py-3 text-gray-300 text-sm">
+                        <div class="flex items-center space-x-3">
+                            <img src="{{ user.avatar }}" alt="Profile" class="w-10 h-10 rounded-full ring-2 ring-indigo-500/50">
+                            <div>
+                                <div class="font-medium text-white">{{ user.name }}</div>
+                                <div class="text-xs text-gray-400">Logged in with Discord</div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="mobile-menu-item text-red-400">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="mobile-menu-item text-indigo-400">
+                        <i class="fab fa-discord"></i>
+                        Login with Discord
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {% block content %}{% endblock %}

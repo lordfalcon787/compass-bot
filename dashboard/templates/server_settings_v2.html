@@ -464,11 +464,11 @@
                         </div>
                         
                         <div class="bg-gray-800 p-5 rounded-lg shadow-sm border border-gray-700" data-config-key="auction_manager">
-                            <label class="block text-sm font-medium text-gray-300 mb-3">Auction Manager Role</label>
-                            <select id="auction-manager-select" class="role-select" placeholder="Select a role..."></select>
+                            <label class="block text-sm font-medium text-gray-300 mb-3">Auction Manager Roles</label>
+                            <select id="auction-manager-select" class="role-select" multiple placeholder="Select roles..."></select>
                             <div class="mt-2 text-sm text-gray-400">
                                 <span class="font-medium">Current:</span>
-                                <div class="current-value mt-1">
+                                <div class="current-value flex flex-wrap items-center mt-1">
                                     <div class="animate-pulse h-7 bg-gray-600 rounded-full w-24"></div>
                                 </div>
                             </div>
@@ -668,6 +668,7 @@
         let roles = [];
         let channels = [];
         let tomSelectInstances = {};
+        let configCleaned = false; // Track if any invalid data was removed
         
         // Show/hide loading indicator
         function showLoading() {
@@ -831,8 +832,7 @@
                     selectedValues = getValidRoleIds([serverConfig.auction.role], options);
                     maxItems = 1;
                 } else if (id === 'auction-manager-select' && serverConfig?.auction?.manager) {
-                    selectedValues = getValidRoleIds([serverConfig.auction.manager], options);
-                    maxItems = 1;
+                    selectedValues = getValidRoleIds(serverConfig.auction.manager, options);
                 }
                 // Staff List roles
                 else if (id === 'staff-list-roles-select' && serverConfig?.staff_list?.roles) {
@@ -858,21 +858,70 @@
                     labelField: 'text',
                     searchField: 'text',
                     create: false,
-                    maxItems: maxItems
+                    maxItems: maxItems,
+                    render: {
+                        option: function(data, escape) {
+                            return '<div class="option" data-value="' + escape(data.value) + '">' +
+                                   '<span class="inline-block w-2 h-2 rounded-full mr-2" style="background-color: ' + (data.color || '#99AAB5') + ';"></span>' +
+                                   '<span>' + escape(data.text) + '</span>' +
+                                   '</div>';
+                        },
+                        item: function(data, escape) {
+                            return '<div class="inline-flex items-center bg-blue-700 text-white rounded-md px-3 py-1.5 text-sm font-medium mr-2 mb-2 shadow-sm border border-blue-600">' +
+                                   '<span class="inline-block w-2 h-2 rounded-full mr-2" style="background-color: ' + (data.color || '#99AAB5') + ';"></span>' +
+                                   '<span class="font-medium text-white">' + escape(data.text) + '</span>' +
+                                   '</div>';
+                        }
+                    }
                 });
             });
         }
         
-        // Helper function to get valid role IDs
+        // Helper function to get valid role IDs and auto-remove invalid ones
         function getValidRoleIds(roleIds, options) {
             if (!roleIds || !Array.isArray(roleIds)) return [];
             let validIds = [];
+            let invalidIds = [];
+            
             for (const item of roleIds) {
                 const option = options.find(opt => String(opt.value) === String(item));
                 if (option) {
                     validIds.push(option.value);
+                } else {
+                    invalidIds.push(item);
                 }
             }
+            
+            // Log invalid IDs that were removed
+            if (invalidIds.length > 0) {
+                console.log('Removed invalid role IDs:', invalidIds);
+                configCleaned = true;
+            }
+            
+            return validIds;
+        }
+        
+        // Helper function to get valid channel IDs and auto-remove invalid ones
+        function getValidChannelIds(channelIds, options) {
+            if (!channelIds || !Array.isArray(channelIds)) return [];
+            let validIds = [];
+            let invalidIds = [];
+            
+            for (const item of channelIds) {
+                const option = options.find(opt => String(opt.value) === String(item));
+                if (option) {
+                    validIds.push(option.value);
+                } else {
+                    invalidIds.push(item);
+                }
+            }
+            
+            // Log invalid IDs that were removed
+            if (invalidIds.length > 0) {
+                console.log('Removed invalid channel IDs:', invalidIds);
+                configCleaned = true;
+            }
+            
             return validIds;
         }
         
@@ -909,9 +958,7 @@
                 } else if (id === 'auto-lock-channels-select' && serverConfig?.auto_lock?.channels) {
                     // This is a multi-select channel, handle differently
                     if (Array.isArray(serverConfig.auto_lock.channels)) {
-                        selectedValues = serverConfig.auto_lock.channels.filter(ch => {
-                            return options.find(opt => String(opt.value) === String(ch));
-                        });
+                        selectedValues = getValidChannelIds(serverConfig.auto_lock.channels, options);
                     }
                     channelValue = null; // Skip single value processing
                 } else if (id === 'auction-channel-select' && serverConfig?.auction?.channel) {
@@ -932,7 +979,9 @@
                     if (option) {
                         selectedValues.push(option.value);
                     } else {
-                        selectedValues.push(channelStr);
+                        // Log invalid channel ID that was removed
+                        console.log('Removed invalid channel ID:', channelStr);
+                        configCleaned = true;
                     }
                 }
                 
@@ -949,7 +998,21 @@
                     labelField: 'text',
                     searchField: 'text',
                     create: false,
-                    maxItems: maxChannelItems
+                    maxItems: maxChannelItems,
+                    render: {
+                        option: function(data, escape) {
+                            return '<div class="option" data-value="' + escape(data.value) + '">' +
+                                   '<span class="text-blue-200 mr-1">#</span>' +
+                                   '<span>' + escape(data.text) + '</span>' +
+                                   '</div>';
+                        },
+                        item: function(data, escape) {
+                            return '<div class="inline-flex items-center bg-blue-700 text-white rounded-md px-3 py-1.5 text-sm font-medium mr-2 mb-2 shadow-sm border border-blue-600">' +
+                                   '<span class="text-blue-200 mr-1">#</span>' +
+                                   '<span class="font-medium text-white">' + escape(data.text) + '</span>' +
+                                   '</div>';
+                        }
+                    }
                 });
             });
         }
@@ -1024,7 +1087,7 @@
                 if (serverConfig.auction) {
                     updateCurrentValueText('auction_channel', serverConfig.auction.channel ? [String(serverConfig.auction.channel)] : []);
                     updateCurrentValueText('auction_role', serverConfig.auction.role ? [String(serverConfig.auction.role)] : []);
-                    updateCurrentValueText('auction_manager', serverConfig.auction.manager ? [String(serverConfig.auction.manager)] : []);
+                    updateCurrentValueText('auction_manager', serverConfig.auction.manager || []);
                     updateCurrentValueText('auction_lock_on_end', [serverConfig.auction.lock_on_end ? 'Enabled' : 'Disabled']);
                 }
                 
@@ -1081,7 +1144,7 @@
                 return;
             }
             
-            if (configKey.includes('role')) {
+            if (configKey.includes('role') || configKey === 'auction_manager' || configKey === 'pcms_requirements') {
                 currentValueContainer.innerHTML = ''; // Clear existing content
                 
                 values.forEach((roleId) => {
@@ -1164,7 +1227,7 @@
                     console.log('Found channel:', channel);
                     
                                          const channelBadge = document.createElement('div');
-                     channelBadge.className = 'inline-flex items-center bg-blue-600 text-white rounded-full px-3 py-1 text-sm shadow-sm';
+                     channelBadge.className = 'inline-flex items-center bg-blue-700 text-white rounded-md px-3 py-1.5 text-sm font-medium mr-2 mb-2 shadow-sm border border-blue-600';
                     
                                          const hashSymbol = document.createElement('span');
                      hashSymbol.className = 'text-blue-200 mr-1';
@@ -1231,6 +1294,136 @@
             setTimeout(() => {
                 toast.classList.add('translate-x-full');
             }, 3000);
+        }
+        
+        // Auto-save cleaned configuration
+        function autoSaveCleanedConfig() {
+            if (!configCleaned) return;
+            
+            console.log('Auto-saving cleaned configuration...');
+            
+            // Get current values from all Tom Select instances
+            const cleanedConfig = getCurrentConfigFromSelects();
+            
+            // Save the cleaned config
+            fetch(`/api/guild/${serverId}/config`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(cleanedConfig)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Auto-cleaned configuration saved successfully');
+                } else {
+                    console.error('Error auto-saving cleaned config:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error auto-saving cleaned config:', error);
+            });
+        }
+        
+        // Get current configuration from all Tom Select instances
+        function getCurrentConfigFromSelects() {
+            // Helper function to get single value from TomSelect
+            function getSingleValue(instanceKey) {
+                const instance = tomSelectInstances[instanceKey];
+                if (!instance) return null;
+                const value = instance.getValue();
+                if (Array.isArray(value)) {
+                    return value.length > 0 ? String(value[0]) : null;
+                } else if (typeof value === 'string') {
+                    return value.length > 0 ? value : null;
+                }
+                return null;
+            }
+            
+            // Helper function to get multiple values from TomSelect
+            function getMultipleValues(instanceKey) {
+                const instance = tomSelectInstances[instanceKey];
+                return instance ? instance.getValue() : [];
+            }
+            
+            // Helper function to get checkbox value
+            function getCheckboxValue(checkboxId) {
+                const checkbox = document.getElementById(checkboxId);
+                return checkbox ? checkbox.checked : false;
+            }
+            
+            return {
+                moderation: {
+                    warn: getMultipleValues('warn-roles-select'),
+                    timeout: getMultipleValues('timeout-roles-select'),
+                    kick: getMultipleValues('kick-roles-select'),
+                    ban: getMultipleValues('ban-roles-select'),
+                    logs: getSingleValue('log-channel-select')
+                },
+                payout: {
+                    channel: getSingleValue('payout-channel-select'),
+                    claim: getSingleValue('claim-channel-select'),
+                    queue: getSingleValue('queue-channel-select'),
+                    role: getSingleValue('payout-role-select')
+                },
+                quarantine: {
+                    role: getSingleValue('quarantine-role-select')
+                },
+                utility: {
+                    poll_roles: getMultipleValues('poll-roles-select'),
+                    lock_roles: getMultipleValues('lock-roles-select'),
+                    player_role: getSingleValue('player-role-select'),
+                    event_manager_role: getSingleValue('event-manager-role-select'),
+                    role_cmd_access_roles: getMultipleValues('role-cmd-access-roles-select')
+                },
+                suggestions: {
+                    channel: getSingleValue('suggestions-channel-select'),
+                    suggestion_role: getSingleValue('suggestion-role-select'),
+                    no_suggestions_role: getSingleValue('no-suggestions-role-select')
+                },
+                perks: {
+                    snipe: getMultipleValues('snipe-roles-select')
+                },
+                auto_responder: {
+                    link_allowed: getMultipleValues('link-allowed-roles-select'),
+                    words_allowed: getMultipleValues('words-allowed-roles-select'),
+                    allowed: getMultipleValues('allowed-roles-select')
+                },
+                auto_lock: {
+                    enabled: getCheckboxValue('auto-lock-enabled'),
+                    channels: getMultipleValues('auto-lock-channels-select')
+                },
+                auction: {
+                    channel: getSingleValue('auction-channel-select'),
+                    role: getSingleValue('auction-role-select'),
+                    manager: getMultipleValues('auction-manager-select'),
+                    lock_on_end: getCheckboxValue('auction-lock-on-end')
+                },
+                mafia_logs: {
+                    channel: getSingleValue('mafia-logs-channel-select')
+                },
+                counting: {
+                    channel: getSingleValue('counting-channel-select')
+                },
+                strike: {
+                    log_channel: getSingleValue('strike-log-channel-select'),
+                    announce_channel: getSingleValue('strike-announce-channel-select')
+                },
+                staff_list: {
+                    roles: getMultipleValues('staff-list-roles-select')
+                },
+                pcms: {
+                    roles: serverConfig?.pcms?.roles || {},
+                    requirements: getMultipleValues('pcms-requirements-select')
+                },
+                afk: {
+                    roles: getMultipleValues('afk-roles-select')
+                },
+                highlight: {
+                    access_roles: getMultipleValues('highlight-access-roles-select')
+                }
+            };
         }
         
         // Save button click handler
@@ -1305,7 +1498,7 @@
                 auction: {
                     channel: getSingleValue('auction-channel-select'),
                     role: getSingleValue('auction-role-select'),
-                    manager: getSingleValue('auction-manager-select'),
+                    manager: getMultipleValues('auction-manager-select'),
                     lock_on_end: getCheckboxValue('auction-lock-on-end')
                 },
                 mafia_logs: {
@@ -1411,6 +1604,9 @@
                 
                 // Then update the current values display
                 updateCurrentValues();
+                
+                // Auto-save if any invalid data was cleaned
+                autoSaveCleanedConfig();
                 
                 // Hide loading indicator when all operations are complete
                 hideLoading();
