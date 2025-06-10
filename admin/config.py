@@ -12,7 +12,7 @@ db = mongo.get_db()
 configuration = db["Configuration"]
 credit_config = db["Credit"]
 
-DOT = "<a:golddot:1303833388410601522>"
+DOT = "<a:gold_dot:1376309693701689365>"
 CHANNEL = "<:channel:1319130208896421889>"
 
 class View(nextcord.ui.View):

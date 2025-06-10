@@ -4,9 +4,11 @@ from oauth import Oauth
 from utils.mongo_connection import MongoConnection
 from functools import wraps
 import requests
+from datetime import timedelta
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "1264646464646464646"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=48)
 
 DEFAULT_CONFIG = {
     "moderation": {
@@ -316,13 +318,11 @@ def get_guild_config(server_id):
                 # Handle auto_lock settings
                 auto_lock_config = {"enabled": False, "channels": []}
                 if "auto_lock" in config and server_id in config["auto_lock"]:
-                    auto_lock_config["enabled"] = bool(config["auto_lock"][server_id])
-                if "auto_lock_channels" in config and server_id in config["auto_lock_channels"]:
-                    value = config["auto_lock_channels"][server_id]
-                    if isinstance(value, (list, tuple)):
-                        auto_lock_config["channels"] = [str(x) for x in value]
-                    else:
-                        auto_lock_config["channels"] = []
+                    server_config = config["auto_lock"][server_id]
+                    auto_lock_config["enabled"] = bool(server_config.get("status", False))
+                    channels = server_config.get("channels", [])
+                    if isinstance(channels, (list, tuple)):
+                        auto_lock_config["channels"] = [str(x) for x in channels]
                 guild_config["auto_lock"] = auto_lock_config
                 
                 # Handle auction settings
@@ -427,6 +427,7 @@ def save_guild_config(server_id):
             print(f"Received config data: {config_data}")
             
             current_config = configuration.find_one({"_id": "config"}) or {}
+            ar_config = configuration.find_one({"_id": "ar_config"}) or {}
             print(f"Current config before update: {current_config}")
             
             for setting_type, settings in config_data.items():
@@ -439,13 +440,13 @@ def save_guild_config(server_id):
                             value = settings[frontend_key]
                             if frontend_key == "logs":
                                 if value and value != "null":
-                                    current_config[backend_key][server_id] = str(value)
+                                    current_config[backend_key][server_id] = int(value)
                                 else:
                                     if server_id in current_config[backend_key]:
                                         del current_config[backend_key][server_id]
                             else:
                                 if isinstance(value, list) and value:
-                                    current_config[backend_key][server_id] = [str(role_id) for role_id in value if role_id]
+                                    current_config[backend_key][server_id] = [int(role_id) for role_id in value if role_id]
                                 else:
                                     if server_id in current_config[backend_key]:
                                         del current_config[backend_key][server_id]
@@ -459,13 +460,13 @@ def save_guild_config(server_id):
                             value = settings[frontend_key]
                             if frontend_key == "role":
                                 if value and value != "null":
-                                    current_config[backend_key][server_id] = str(value)
+                                    current_config[backend_key][server_id] = int(value)
                                 else:
                                     if server_id in current_config[backend_key]:
                                         del current_config[backend_key][server_id]
                             else:
                                 if value and value != "null":
-                                    current_config[backend_key][server_id] = str(value)
+                                    current_config[backend_key][server_id] = int(value)
                                 else:
                                     if server_id in current_config[backend_key]:
                                         del current_config[backend_key][server_id]
@@ -475,15 +476,15 @@ def save_guild_config(server_id):
                     if "quarantine" not in current_config:
                         current_config["quarantine"] = {}
                     if value and value != "null":
-                        current_config["quarantine"][server_id] = str(value)
+                        current_config["quarantine"][server_id] = int(value)
                     else:
                         if server_id in current_config["quarantine"]:
                             del current_config["quarantine"][server_id]
                 
                 elif setting_type == "utility":
                     utility_mappings = {
-                        "poll_roles": "poll_roles",
-                        "lock_roles": "lock_roles",
+                        "poll_roles": "poll_role",
+                        "lock_roles": "lock_role",
                         "player_role": "player_role",
                         "event_manager_role": "event_manager_role",
                         "role_cmd_access_roles": "role_cmd_access_roles"
@@ -495,19 +496,19 @@ def save_guild_config(server_id):
                             value = settings[frontend_key]
                             if frontend_key in ["player_role", "event_manager_role"]:
                                 if value and value != "null":
-                                    current_config[backend_key][server_id] = str(value)
+                                    current_config[backend_key][server_id] = int(value)
                                 else:
                                     if server_id in current_config[backend_key]:
                                         del current_config[backend_key][server_id]
                             else:
                                 if isinstance(value, list) and value:
-                                    current_config[backend_key][server_id] = [str(role_id) for role_id in value if role_id]
+                                    current_config[backend_key][server_id] = [int(role_id) for role_id in value if role_id]
                                 else:
                                     if server_id in current_config[backend_key]:
                                         del current_config[backend_key][server_id]
                 
                 elif setting_type == "suggestions":
-                    suggestions_mappings = {"channel": "suggestions", "suggestion_role": "suggestion_role", "no_suggestions_role": "no_suggestions_role"}
+                    suggestions_mappings = {"channel": "suggestions", "suggestion_role": "suggestion_role", "no_suggestions_role": "no_suggestions"}
                     for frontend_key, backend_key in suggestions_mappings.items():
                         if frontend_key in settings:
                             if backend_key not in current_config:
@@ -515,13 +516,13 @@ def save_guild_config(server_id):
                             value = settings[frontend_key]
                             if frontend_key == "channel":
                                 if value and value != "null":
-                                    current_config[backend_key][server_id] = str(value)
+                                    current_config[backend_key][server_id] = int(value)
                                 else:
                                     if server_id in current_config[backend_key]:
                                         del current_config[backend_key][server_id]
                             else:
                                 if value and value != "null":
-                                    current_config[backend_key][server_id] = str(value)
+                                    current_config[backend_key][server_id] = int(value)
                                 else:
                                     if server_id in current_config[backend_key]:
                                         del current_config[backend_key][server_id]
@@ -533,7 +534,7 @@ def save_guild_config(server_id):
                     if "snipe" not in current_config[setting_type]:
                         current_config[setting_type]["snipe"] = {}
                     if isinstance(value, list) and value:
-                        current_config[setting_type]["snipe"][server_id] = [str(role_id) for role_id in value if role_id]
+                        current_config[setting_type]["snipe"][server_id] = [int(role_id) for role_id in value if role_id]
                     else:
                         if server_id in current_config[setting_type]["snipe"]:
                             del current_config[setting_type]["snipe"][server_id]
@@ -546,7 +547,7 @@ def save_guild_config(server_id):
                                 current_config[backend_key] = {}
                             value = settings[frontend_key]
                             if isinstance(value, list) and value:
-                                current_config[backend_key][server_id] = [str(role_id) for role_id in value if role_id]
+                                current_config[backend_key][server_id] = [int(role_id) for role_id in value if role_id]
                             else:
                                 if server_id in current_config[backend_key]:
                                     del current_config[backend_key][server_id]
@@ -556,18 +557,18 @@ def save_guild_config(server_id):
                     value_channels = settings.get("channels")
                     if "auto_lock" not in current_config:
                         current_config["auto_lock"] = {}
+                    if server_id not in current_config["auto_lock"]:
+                        current_config["auto_lock"][server_id] = {"status": False, "channels": []}
+                    
                     if value_enabled:
-                        current_config["auto_lock"][server_id] = bool(value_enabled)
+                        current_config["auto_lock"][server_id]["status"] = bool(value_enabled)
                     else:
-                        if server_id in current_config["auto_lock"]:
-                            del current_config["auto_lock"][server_id]
-                    if "auto_lock_channels" not in current_config:
-                        current_config["auto_lock_channels"] = {}
+                        current_config["auto_lock"][server_id]["status"] = False
+                        
                     if isinstance(value_channels, list) and value_channels:
-                        current_config["auto_lock_channels"][server_id] = [str(channel_id) for channel_id in value_channels if channel_id]
+                        current_config["auto_lock"][server_id]["channels"] = [int(channel_id) for channel_id in value_channels if channel_id]
                     else:
-                        if server_id in current_config["auto_lock_channels"]:
-                            del current_config["auto_lock_channels"][server_id]
+                        current_config["auto_lock"][server_id]["channels"] = []
                 
                 elif setting_type == "auction":
                     auction_mappings = {"channel": "auction", "role": "auction_role", "manager": "auction_manager", "lock_on_end": "lock_on_end"}
@@ -584,7 +585,7 @@ def save_guild_config(server_id):
                                         del current_config[backend_key][server_id]
                             else:
                                 if value and value != "null":
-                                    current_config[backend_key][server_id] = str(value)
+                                    current_config[backend_key][server_id] = int(value)
                                 else:
                                     if server_id in current_config[backend_key]:
                                         del current_config[backend_key][server_id]
@@ -594,7 +595,7 @@ def save_guild_config(server_id):
                     if "mafia_logs" not in current_config:
                         current_config["mafia_logs"] = {}
                     if value and value != "null":
-                        current_config["mafia_logs"][server_id] = str(value)
+                        current_config["mafia_logs"][server_id] = int(value)
                     else:
                         if server_id in current_config["mafia_logs"]:
                             del current_config["mafia_logs"][server_id]
@@ -604,7 +605,7 @@ def save_guild_config(server_id):
                     if "counting" not in current_config:
                         current_config["counting"] = {}
                     if value and value != "null":
-                        current_config["counting"][server_id] = str(value)
+                        current_config["counting"][server_id] = int(value)
                     else:
                         if server_id in current_config["counting"]:
                             del current_config["counting"][server_id]
@@ -617,7 +618,7 @@ def save_guild_config(server_id):
                                 current_config[backend_key] = {}
                             value = settings[frontend_key]
                             if value and value != "null":
-                                current_config[backend_key][server_id] = str(value)
+                                current_config[backend_key][server_id] = int(value)
                             else:
                                 if server_id in current_config[backend_key]:
                                     del current_config[backend_key][server_id]
@@ -627,7 +628,7 @@ def save_guild_config(server_id):
                     if "staff_list" not in current_config:
                         current_config["staff_list"] = {}
                     if isinstance(value, list) and value:
-                        current_config["staff_list"][server_id] = [str(role_id) for role_id in value if role_id]
+                        current_config["staff_list"][server_id] = [int(role_id) for role_id in value if role_id]
                     else:
                         if server_id in current_config["staff_list"]:
                             del current_config["staff_list"][server_id]
@@ -645,7 +646,7 @@ def save_guild_config(server_id):
                     if "pcms_requirements" not in current_config:
                         current_config["pcms_requirements"] = {}
                     if isinstance(value_reqs, list) and value_reqs:
-                        current_config["pcms_requirements"][server_id] = [str(role_id) for role_id in value_reqs if role_id]
+                        current_config["pcms_requirements"][server_id] = [int(role_id) for role_id in value_reqs if role_id]
                     else:
                         if server_id in current_config["pcms_requirements"]:
                             del current_config["pcms_requirements"][server_id]
@@ -655,7 +656,7 @@ def save_guild_config(server_id):
                     if "afk" not in current_config:
                         current_config["afk"] = {}
                     if isinstance(value, list) and value:
-                        current_config["afk"][server_id] = [str(role_id) for role_id in value if role_id]
+                        current_config["afk"][server_id] = [int(role_id) for role_id in value if role_id]
                     else:
                         if server_id in current_config["afk"]:
                             del current_config["afk"][server_id]
@@ -665,7 +666,7 @@ def save_guild_config(server_id):
                     if "highlight" not in current_config:
                         current_config["highlight"] = {}
                     if isinstance(value, list) and value:
-                        current_config["highlight"][server_id] = [str(role_id) for role_id in value if role_id]
+                        current_config["highlight"][server_id] = [int(role_id) for role_id in value if role_id]
                     else:
                         if server_id in current_config["highlight"]:
                             del current_config["highlight"][server_id]
@@ -685,7 +686,10 @@ def save_guild_config(server_id):
             )
             
             print("Config saved successfully")
-        return jsonify({"status": "success"})
+            
+            # Return the updated config so frontend can refresh
+            updated_config = get_guild_config(server_id)
+            return jsonify({"status": "success", "config": updated_config.get_json()})
     except Exception as e:
         print(f"Error saving config: {e}")
         import traceback
