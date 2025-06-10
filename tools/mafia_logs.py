@@ -67,6 +67,10 @@ class MafiaLogs(commands.Cog):
                 mentions = re.findall(r'<@!?(\d+)>', field.value)
                 members.extend(mentions)
         duration = message.channel.created_at - datetime.now()
+        duration = abs(duration)
+        minutes = int(duration.total_seconds() // 60)
+        seconds = int(duration.total_seconds() % 60)
+        duration = f"{minutes} minutes and {seconds} seconds"
         return members, duration
 def setup(bot):
     bot.add_cog(MafiaLogs(bot))
