@@ -82,7 +82,7 @@ class MafiaLogs(commands.Cog):
         }
         collection.insert_one(doc_data)
 
-    async def send_transcript(self, transcript, embed, message):
+    async def send_transcript(self, transcript, embed, message, view):
         config = configuration.find_one({"_id": "config"})
         mafia_logs_channel = config["mafia_logs"]
         if not mafia_logs_channel:
@@ -93,7 +93,7 @@ class MafiaLogs(commands.Cog):
         channel = self.bot.get_channel(int(channel))
         if not channel:
             return
-        await channel.send(embed=embed, file=transcript)
+        await channel.send(embed=embed, file=transcript, view=view)
         await message.add_reaction(GREEN_CHECK)
 
     async def get_mafia_game_info(self, message):
