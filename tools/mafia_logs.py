@@ -4,10 +4,7 @@ from cogs.transcript import create_channel_transcript
 from datetime import datetime
 import re
 
-MAFIA_BOTS = [
-    758999095070687284,
-    511786918783090688,
-]
+MAFIA_BOTS = [758999095070687284, 511786918783090688, 204255221017214977]
 GREEN_CHECK = "<:green_check2:1291173532432203816>"
 
 from utils.mongo_connection import MongoConnection
