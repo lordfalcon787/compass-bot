@@ -41,7 +41,7 @@ class MafiaLogs(commands.Cog):
             return
         if message.author.id not in MAFIA_BOTS:
             return
-        
+        print("Mafia game detected")
         transcript, messages = await create_channel_transcript(message.channel)
         members, duration = await self.get_mafia_game_info(message)
         timestamp = message.created_at.timestamp()
