@@ -614,15 +614,13 @@ class TranscriptGenerator:
             - nextcord.File object containing the HTML transcript
             - List of nextcord.Message objects from the channel
         """
-        # Collect messages first
+        # Collect messages using the proper Discord.py method
         messages: List[nextcord.Message] = []
-        print("Collecting messages")
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://discord.com/api/v10/channels/{channel.id}/messages?limit={limit}&after={after}&before={before}") as response:
-                data = await response.json()
-                for message in data:
-                    messages.append(nextcord.Message(channel=channel, data=message))
-        print("Messages collected")
+                async with session.get(f"https://google.com") as response:
+                    if response.status == 200:
+                        async for message in channel.history(limit=limit, after=after, before=before):
+                            messages.append(message)
         
         # Reverse to get chronological order
         messages.reverse()
