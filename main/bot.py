@@ -525,7 +525,7 @@ async def latency_cmd(ctx):
 async def transcript_cmd(ctx):
     if ctx.author.id != BOT_OWNER:
         return
-    transcript = await create_channel_transcript(ctx.channel, limit=100)
+    transcript, messages = await create_channel_transcript(ctx.channel, limit=100)
     await ctx.send(file=transcript)
 
 if __name__ == "__main__":
