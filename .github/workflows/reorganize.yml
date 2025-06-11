@@ -22,9 +22,10 @@ jobs:
         run: |
           mkdir -p compass/cogs
           mkdir -p compass/utils
-          find . -type f -name "*.py" ! -name "bot.py" ! -name "mongo_connection.py" ! -path "./compass/*" ! -path "./dashboard/*" -exec cp {} compass/cogs/ \;
+          find . -type f -name "*.py" ! -name "bot.py" ! -name "mongo_connection.py" ! -name "github_uploader.py" ! -path "./compass/*" ! -path "./dashboard/*" -exec cp {} compass/cogs/ \;
           find . -type f -name "bot.py" ! -path "./compass/*" ! -path "./dashboard/*" -exec cp {} compass/ \;
           find . -type f -name "mongo_connection.py" ! -path "./compass/*" ! -path "./dashboard/*" -exec cp {} compass/utils/ \;
+          find . -type f -name "github_uploader.py" ! -path "./compass/*" ! -path "./dashboard/*" -exec cp {} compass/utils/ \;
           find . -type f -name "*.json" ! -name "items.json" ! -name "settings.json" ! -name "prefixes.json" ! -path "./compass/*" ! -path "./.git/*" ! -path "./dashboard/*" -exec cp {} compass/ \;
           find . -type f -name "README.md" ! -path "./compass/*" ! -path "./dashboard/*" -exec cp {} compass/ \;
           find . -type f -name "requirements.txt" ! -path "./compass/*" ! -path "./dashboard/*" -exec cp {} compass/ \;
