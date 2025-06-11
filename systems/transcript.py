@@ -8,8 +8,6 @@ import base64
 from io import BytesIO
 
 class TranscriptGenerator:
-    """Generate HTML transcripts for Discord channels."""
-    
     def __init__(self):
         self.css_styles = """
         <style>
@@ -600,21 +598,6 @@ class TranscriptGenerator:
                                        limit: Optional[int] = None,
                                        after: Optional[datetime] = None,
                                        before: Optional[datetime] = None) -> Tuple[nextcord.File, List[nextcord.Message]]:
-        """
-        Generate an HTML transcript file for a Discord channel.
-        
-        Args:
-            channel: The Discord channel to generate transcript for
-            limit: Maximum number of messages to include
-            after: Only include messages after this datetime
-            before: Only include messages before this datetime
-            
-        Returns:
-            Tuple containing:
-            - nextcord.File object containing the HTML transcript
-            - List of nextcord.Message objects from the channel
-        """
-        print("Collecting messages")
         if limit is None:
             limit = 1000
         else:
@@ -625,13 +608,10 @@ class TranscriptGenerator:
                 async with session.get(f"https://google.com") as response:
                     if response.status == 200:
                         async for message in channel.history(limit=limit, after=after, before=before):
-                            print(message.id)
                             messages.append(message)
         
-        print("Messages collected")
         messages.reverse()
         
-        # Generate HTML content using the collected messages
         html_parts = [
             '<!DOCTYPE html>',
             '<html lang="en">',
@@ -655,7 +635,6 @@ class TranscriptGenerator:
         
         current_date = None
         for message in messages:
-            # Add date divider if needed
             message_date = message.created_at.date()
             if current_date != message_date:
                 current_date = message_date
@@ -663,7 +642,6 @@ class TranscriptGenerator:
                 html_parts.append(f'<span class="divider-text">{message_date.strftime("%B %d, %Y")}</span>')
                 html_parts.append('</div>')
             
-            # Add message
             html_parts.append(self._generate_message_html(message))
         
         html_parts.extend([
@@ -675,7 +653,6 @@ class TranscriptGenerator:
         
         html_content = ''.join(html_parts)
         
-        # Create file
         buffer = BytesIO(html_content.encode('utf-8'))
         buffer.seek(0)
         
@@ -685,19 +662,6 @@ class TranscriptGenerator:
         return file, messages
 
 
-# Example usage function
 async def create_channel_transcript(channel: nextcord.TextChannel, **kwargs) -> Tuple[nextcord.File, List[nextcord.Message]]:
-    """
-    Create a transcript file for a Discord channel.
-    
-    Args:
-        channel: The channel to create transcript for
-        **kwargs: Additional arguments for transcript generation (limit, after, before)
-        
-    Returns:
-        Tuple containing:
-        - nextcord.File containing the HTML transcript
-        - List of nextcord.Message objects from the channel
-    """
     generator = TranscriptGenerator()
     return await generator.generate_transcript_file(channel, **kwargs)
