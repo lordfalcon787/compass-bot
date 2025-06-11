@@ -615,8 +615,11 @@ class TranscriptGenerator:
             - List of nextcord.Message objects from the channel
         """
         print("Collecting messages")
-        if limit > 1000 or limit is None:
+        if limit is None:
             limit = 1000
+        else:
+            if limit > 1000:
+                limit = 1000
         messages: List[nextcord.Message] = []
         async with aiohttp.ClientSession() as session:
                 async with session.get(f"https://google.com") as response:
