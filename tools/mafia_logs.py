@@ -46,8 +46,8 @@ class MafiaLogs(commands.Cog):
         await self.send_transcript(transcript, embed, message)
 
     async def send_transcript(self, transcript, embed, message):
-        configuration = configuration.find_one({"_id": "config"})
-        mafia_logs_channel = configuration["mafia_logs"]
+        config = configuration.find_one({"_id": "config"})
+        mafia_logs_channel = config["mafia_logs"]
         if not mafia_logs_channel:
             return
         channel = mafia_logs_channel.get(str(message.guild.id))
