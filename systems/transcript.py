@@ -615,8 +615,13 @@ class TranscriptGenerator:
         """
         # Collect messages first
         messages: List[nextcord.Message] = []
-        async for message in channel.history(limit=limit, after=after, before=before):
-            messages.append(message)
+        print("Collecting messages")
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://discord.com/api/v10/channels/{channel.id}/messages?limit={limit}&after={after}&before={before}") as response:
+                data = await response.json()
+                for message in data:
+                    messages.append(nextcord.Message(channel=channel, data=message))
+        print("Messages collected")
         
         # Reverse to get chronological order
         messages.reverse()
