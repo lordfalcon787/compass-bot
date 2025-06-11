@@ -66,8 +66,7 @@ class MafiaLogs(commands.Cog):
             if field.name and field.value:
                 mentions = re.findall(r'<@!?(\d+)>', field.value)
                 members.extend(mentions)
-        duration = message.channel.created_at - datetime.now()
-        duration = abs(duration)
+        duration = datetime.now(message.channel.created_at.tzinfo) - message.channel.created_at
         minutes = int(duration.total_seconds() // 60)
         seconds = int(duration.total_seconds() % 60)
         duration = f"{minutes} minutes and {seconds} seconds"
