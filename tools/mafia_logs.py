@@ -47,19 +47,17 @@ class MafiaLogs(commands.Cog):
         timestamp = message.created_at.timestamp()
         timestamp_int = int(timestamp)
         
-        # Upload transcript to GitHub
         file_url = None
         if self.github_uploader:
             try:
-                # Get file content as bytes
-                transcript.fp.seek(0)  # Reset file pointer
+                transcript.fp.seek(0)
                 file_content = transcript.fp.read()
                 if isinstance(file_content, str):
                     file_content = file_content.encode('utf-8')
                 
                 file_url = await self.github_uploader.upload_transcript(
                     file_content, 
-                    message.channel.name, 
+                    f"mafia-transcript-{message.channel.id}", 
                     message.created_at
                 )
                 print(f"Transcript uploaded to: {file_url}")
@@ -68,30 +66,20 @@ class MafiaLogs(commands.Cog):
         
         embed = nextcord.Embed(
             title="Mafia Game Transcript", 
-            description=f"**Time Completed:** <t:{timestamp_int}:f>\n**Server:** {message.guild.name}\n**Duration:** {duration}\n**Players:** {len(members)}\n**Message Count:** {len(messages)}"
+            description=f"**Time Completed:** <t:{timestamp_int}:f>\n**Server:** {message.guild.name}\n**Duration:** {duration}\n**Players:** {len(members)}\n**Message Count:** {len(messages)}\n**Transcript URL:** [View Online]({file_url})"
         )
+        view = nextcord.ui.View()
+        view.add_item(nextcord.ui.Button(label="📄 View Transcript", url=f"https://compass-website.onrender.com/transcripts/{message.channel.id}", style=nextcord.ButtonStyle.url))
+        view.add_item(nextcord.ui.Button(label="🖨️ View Raw Transcript", url=file_url, style=nextcord.ButtonStyle.url))
         embed.set_thumbnail(url=message.guild.icon.url)
         
-        # Add GitHub link to embed if available
-        if file_url:
-            embed.add_field(name="📄 Transcript", value=f"[View Online]({file_url})", inline=False)
+        await self.send_transcript(transcript, embed, message, view)
         
-        await self.send_transcript(transcript, embed, message)
-        
-        # Store in MongoDB
         collection = db["Mafia Games"]
         doc_data = {
             "_id": message.channel.id,
-            "timestamp": timestamp_int,
-            "server": message.guild.name,
-            "duration": duration,
-            "players": len(members),
-            "message_count": len(messages)
+            "url": file_url
         }
-        
-        if file_url:
-            doc_data["file_url"] = file_url
-            
         collection.insert_one(doc_data)
 
     async def send_transcript(self, transcript, embed, message):
