@@ -43,7 +43,7 @@ class GitHubUploader:
             async with session.put(url, headers=headers, json=data) as response:
                 if response.status in [200, 201]:
                     result = await response.json()
-                    return f"https://raw.githubusercontent.com/{self.owner}/{self.repo}/main/{file_path}"
+                    return result["content"]["download_url"]
                 else:
                     error_text = await response.text()
                     raise Exception(f"Failed to upload file: {response.status} - {error_text}")
