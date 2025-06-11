@@ -28,6 +28,8 @@ class MafiaLogs(commands.Cog):
     async def on_message(self, message):
         if not message.channel:
             return
+        if isinstance(message.channel, nextcord.DMChannel):
+            return
         if not message.embeds:
             return
         if not message.channel.name == "mafia":
@@ -41,8 +43,8 @@ class MafiaLogs(commands.Cog):
         if message.author.id not in MAFIA_BOTS:
             return
         
-        members, duration = await self.get_mafia_game_info(message)
         transcript, messages = await create_channel_transcript(message.channel)
+        members, duration = await self.get_mafia_game_info(message)
         embed = nextcord.Embed(title="Mafia Game Transcript", description=f"**Time Completed:** <t:{message.created_at.timestamp()}:f>\n**Server:** {message.guild.name}\n**Duration:** {duration}\n**Players:** {len(members)}")
         await self.send_transcript(transcript, embed, message)
 
