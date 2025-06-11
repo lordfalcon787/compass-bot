@@ -42,7 +42,9 @@ class MafiaLogs(commands.Cog):
         
         transcript, messages = await create_channel_transcript(message.channel)
         members, duration = await self.get_mafia_game_info(message)
-        embed = nextcord.Embed(title="Mafia Game Transcript", description=f"**Time Completed:** <t:{message.created_at.timestamp()}:f>\n**Server:** {message.guild.name}\n**Duration:** {duration}\n**Players:** {len(members)}")
+        timestamp = message.created_at.timestamp().round()
+        embed = nextcord.Embed(title="Mafia Game Transcript", description=f"**Time Completed:** <t:{timestamp}:f>\n**Server:** {message.guild.name}\n**Duration:** {duration}\n**Players:** {len(members)}\n**Message Count:** {len(messages)}")
+        embed.set_thumbnail(url=message.guild.icon.url)
         await self.send_transcript(transcript, embed, message)
 
     async def send_transcript(self, transcript, embed, message):
