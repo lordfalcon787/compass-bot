@@ -73,7 +73,7 @@ class MafiaLogs(commands.Cog):
         view.add_item(nextcord.ui.Button(label="🖨️ View Raw Transcript", url=file_url, style=nextcord.ButtonStyle.url))
         embed.set_thumbnail(url=message.guild.icon.url)
         
-        await self.send_transcript(transcript, embed, message, view)
+        await self.send_transcript(embed, message, view)
         
         collection = db["Mafia Games"]
         doc_data = {
@@ -82,7 +82,7 @@ class MafiaLogs(commands.Cog):
         }
         collection.insert_one(doc_data)
 
-    async def send_transcript(self, transcript, embed, message, view):
+    async def send_transcript(self, embed, message, view):
         config = configuration.find_one({"_id": "config"})
         mafia_logs_channel = config["mafia_logs"]
         if not mafia_logs_channel:
@@ -93,7 +93,7 @@ class MafiaLogs(commands.Cog):
         channel = self.bot.get_channel(int(channel))
         if not channel:
             return
-        await channel.send(embed=embed, file=transcript, view=view)
+        await channel.send(embed=embed, view=view)
         await message.add_reaction(GREEN_CHECK)
 
     async def get_mafia_game_info(self, message):
