@@ -3,6 +3,7 @@ from nextcord.ext import commands
 from cogs.transcript import create_channel_transcript
 from datetime import datetime
 import re
+from utils.github_uploader import get_github_uploader
 
 MAFIA_BOTS = [758999095070687284, 511786918783090688, 204255221017214977]
 GREEN_CHECK = "<:green_check2:1291173532432203816>"
@@ -16,6 +17,7 @@ configuration = db["Configuration"]
 class MafiaLogs(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.github_uploader = get_github_uploader()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -42,10 +44,55 @@ class MafiaLogs(commands.Cog):
         
         transcript, messages = await create_channel_transcript(message.channel)
         members, duration = await self.get_mafia_game_info(message)
-        timestamp = message.created_at.timestamp().round()
-        embed = nextcord.Embed(title="Mafia Game Transcript", description=f"**Time Completed:** <t:{timestamp}:f>\n**Server:** {message.guild.name}\n**Duration:** {duration}\n**Players:** {len(members)}\n**Message Count:** {len(messages)}")
+        timestamp = message.created_at.timestamp()
+        timestamp_int = int(timestamp)
+        
+        # Upload transcript to GitHub
+        file_url = None
+        if self.github_uploader:
+            try:
+                # Get file content as bytes
+                transcript.fp.seek(0)  # Reset file pointer
+                file_content = transcript.fp.read()
+                if isinstance(file_content, str):
+                    file_content = file_content.encode('utf-8')
+                
+                file_url = await self.github_uploader.upload_transcript(
+                    file_content, 
+                    message.channel.name, 
+                    message.created_at
+                )
+                print(f"Transcript uploaded to: {file_url}")
+            except Exception as e:
+                print(f"Failed to upload transcript to GitHub: {e}")
+        
+        embed = nextcord.Embed(
+            title="Mafia Game Transcript", 
+            description=f"**Time Completed:** <t:{timestamp_int}:f>\n**Server:** {message.guild.name}\n**Duration:** {duration}\n**Players:** {len(members)}\n**Message Count:** {len(messages)}"
+        )
         embed.set_thumbnail(url=message.guild.icon.url)
+        
+        # Add GitHub link to embed if available
+        if file_url:
+            embed.add_field(name="📄 Transcript", value=f"[View Online]({file_url})", inline=False)
+        
         await self.send_transcript(transcript, embed, message)
+        
+        # Store in MongoDB
+        collection = db["Mafia Games"]
+        doc_data = {
+            "_id": message.channel.id,
+            "timestamp": timestamp_int,
+            "server": message.guild.name,
+            "duration": duration,
+            "players": len(members),
+            "message_count": len(messages)
+        }
+        
+        if file_url:
+            doc_data["file_url"] = file_url
+            
+        collection.insert_one(doc_data)
 
     async def send_transcript(self, transcript, embed, message):
         config = configuration.find_one({"_id": "config"})
@@ -72,5 +119,6 @@ class MafiaLogs(commands.Cog):
         seconds = int(duration.total_seconds() % 60)
         duration = f"{minutes} minutes and {seconds} seconds"
         return members, duration
+
 def setup(bot):
     bot.add_cog(MafiaLogs(bot))
