@@ -1,4 +1,5 @@
 import nextcord
+import aiohttp
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Tuple
 import html
