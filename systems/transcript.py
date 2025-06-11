@@ -605,7 +605,7 @@ class TranscriptGenerator:
         
         Args:
             channel: The Discord channel to generate transcript for
-            limit: Maximum number of messages to include (max 1000)
+            limit: Maximum number of messages to include
             after: Only include messages after this datetime
             before: Only include messages before this datetime
             
@@ -615,17 +615,16 @@ class TranscriptGenerator:
             - List of nextcord.Message objects from the channel
         """
         print("Collecting messages")
-        messages: List[nextcord.Message] = []
-        
-        # Ensure limit doesn't exceed 1000
-        if limit is not None:
-            limit = min(limit, 1000)
-        else:
+        if limit > 1000 or limit is None:
             limit = 1000
-            
-        async for message in channel.history(limit=limit, after=after, before=before):
-            print(message.id)
-            messages.append(message)
+        messages: List[nextcord.Message] = []
+        async with aiohttp.ClientSession() as session:
+                async with session.get(f"https://google.com") as response:
+                    if response.status == 200:
+                        async for message in channel.history(limit=limit, after=after, before=before):
+                            print(message.id)
+                            messages.append(message)
+        
         print("Messages collected")
         messages.reverse()
         
