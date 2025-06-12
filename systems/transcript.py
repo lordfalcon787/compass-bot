@@ -409,7 +409,7 @@ class TranscriptGenerator:
     def _format_timestamp(self, timestamp: datetime) -> str:
         return timestamp.strftime("%m/%d/%Y %I:%M %p")
     
-    def _parse_discord_markdown(self, text: str) -> str:
+    def _parse_discord_markdown(self, text: str, message: Optional[nextcord.Message] = None) -> str:
         if not text:
             return ""
             
@@ -424,7 +424,24 @@ class TranscriptGenerator:
         text = re.sub(r'~~(.*?)~~', r'<del>\1</del>', text)
         text = re.sub(r'\|\|(.*?)\|\|', r'<span class="spoiler">\1</span>', text)
         text = re.sub(r'(https?://[^\s]+)', r'<a href="\1" target="_blank">\1</a>', text)
-        text = re.sub(r'&lt;@!?(\d+)&gt;', r'<span class="mention">@User</span>', text)
+        
+        if message and message.guild:
+            def replace_user_mention(match):
+                user_id = int(match.group(1))
+                try:
+                    member = nextcord.utils.get(message.guild.members, id=user_id)
+                    if member:
+                        display_name = member.display_name
+                        return f'<span class="mention">@{self._escape_html(display_name)}</span>'
+                    else:
+                        return f'<span class="mention">@User</span>'
+                except:
+                    return f'<span class="mention">@User</span>'
+            
+            text = re.sub(r'&lt;@!?(\d+)&gt;', replace_user_mention, text)
+        else:
+            text = re.sub(r'&lt;@!?(\d+)&gt;', r'<span class="mention">@User</span>', text)
+        
         text = re.sub(r'&lt;@&amp;(\d+)&gt;', r'<span class="mention">@Role</span>', text)
         text = re.sub(r'&lt;#(\d+)&gt;', r'<span class="mention">#channel</span>', text)
         text = text.replace('\n', '<br>')
@@ -507,7 +524,7 @@ class TranscriptGenerator:
         html_parts.append('</div>')
         
         if message.content:
-            html_parts.append(f'<div class="message-text">{self._parse_discord_markdown(message.content)}</div>')
+            html_parts.append(f'<div class="message-text">{self._parse_discord_markdown(message.content, message)}</div>')
         
         if message.attachments:
             html_parts.append('<div class="message-attachments">')
