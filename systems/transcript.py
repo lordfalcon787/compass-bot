@@ -1,5 +1,4 @@
 import nextcord
-import aiohttp
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Tuple
 import html
@@ -604,11 +603,8 @@ class TranscriptGenerator:
             if limit > 1000:
                 limit = 1000
         messages: List[nextcord.Message] = []
-        async with aiohttp.ClientSession() as session:
-                async with session.get(f"https://google.com") as response:
-                    if response.status == 200:
-                        async for message in channel.history(limit=limit, after=after, before=before):
-                            messages.append(message)
+        async for message in channel.history(limit=limit, after=after, before=before):
+            messages.append(message)
         
         messages.reverse()
         
