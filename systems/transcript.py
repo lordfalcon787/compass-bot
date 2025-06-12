@@ -564,6 +564,8 @@ class TranscriptGenerator:
                 break
                 
             messages.extend(chunk_messages)
+            if len(messages) >= msg_limit:
+                break
             last_message = chunk_messages[-1]
         
         print(f"Messages fetched: {len(messages)} (unique)")
