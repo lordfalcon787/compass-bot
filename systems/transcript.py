@@ -594,21 +594,21 @@ class TranscriptGenerator:
     
     async def generate_transcript_file(self,
                                        channel: nextcord.TextChannel,
-                                       limit: Optional[int] = None,
+                                       msg_limit: Optional[int] = None,
                                        after: Optional[datetime] = None,
                                        before: Optional[datetime] = None) -> Tuple[nextcord.File, List[nextcord.Message]]:
-        print(f"Original limit: {limit}")
-        if limit is None:
-            limit = 1000
+        print(f"Original limit: {msg_limit}")
+        if msg_limit is None:
+            msg_limit = 1000
         else:
-            if limit > 1000:
-                limit = 1000
-        print(f"Final limit: {limit}")
+            if msg_limit > 1000:
+                msg_limit = 1000
+        print(f"Final limit: {msg_limit}")
         messages: List[nextcord.Message] = []
         seen_message_ids = set()
         
         # Fetch messages with deduplication
-        async for message in channel.history(limit=limit):
+        async for message in channel.history(limit=msg_limit):
             messages.append(message)
         
         print(f"Messages fetched: {len(messages)} (unique)")
