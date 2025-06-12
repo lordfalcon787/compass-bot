@@ -538,59 +538,6 @@ class TranscriptGenerator:
         
         return ''.join(html_parts)
     
-    async def generate_transcript(self, 
-                                  channel: nextcord.TextChannel, 
-                                  limit: Optional[int] = None,
-                                  after: Optional[datetime] = None,
-                                  before: Optional[datetime] = None) -> str:
-        messages: List[nextcord.Message] = []
-        async for message in channel.history(limit=limit, after=after, before=before):
-            messages.append(message)
-        
-        messages.reverse()
-        
-        html_parts = [
-            '<!DOCTYPE html>',
-            '<html lang="en">',
-            '<head>',
-            '<meta charset="UTF-8">',
-            '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
-            f'<title>Transcript - #{channel.name}</title>',
-            self.css_styles,
-            '</head>',
-            '<body>',
-            '<div class="transcript-container">',
-            '<div class="header">',
-            '<div class="header-icon">#</div>',
-            '<div class="header-info">',
-            f'<h1>#{self._escape_html(channel.name)}</h1>',
-            f'<p>{len(messages)} messages • Generated on {datetime.now().strftime("%B %d, %Y at %I:%M %p")}</p>',
-            '</div>',
-            '</div>',
-            '<div class="messages-container">'
-        ]
-        
-        current_date = None
-        for message in messages:
-            # Add date divider if needed
-            message_date = message.created_at.date()
-            if current_date != message_date:
-                current_date = message_date
-                html_parts.append('<div class="divider">')
-                html_parts.append(f'<span class="divider-text">{message_date.strftime("%B %d, %Y")}</span>')
-                html_parts.append('</div>')
-            
-            # Add message
-            html_parts.append(self._generate_message_html(message))
-        
-        html_parts.extend([
-            '</div>',
-            '</div>',
-            '</body>',
-            '</html>'
-        ])
-        
-        return ''.join(html_parts)
     
     async def generate_transcript_file(self,
                                        channel: nextcord.TextChannel,
@@ -605,10 +552,19 @@ class TranscriptGenerator:
         messages: List[nextcord.Message] = []
         seen_message_ids = set()
         
-        async for message in channel.history(limit=None):
-            if message.id not in seen_message_ids:
-                messages.append(message)
-                seen_message_ids.add(message.id)
+        last_message = None
+        while True:
+            chunk_messages = []
+            async for message in channel.history(limit=100, before=last_message):
+                if message.id not in seen_message_ids:
+                    chunk_messages.append(message)
+                    seen_message_ids.add(message.id)
+            
+            if not chunk_messages:
+                break
+                
+            messages.extend(chunk_messages)
+            last_message = chunk_messages[-1]
         
         print(f"Messages fetched: {len(messages)} (unique)")
         messages.reverse()
