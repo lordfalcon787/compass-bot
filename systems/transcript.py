@@ -605,7 +605,7 @@ class TranscriptGenerator:
         messages: List[nextcord.Message] = []
         seen_message_ids = set()
         
-        async for message in channel.history(limit=msg_limit, after=after, before=before):
+        async for message in channel.history():
             if message.id not in seen_message_ids:
                 messages.append(message)
                 seen_message_ids.add(message.id)
