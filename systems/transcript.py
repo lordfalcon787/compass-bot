@@ -597,15 +597,27 @@ class TranscriptGenerator:
                                        limit: Optional[int] = None,
                                        after: Optional[datetime] = None,
                                        before: Optional[datetime] = None) -> Tuple[nextcord.File, List[nextcord.Message]]:
+        print(f"Original limit: {limit}")
         if limit is None:
             limit = 1000
         else:
             if limit > 1000:
                 limit = 1000
+        print(f"Final limit: {limit}")
         messages: List[nextcord.Message] = []
         async for message in channel.history(limit=limit, after=after, before=before):
             messages.append(message)
-        print(len(messages))
+        print(f"Messages fetched: {len(messages)}")
+        
+        # Check for duplicates
+        message_ids = [msg.id for msg in messages]
+        unique_ids = set(message_ids)
+        if len(message_ids) != len(unique_ids):
+            print(f"DUPLICATE DETECTED: {len(message_ids)} total, {len(unique_ids)} unique")
+            duplicates = [msg_id for msg_id in message_ids if message_ids.count(msg_id) > 1]
+            print(f"Duplicate IDs: {set(duplicates)}")
+        else:
+            print("No duplicates found")
         messages.reverse()
         
         html_parts = [
