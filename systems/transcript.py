@@ -448,7 +448,7 @@ class TranscriptGenerator:
         
         return text
     
-    def _generate_embed_html(self, embed: nextcord.Embed) -> str:
+    def _generate_embed_html(self, embed: nextcord.Embed, message: Optional[nextcord.Message] = None) -> str:
         color = f"#{embed.color.value:06x}" if embed.color else "#5865f2"
         
         html_parts = [f'<div class="embed">']
@@ -469,7 +469,7 @@ class TranscriptGenerator:
                 html_parts.append(f'<div class="embed-title">{self._escape_html(embed.title)}</div>')
         
         if embed.description:
-            html_parts.append(f'<div class="embed-description">{self._parse_discord_markdown(embed.description)}</div>')
+            html_parts.append(f'<div class="embed-description">{self._parse_discord_markdown(embed.description, message)}</div>')
         
         if embed.fields:
             html_parts.append('<div class="embed-fields">')
@@ -477,7 +477,7 @@ class TranscriptGenerator:
                 inline_class = "embed-field-inline" if field.inline else ""
                 html_parts.append(f'<div class="embed-field {inline_class}">')
                 html_parts.append(f'<div class="embed-field-name">{self._escape_html(field.name)}</div>')
-                html_parts.append(f'<div class="embed-field-value">{self._parse_discord_markdown(field.value)}</div>')
+                html_parts.append(f'<div class="embed-field-value">{self._parse_discord_markdown(field.value, message)}</div>')
                 html_parts.append('</div>')
             html_parts.append('</div>')
         
@@ -536,7 +536,7 @@ class TranscriptGenerator:
             html_parts.append('</div>')
         
         for embed in message.embeds:
-            html_parts.append(self._generate_embed_html(embed))
+            html_parts.append(self._generate_embed_html(embed, message))
         
         if message.reactions:
             html_parts.append('<div class="reactions">')
