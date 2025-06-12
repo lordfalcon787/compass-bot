@@ -605,7 +605,7 @@ class TranscriptGenerator:
         messages: List[nextcord.Message] = []
         async for message in channel.history(limit=limit, after=after, before=before):
             messages.append(message)
-        
+        print(len(messages))
         messages.reverse()
         
         html_parts = [
