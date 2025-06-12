@@ -567,8 +567,7 @@ class TranscriptGenerator:
             if len(messages) >= msg_limit:
                 break
             last_message = chunk_messages[-1]
-        
-        print(f"Messages fetched: {len(messages)} (unique)")
+    
         messages.reverse()
         
         html_parts = [
