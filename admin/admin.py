@@ -72,6 +72,83 @@ class Admin(commands.Cog):
         await interaction.followup.send(file=nextcord.File("combined_bot_code.py"), ephemeral=True)
         os.remove("combined_bot_code.py")
 
+    @commands.command(name="guildstats")
+    async def guildstats(self, ctx):
+        if ctx.author.id != BOT_OWNER:
+            embed = nextcord.Embed(title="Invalid Permissions", description="You do not have the required permissions to use this command.", color=nextcord.Color.red())
+            await ctx.reply(embed=embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        total_guilds = len(self.bot.guilds)
+        guilds_per_page = 5
+        total_pages = (total_guilds + guilds_per_page - 1) // guilds_per_page
+        
+        sorted_guilds = sorted(self.bot.guilds, key=lambda g: g.member_count, reverse=True)
+        
+        class GuildView(nextcord.ui.View):
+            def __init__(self, guilds, per_page):
+                super().__init__(timeout=60)
+                self.guilds = guilds
+                self.per_page = per_page
+                self.current_page = 0
+                self.total_pages = (len(guilds) + per_page - 1) // per_page
+                
+                self.update_buttons()
+            
+            def update_buttons(self):
+                self.children[0].disabled = self.current_page == 0
+                self.children[1].disabled = self.current_page == self.total_pages - 1
+            
+            @nextcord.ui.button(label="Previous", style=nextcord.ButtonStyle.primary)
+            async def previous(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
+                if self.current_page > 0:
+                    self.current_page -= 1
+                    self.update_buttons()
+                    await self.update_embed(interaction)
+            
+            @nextcord.ui.button(label="Next", style=nextcord.ButtonStyle.primary)
+            async def next(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
+                if self.current_page < self.total_pages - 1:
+                    self.current_page += 1
+                    self.update_buttons()
+                    await self.update_embed(interaction)
+            
+            async def update_embed(self, interaction: nextcord.Interaction):
+                start_idx = self.current_page * self.per_page
+                end_idx = min(start_idx + self.per_page, len(self.guilds))
+                current_guilds = self.guilds[start_idx:end_idx]
+                
+                embed = nextcord.Embed(
+                    title="Guild Statistics",
+                    description=f"Page {self.current_page + 1}/{self.total_pages}",
+                    color=nextcord.Color.blue()
+                )
+                
+                for guild in current_guilds:
+                    embed.add_field(
+                        name=f"{guild.name}",
+                        value=f"Members: {guild.member_count}\nID: {guild.id}",
+                        inline=False
+                    )
+                
+                await interaction.response.edit_message(embed=embed, view=self)
+        
+        view = GuildView(sorted_guilds, guilds_per_page)
+        embed = nextcord.Embed(
+            title="Guild Statistics",
+            description=f"Page 1/{view.total_pages}",
+            color=nextcord.Color.blue()
+        )
+        
+        for guild in sorted_guilds[:guilds_per_page]:
+            embed.add_field(
+                name=f"{guild.name}",
+                value=f"Members: {guild.member_count}\nID: {guild.id}",
+                inline=False
+            )
+        
+        await ctx.reply(embed=embed, view=view, mention_author=False)
+
     @commands.command(name="extensions")
     async def extensions(self, ctx):
         if ctx.author.id != BOT_OWNER:
