@@ -120,7 +120,6 @@ class Admin(commands.Cog):
                 
                 embed = nextcord.Embed(
                     title="Guild Statistics",
-                    description=f"Page {self.current_page + 1}/{self.total_pages}",
                     color=nextcord.Color.blue()
                 )
                 
@@ -131,6 +130,7 @@ class Admin(commands.Cog):
                         inline=False
                     )
                 
+                embed.set_footer(text=f"Page {self.current_page + 1} of {self.total_pages}", icon_url=self.bot.user.avatar.url)
                 await interaction.response.edit_message(embed=embed, view=self)
         
         view = GuildView(sorted_guilds, guilds_per_page)
@@ -146,7 +146,8 @@ class Admin(commands.Cog):
                 value=f"Members: {guild.member_count}\nID: {guild.id}",
                 inline=False
             )
-        
+        total_members = sum(guild.member_count for guild in sorted_guilds)
+        embed.set_footer(text=f"Total Guilds: {total_guilds} | Total Members: {total_members} | Page 1 of {view.total_pages}", icon_url=self.bot.user.avatar.url)
         await ctx.reply(embed=embed, view=view, mention_author=False)
 
     @commands.command(name="extensions")
