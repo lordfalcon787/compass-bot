@@ -69,7 +69,7 @@ class MafiaLogs(commands.Cog):
             description=f"**Time Completed:** <t:{timestamp_int}:f>\n**Server:** {message.guild.name}\n**Duration:** {duration}\n**Players:** {len(members)}\n**Message Count:** {len(messages)}\n**Transcript URL:** [View Online]({file_url})"
         )
         view = nextcord.ui.View()
-        view.add_item(nextcord.ui.Button(label="📄 View Transcript", url=f"https://compass-website.onrender.com/transcripts/{message.channel.id}", style=nextcord.ButtonStyle.url))
+        view.add_item(nextcord.ui.Button(label="📄 View Transcript", url=f"https://compassbot.dev/transcripts/{message.channel.id}", style=nextcord.ButtonStyle.url))
         view.add_item(nextcord.ui.Button(label="🖨️ View Raw Transcript", url=file_url, style=nextcord.ButtonStyle.url))
         embed.set_thumbnail(url=message.guild.icon.url)
         
