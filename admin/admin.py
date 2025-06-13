@@ -136,7 +136,6 @@ class Admin(commands.Cog):
         view = GuildView(sorted_guilds, guilds_per_page)
         embed = nextcord.Embed(
             title="Guild Statistics",
-            description=f"Page 1/{view.total_pages}",
             color=nextcord.Color.blue()
         )
         
