@@ -336,6 +336,10 @@ class Poll(commands.Cog):
         choices = [choice1, choice2, choice3, choice4, choice5, choice6, choice7, choice8, choice9, choice10]
         choices = [choice for choice in choices if choice is not None]
 
+        if interaction.channel.id == 1205579598411202681:
+            await interaction.response.send_message("Please use `/poll admin` for polls in this channel.", ephemeral=True)
+            return
+
         config = configuration.find_one({"_id": "config"})
         guild = str(interaction.guild.id)
         poll_role = config["poll_role"]
@@ -418,6 +422,10 @@ class Poll(commands.Cog):
     ):
         choices = [choice1, choice2, choice3, choice4, choice5, choice6, choice7, choice8, choice9, choice10]
         choices = [choice for choice in choices if choice is not None]
+
+        if interaction.channel.id == 1205579598411202681:
+            await interaction.response.send_message("Please use `/poll admin` for polls in this channel.", ephemeral=True)
+            return
 
         config = configuration.find_one({"_id": "config"})
         guild = str(interaction.guild.id)
