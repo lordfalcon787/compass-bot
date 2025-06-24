@@ -1,7 +1,7 @@
 import nextcord
 from nextcord.ext import commands
 from nextcord import SlashOption
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from utils.mongo_connection import MongoConnection
 
 DONATION_CHANNEL = 1386494501006217307
@@ -12,7 +12,30 @@ mongo = MongoConnection.get_instance()
 db = mongo.get_db()
 collection = db["Donations"]
 itemcollection = db["Items"]
+class PrecisionExtractor:
+    def extract_content(self, raw_json: Dict[str, Any]) -> List[str]:
+        results = []
+        
+        def scan_component(component: Dict[str, Any]):
+            for field in ['label', 'content', 'value', 'placeholder']:
+                if field in component and isinstance(component[field], str):
+                    text = component[field].strip()
+                    if text and len(text) > 1:  
+                        results.append(text)
+            
+            if 'components' in component:
+                for child in component['components']:
+                    scan_component(child)
 
+        if 'content' in raw_json and raw_json['content']:
+            results.append(raw_json['content'].strip())
+        
+        if 'components' in raw_json:
+            for component in raw_json['components']:
+                scan_component(component)
+
+        return results
+    
 class DonationCounter(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -20,6 +43,17 @@ class DonationCounter(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print("Event Logger Cog Loaded.")
+        self.precision_extractor = PrecisionExtractor()
+
+    async def extract(self, message):
+        target = message
+        route = nextcord.http.Route(
+            'GET', '/channels/{channel_id}/messages/{message_id}',
+            channel_id=target.channel.id, message_id=target.id
+        )
+        raw_json = await self.bot.http.request(route)
+        content_pieces = self.precision_extractor.extract_content(raw_json)
+        return content_pieces
 
     @nextcord.slash_command(name="usesummerdonos", description="Use stuff from the Summer event.", guild_ids=[1205270486230110330])
     async def usesummerdonos(self, interaction: nextcord.Interaction,
@@ -183,24 +217,21 @@ class DonationCounter(commands.Cog):
         message = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
         if message.author.id != DANK_ID:
             return
-        elif not message.embeds:
-            return
-        elif not message.embeds[0].description:
-            return
-        elif "successfully donated" not in message.embeds[0].description.lower():
-            return
         
-        descp = message.embeds[0].description
-
-        if "⏣" in descp:
-            amount = descp.split("⏣")[1]
+        content = await self.extract(message)
+        content = " ".join(content)
+        if "successfully donated" not in content.lower():
+            return
+        content_lines = content.split("\n")
+        if "⏣" in content_lines[1]:
+            amount = content_lines[1].split("⏣")[1]
             amount = amount.replace("*", "")
             amount = amount.replace(",", "")
             amount = int(amount)
             collection.update_one({"_id": "summer_donations"}, {"$inc": {"coins": amount}}, upsert=True)
             await message.add_reaction(GREEN_CHECK)
         else:
-            amount = descp.split("donated ")[1]
+            amount = content_lines[1].split("donated ")[1]
             amount = amount.replace("*", "")
             first = amount.split("<")[0]
             second = amount.split("> ")[1]
