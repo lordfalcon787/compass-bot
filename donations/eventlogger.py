@@ -241,6 +241,7 @@ class DonationCounter(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
+        return
         if payload.channel_id != DONATION_CHANNEL:
             return
         if payload.emoji.id != 1291173532432203816:
