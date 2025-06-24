@@ -239,6 +239,38 @@ class DonationCounter(commands.Cog):
             collection.update_one({"_id": "summer_donations"}, {"$inc": {second: first}}, upsert=True)
             await message.add_reaction(GREEN_CHECK)
 
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        if payload.channel_id != DONATION_CHANNEL:
+            return
+        if payload.emoji.id != 1291173532432203816:
+            return
+        message = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
+        if message.author.id != DANK_ID:
+            return
+        content = await self.extract(message)
+        content = " ".join(content)
+        if "successfully donated" not in content.lower():
+            return
+        if "⏣" in content:
+            amount = content.split("**")[1]
+            amount = amount.replace("⏣ ", "")
+            amount = amount.replace(",", "")
+            amount = int(amount)
+            collection.update_one({"_id": "summer_donations"}, {"$inc": {"coins": amount}}, upsert=True)
+            await message.clear_reactions()
+            await message.add_reaction(GREEN_CHECK)
+        else:
+            amount = content.split("**")[1]
+            first = amount.split("<")[0]
+            second = amount.split("> ")[1]
+            second = second.replace(" ", "")
+            first = first.replace(",", "")
+            first = int(first)
+            collection.update_one({"_id": "summer_donations"}, {"$inc": {second: first}}, upsert=True)
+            await message.clear_reactions()
+            await message.add_reaction(GREEN_CHECK)
+
     async def get_choices(self, interaction, current: str) -> List[str]:
         prefix_query = {"_id": {"$regex": f"^{current}", "$options": "i"}}
         choices = [doc["_id"] for doc in itemcollection.find(prefix_query).limit(25)]
