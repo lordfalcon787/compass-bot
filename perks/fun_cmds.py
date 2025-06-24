@@ -4,8 +4,8 @@ from nextcord.ext import commands, tasks
 import random
 from datetime import datetime, timedelta
 
-fivehundred = 1334990776702341150
-billion = 1334990830242365472
+fivehundred = 1386481737478967296
+billion = 1386481804105748620
 
 GREEN_CHECK = "<:green_check2:1291173532432203816>"
 RED_X = "<:red_x2:1292657124832448584>"
