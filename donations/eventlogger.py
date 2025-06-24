@@ -230,8 +230,8 @@ class DonationCounter(commands.Cog):
             await message.add_reaction(GREEN_CHECK)
         else:
             amount = content.split("**")[1]
-            first = amount.split(":")[0]
-            second = amount.split(":")[1]
+            first = amount.split("<")[0]
+            second = amount.split(">")[1]
             second = second.replace(" ", "")
             first = first.replace(" ", "")
             first = int(first)
