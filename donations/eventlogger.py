@@ -220,7 +220,26 @@ class DonationCounter(commands.Cog):
             
         return choices
     
-    @useeasterdonos.on_autocomplete("item")
+    @commands.command(name="addsdonos", aliases=["asdonos"])
+    async def addsdonos(self, ctx):
+        doc = collection.find_one({"_id": "summer_donations"})
+        if not doc:
+            collection.insert_one({"_id": "summer_donations", "coins": 0})
+            doc = collection.find_one({"_id": "summer_donations"})
+        split = ctx.message.content.split(" ")
+        if len(split) < 2:
+            await ctx.reply("Please provide an item and amount.", mention_author=False)
+            return
+        if len(split) == 2:
+            collection.update_one({"_id": "summer_donations"}, {"$inc": {"coins": int(split[1])}}, upsert=True)
+            await ctx.reply(f"Added {split[1]} coins to the database.", mention_author=False)
+            return
+        if len(split) == 3:
+            collection.update_one({"_id": "summer_donations"}, {"$inc": {split[2]: int(split[1])}}, upsert=True)
+            await ctx.reply(f"Added {split[1]} {split[2]} to the database.", mention_author=False)
+            return
+    
+    @usesummerdonos.on_autocomplete("item")
     async def autocomplete_handler(self, interaction: nextcord.Interaction, current: str):
         try:
             choices = await self.get_choices(interaction, current)
