@@ -234,7 +234,7 @@ class DonationCounter(commands.Cog):
             collection.update_one({"_id": "summer_donations"}, {"$inc": {"coins": int(split[1])}}, upsert=True)
             await ctx.reply(f"Added {split[1]} coins to the database.", mention_author=False)
             return
-        if len(split) == 3:
+        if len(split) >= 3:
             item = " ".join(split[2:])
             collection.update_one({"_id": "summer_donations"}, {"$inc": {item: int(split[1])}}, upsert=True)
             await ctx.reply(f"Added {split[1]} {item} to the database.", mention_author=False)
