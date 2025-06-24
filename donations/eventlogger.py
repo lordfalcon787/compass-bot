@@ -222,22 +222,18 @@ class DonationCounter(commands.Cog):
         content = " ".join(content)
         if "successfully donated" not in content.lower():
             return
-        content_2 = content.split("• ")[1]
-        if "⏣" in content_2:
-            amount = content_2.split("⏣")[1]
-            amount = amount.replace("*", "")
-            amount = amount.replace(",", "")
+        if "⏣" in content:
+            amount = content.split("**")[1]
+            amount = amount.replace("⏣ ", "")
             amount = int(amount)
             collection.update_one({"_id": "summer_donations"}, {"$inc": {"coins": amount}}, upsert=True)
             await message.add_reaction(GREEN_CHECK)
         else:
-            amount = content_2.split("donated ")[1]
-            amount = amount.replace("*", "")
-            first = amount.split("<")[0]
-            second = amount.split("> ")[1]
-            amount = f"{first} {second}"
+            amount = content.split("**")[1]
+            first = amount.split(":")[0]
+            second = amount.split(":")[1]
+            second = second.replace(" ", "")
             first = first.replace(" ", "")
-            first = first.replace(",", "")
             first = int(first)
             collection.update_one({"_id": "summer_donations"}, {"$inc": {second: first}}, upsert=True)
             await message.add_reaction(GREEN_CHECK)
