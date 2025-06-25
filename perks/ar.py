@@ -184,7 +184,7 @@ class AR(commands.Cog):
                 await interaction.response.send_message(content=f"You must provide a valid emoji which exists in the server.", ephemeral=True)
                 return
         elif not word is None:
-            if word.lower() not in interaction.user.nick.lower() or word.lower() not in interaction.user.name.lower():
+            if word.lower() not in interaction.user.nick.lower() and word.lower() not in interaction.user.name.lower() and word.lower() not in interaction.user.display_name.lower():
                 await interaction.response.send_message(content=f"You must provide a word which is in your display name/username to trigger on.", ephemeral=True)
                 return
         elif word is None:
