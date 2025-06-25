@@ -221,6 +221,7 @@ class AR(commands.Cog):
             wordd = word.lower()
             collection2.update_one({"_id": interaction.user.id}, {"$set": {f"emoji_{interaction.guild.id}": EMOJI, f"word_{interaction.guild.id}": wordd}}, upsert=True)
             collection2.update_one({"_id": "cachedwords"}, {"$addToSet": {f"{interaction.guild.id}": wordd}}, upsert=True)
+            self.cache.append(word)
         
         message = WORD_TYPE
         embed = nextcord.Embed(title="Auto Responder Set", description=message, color=65280)
