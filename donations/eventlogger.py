@@ -84,15 +84,19 @@ class DonationCounter(commands.Cog):
                 fixed_key = new_key
             
             if fixed_key != key:
+                print(f"Fixing key: {key} → {fixed_key}")
                 if fixed_key in doc:
                     doc[fixed_key] += doc[key]
                     items_to_remove.append(key)
+                    print(f"Merged {key} into existing {fixed_key}")
                 else:
                     doc[fixed_key] = doc[key]
                     items_to_remove.append(key)
+                    print(f"Renamed {key} to {fixed_key}")
         
         for old_key in items_to_remove:
             del doc[old_key]
+            print(f"Removed old key: {old_key}")
         
         collection.update_one({"_id": "summer_donations"}, {"$set": doc}, upsert=True)
         
