@@ -54,6 +54,53 @@ class DonationCounter(commands.Cog):
         raw_json = await self.bot.http.request(route)
         content_pieces = self.precision_extractor.extract_content(raw_json)
         return content_pieces
+    
+    @commands.command(name="fixsdonos", aliases=["fsdonos"])
+    async def fixsdonos(self, ctx):
+        doc = collection.find_one({"_id": "summer_donations"})
+        if not doc:
+            await ctx.reply("No donations have been made yet.", mention_author=False)
+            return
+        
+        keys_to_fix = [key for key in doc.keys() if key not in ['_id', 'coins']]
+        
+        if not keys_to_fix:
+            await ctx.reply("No items to fix found.", mention_author=False)
+            return
+        
+        fixed_items = {}
+        items_to_remove = []
+        
+        for key in keys_to_fix:
+            fixed_key = key
+            
+            if len(key) > 1 and any(char.isupper() for char in key[1:]):
+                new_key = key[0]
+                for i in range(1, len(key)):
+                    if key[i].isupper() and key[i-1].isalpha():
+                        new_key += " " + key[i]
+                    else:
+                        new_key += key[i]
+                fixed_key = new_key
+            
+            if fixed_key != key:
+                if fixed_key in doc:
+                    doc[fixed_key] += doc[key]
+                    items_to_remove.append(key)
+                else:
+                    doc[fixed_key] = doc[key]
+                    items_to_remove.append(key)
+        
+        for old_key in items_to_remove:
+            del doc[old_key]
+        
+        collection.update_one({"_id": "summer_donations"}, {"$set": doc}, upsert=True)
+        
+        if items_to_remove:
+            fixed_names = [f"{old} → {new}" for old, new in zip(items_to_remove, [key for key in doc.keys() if key not in ['_id', 'coins'] and key not in keys_to_fix])]
+            await ctx.reply(f"Fixed {len(items_to_remove)} items:\n" + "\n".join(fixed_names), mention_author=False)
+        else:
+            await ctx.reply("No items needed fixing.", mention_author=False)
 
     @nextcord.slash_command(name="usesummerdonos", description="Use stuff from the Summer event.", guild_ids=[1205270486230110330])
     async def usesummerdonos(self, interaction: nextcord.Interaction,
@@ -233,7 +280,7 @@ class DonationCounter(commands.Cog):
             amount = content.split("**")[1]
             first = amount.split("<")[0]
             second = amount.split("> ")[1]
-            second = second.replace(" ", "")
+            second = second.strip()
             first = first.replace(",", "")
             first = int(first)
             collection.update_one({"_id": "summer_donations"}, {"$inc": {second: first}}, upsert=True)
