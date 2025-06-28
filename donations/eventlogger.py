@@ -97,9 +97,9 @@ class DonationCounter(commands.Cog):
         for old_key in items_to_remove:
             del doc[old_key]
             print(f"Removed old key: {old_key}")
-        
+
         collection.delete_one({"_id": "summer_donations"})
-        collection.insert_one({"_id": "summer_donations", "coins": doc["coins"], **fixed_items})
+        collection.insert_one(doc)
         
         if items_to_remove:
             fixed_names = [f"{old} → {new}" for old, new in zip(items_to_remove, [key for key in doc.keys() if key not in ['_id', 'coins'] and key not in keys_to_fix])]
