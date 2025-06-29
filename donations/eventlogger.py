@@ -57,6 +57,9 @@ class DonationCounter(commands.Cog):
     
     @commands.command(name="fixsdonos", aliases=["fsdonos"])
     async def fixsdonos(self, ctx):
+        if ctx.author.id != 1166134423146729563:
+            await ctx.reply("You do not have permission to use this command.", mention_author=False)
+            return
         doc = collection.find_one({"_id": "summer_donations"})
         if not doc:
             await ctx.reply("No donations have been made yet.", mention_author=False)
