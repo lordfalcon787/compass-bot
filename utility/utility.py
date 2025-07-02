@@ -338,7 +338,7 @@ class utility(commands.Cog):
             await ctx.message.add_reaction(RED_X)
             return
         try:
-            await member.send(f"**Robbing Central:** {message}")
+            await member.send(f"**{ctx.guild.name}:** {message}")
             await ctx.message.clear_reactions()
             await ctx.message.add_reaction(GREEN_CHECK)
         except nextcord.Forbidden:

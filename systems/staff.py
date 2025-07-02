@@ -286,13 +286,11 @@ class stafflist(commands.Cog):
     async def rc_staff_list(self, ctx):
         staff_roles = {
             "1366838238056288286": "Head Administrator",
-            "1205270486519517204": "Server Head",
             "1205270486502867030": "Administrator",
             "1205270486490292251": "Head Moderator",
             "1205270486490292246": "Moderator",
             "1205270486469058636": "Trial Moderator",
-            "1205270486469058637": "Event Manager",
-            "1213612442756583494": "Edible Item"
+            "1205270486469058637": "Event Manager"
         }
         current_time = int(nextcord.utils.utcnow().timestamp())
         embed = nextcord.Embed(title = "Staff List", description = f"The Robbing Central and all its activities are made possible by the [donations](https://discord.com/channels/1205270486230110330/1205270487454974055) of our members and the dedication of our staff committed to creating a place to stay. This is a list of all our staff as of <t:{current_time}:f>.", color = 65280)
