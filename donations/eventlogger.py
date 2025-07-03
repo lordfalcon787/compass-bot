@@ -338,6 +338,9 @@ class DonationCounter(commands.Cog):
     
     @commands.command(name="addsdonos", aliases=["asdonos"])
     async def addsdonos(self, ctx):
+        if not ctx.author.guild_permissions.administrator:
+            await ctx.reply("You do not have permission to use this command.", mention_author=False)
+            return
         doc = collection.find_one({"_id": "summer_donations"})
         if not doc:
             collection.insert_one({"_id": "summer_donations", "coins": 0})
