@@ -160,7 +160,11 @@ class Role(commands.Cog):
         things_edited = []
         try:
             role_kwargs = {}
+            prohibited_names = ["garticmod", "amarimod", "gartic mod", "amari mod"]
             if name:
+                if any(word in name.lower() for word in prohibited_names):
+                    await interaction.response.send_message("You cannot use that name for your custom role.", ephemeral=True)
+                    return
                 role_kwargs["name"] = name
                 things_edited.append("name")
             if color:
