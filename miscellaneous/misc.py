@@ -254,6 +254,9 @@ class misc(commands.Cog):
                    image: str = SlashOption(description="Enter an image url for the embed", required=False),
                    thumbnail: str = SlashOption(description="Enter a thumbnail url for the embed", required=False)):
         await interaction.response.defer(ephemeral=True)
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
+            return
         description = description.replace("\\n", "\n")
         embed = nextcord.Embed(title=title, description=description)
         if color is not None:
