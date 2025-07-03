@@ -289,10 +289,6 @@ class Admin(commands.Cog):
                     user = await self.bot.fetch_user(user)
                     embed = nextcord.Embed(title=f"{GREEN_CHECK} | Unban Successful", description=f"User {user.id} ({user.name}) has been unbanned from using the bot.", color=65280)
                     await ctx.reply(embed=embed, mention_author=False)
-                    try:
-                        await user.send(embed=embed)
-                    except:
-                        pass
                     return
             if len(split) == 2:
                 reason = "No reason provided."
@@ -302,10 +298,6 @@ class Admin(commands.Cog):
             collection.update_one({"_id": "bot_banned"}, {"$set": {str(user): reason}}, upsert=True)
             user = await self.bot.fetch_user(user)
             embed = nextcord.Embed(title=f"{GREEN_CHECK} | Ban Successful", description=f"User {user.id} ({user.name}) has been banned from using the bot for reason: {reason}", color=65280)
-            try:
-                await user.send(embed=embed)
-            except:
-                pass
             await ctx.reply(embed=embed, mention_author=False)
         except Exception as e:
             await ctx.reply(content=f"An error occurred: {str(e)}", mention_author=False)
