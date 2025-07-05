@@ -176,7 +176,9 @@ class FunCommands(commands.Cog):
                 await ctx.message.add_reaction(RED_X)
                 return
         bot_admins = acollection.find_one({"_id": "bot_admins"})
-        if not ctx.author.guild_permissions.administrator and ctx.author.id not in bot_admins["admins"]:
+        roles = [role.id for role in ctx.author.roles]
+        access_roles = [1386481965578063882]
+        if not ctx.author.guild_permissions.administrator and ctx.author.id not in bot_admins["admins"] and not any(role in access_roles for role in roles):
             await ctx.message.add_reaction(RED_X)
             return
         
