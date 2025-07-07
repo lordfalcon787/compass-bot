@@ -51,7 +51,9 @@ class View(nextcord.ui.View):
         user = user.replace(">", "")
         user = await self.bot.fetch_user(int(user))
         await interaction.response.send_message(content=f"Denied this chat rumble successfully.", ephemeral=True)
-        await interaction.message.edit(content=f"{interaction.user.mention} has denied this chat rumble.", view=None, color=nextcord.Color.red())
+        embed = interaction.message.embeds[0]
+        embed.color = nextcord.Color.red()
+        await interaction.message.edit(content=f"{interaction.user.mention} has denied this chat rumble.", view=None, embed=embed)
         try:
             await user.send(content=f"Your chat rumble request has been denied, please contact an admin if you believe this was in error.")
         except:
