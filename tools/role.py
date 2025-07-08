@@ -362,7 +362,9 @@ class Role(commands.Cog):
         added = 0
         total_added = 0
         msg = await interaction.channel.send(content=f"`Started Role In Process:` Added to {total_added}/{len(in_role.members)} members")
-        for member in in_role.members:
+        role_members = in_role.members
+        role_members = [member for member in role_members if role not in member.roles]
+        for member in role_members:
             if added == 10:
                 await asyncio.sleep(5)
                 await msg.edit(content=f"`Started Role In Process:` Added to {total_added}/{len(in_role.members)} members")
