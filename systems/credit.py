@@ -214,11 +214,9 @@ class Credit(commands.Cog):
             last_points = points
 
         embed = nextcord.Embed(title="Credit Leaderboard", description=leaderboard_message, color=GRAY)
-        embed.set_footer(text=f"Requested by {ctx.message.author.name}", icon_url=ctx.message.author.avatar.url)
+        embed.set_footer(text=f"Requested by {ctx.message.author.name}", icon_url=ctx.author.display_avatar.url)
         embed.color = 16776960
         await ctx.reply(embed=embed, mention_author=False)
-        
-
     async def add_credit(self, ctx):
         args = ctx.message.content.split(" ")
         user = args[2]
@@ -350,9 +348,6 @@ class Credit(commands.Cog):
                     embed.set_footer(text="All systems operational.")
                     embed.set_thumbnail(url="https://i.imgur.com/tTpRLgK.png")
                     await self.bot.get_channel(LOG).send(embed=embed)
-
-            
-            
 
     async def credit_score(self, ctx, user):
         try:
