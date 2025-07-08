@@ -8,7 +8,7 @@ with open("config.json", "r") as file:
     config = json.load(file)
 
 DICT = {"wolfia": "Wolfia", "wolf": "Wolfia", "Rumble Royale": "Rumble Royale", "rumble": "Rumble Royale", "Hangry Game": "Hangry Game", "hangry": "Hangry Game", "gti": "Guess the Item", "sos": "Split or Steal", "Bingo": "Bingo", "Blackjack": "Blackjack", "Rollout": "Rollout", "Hot Potato": "Hot Potato", "rlgl": "Red Light Green Light", "Russian Roulette": "Russian Roulette", "Skribbl": "Skribbl", "Wordle": "Wordle", "Mudae Tea Game": "Mudae Tea Game", "blacktea": "Mudae Tea Game", "yellowtea": "Mudae Tea Game", "redtea": "Mudae Tea Game", "mixtea": "Mudae Tea Game", "greentea": "Mudae Tea Game", "Gartic": "Gartic", "gtn": "Guess the Number", "Guess the Number": "Guess the Number", "Bloony Battle": "Bloony Battle", "UNO": "UNO", "Rollkill": "Rollkill", "black tea": "Mudae Tea Game", "yellow tea": "Mudae Tea Game", "red tea": "Mudae Tea Game", "mix tea": "Mudae Tea Game", "green tea": "Mudae Tea Game", "rumb": "Rumble Royale"}
-POINTS = {"Wolfia": 3, "Rumble Royale": 2, "Hangry Game": 2, "Guess the Item": 2, "Split or Steal": 2, "Bingo": 3, "Blackjack": 1, "Rollout:": 2, "Hot Potato": 2, "Red Light Green Light": 2, "Russian Roulette": 1, "Skribbl": 5, "Mudae Tea Game": 3, "Gartic": 3, "Guess the Number": 2, "Bloony Battle": 2, "Wordle": 1, "Mafia Game": 5, "Auction": 2, "Giveaway": 1, "UNO": 6, "Rollkill": 2, "Heist": 3, "Other": 1}
+POINTS = {"Wolfia": 3, "Rumble Royale": 2, "Hangry Game": 2, "Guess the Item": 2, "Split or Steal": 2, "Bingo": 3, "Blackjack": 1, "Rollout:": 2, "Hot Potato": 2, "Red Light Green Light": 2, "Russian Roulette": 1, "Skribbl": 5, "Mudae Tea Game": 3, "Gartic": 3, "Guess the Number": 2, "Bloony Battle": 2, "Wordle": 1, "Mafia Game": 5, "Auction": 2, "Giveaway": 1, "UNO": 6, "Rollkill": 2, "Heist": 3, "Other": 1, "Ghosty": 1}
 LOG = 1254624889621708900
 RC_ID = 1205270486230110330
 MPING = "<@&1205270486263795712>"
@@ -17,6 +17,7 @@ APING = "<@&1241563195731349504>"
 HPING = "<@&1205270486263795719>"
 EPING = "<@&1205270486263795720>"
 RPING = "<@&1273737523042189372>"
+GHOSTYPING = "<@&1392182028706910298>"
 GPING = ["<@&1205270486276251689>", "<@&1218714110502506586>", "<@&1205270486276251688>", "<@&1205270486246883349>", "<@&1207242044502835231>"]
 GRAY = 8421504
 PINGSLICE = ["<@&1205270486263795712>", "<@&1286097140942377032>", "<@&1241563195731349504>", "<@&1205270486263795720>", "<@&1205270486276251689>", "<@&1218714110502506586>", "<@&1205270486276251688>", "<@&1205270486246883349>", "<@&1207242044502835231>"]
@@ -260,6 +261,8 @@ class Credit(commands.Cog):
             type = "Giveaway"
         elif EPING in message.content and RPING in message.content:
             type = "Rumble Royale"
+        elif GHOSTYPING in message.content:
+            type = "Ghosty"
         else:
             type = "event"
             ping = message.content.split("<@&")[1].split(">")[0]
@@ -292,6 +295,21 @@ class Credit(commands.Cog):
                 collection.update_one(
                     {"_id": "total_credit"},
                     {"$inc": {f"Points.{message.author.id}": points_to_add, f"{str(message.author.id)}.Rumble Royale": 1}}
+                )
+                embed = nextcord.Embed(title="Credit Increment", description=f"**Target:** {message.author.mention}\n**Reward:** {points_to_add} Points\n**Reason:** Event Host\n**Type:** [{type}]({message.jump_url})", color=65280)
+                embed.set_footer(text="All systems operational.")
+                embed.set_thumbnail(url="https://i.imgur.com/tTpRLgK.png")
+                await self.bot.get_channel(LOG).send(embed=embed)
+        elif type == "Ghosty":
+            points_to_add = POINTS["Ghosty"]
+            if points_to_add:
+                collection.update_one(
+                    {"_id": "credit_score"},
+                    {"$inc": {f"Points.{message.author.id}": points_to_add, f"{str(message.author.id)}.Ghosty": 1}}
+                )
+                collection.update_one(
+                    {"_id": "total_credit"},
+                    {"$inc": {f"Points.{message.author.id}": points_to_add, f"{str(message.author.id)}.Ghosty": 1}}
                 )
                 embed = nextcord.Embed(title="Credit Increment", description=f"**Target:** {message.author.mention}\n**Reward:** {points_to_add} Points\n**Reason:** Event Host\n**Type:** [{type}]({message.jump_url})", color=65280)
                 embed.set_footer(text="All systems operational.")
