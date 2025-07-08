@@ -88,10 +88,6 @@ class Moderation(commands.Cog):
             return
         user_roles = [role.id for role in ctx.author.roles]
         event_warn_var = ["event", "maf", "wordle", "gartic", "item guess", "rumbl", "bingo", "hangr", "rollkill", "roll kill", "cheat", "blacktea", "greentea", "redtea", "yellowtea", "mixtea", "black tea", "green tea", "red tea", "yellow tea", "mix tea", "split or steal", "sos", "gti", "guess the item", "battle", "bloony", "gaws", "giveaway", "mudae", "host", "game"]
-        if any(word in reason.lower() for word in event_warn_var):
-            await ctx.reply("You cannot warn this user for this reason.", mention_author=False)
-            await ctx.message.add_reaction(RED_X)
-            return
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
         logs = config["logs"]
