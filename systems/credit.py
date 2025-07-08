@@ -392,7 +392,7 @@ class Credit(commands.Cog):
         embed = nextcord.Embed(title="Credit Report", description=descp, color=GRAY)
         avatar = user.display_avatar.url
         embed.set_thumbnail(url=avatar)
-        embed.set_footer(text=f"Requested by {ctx.message.author.name}", icon_url=ctx.message.author.avatar.url)
+        embed.set_footer(text=f"Requested by {ctx.message.author.name}", icon_url=avatar)
         await ctx.send(embed=embed)
         
 
