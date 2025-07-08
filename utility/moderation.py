@@ -87,6 +87,11 @@ class Moderation(commands.Cog):
             await ctx.message.add_reaction(RED_X)
             return
         user_roles = [role.id for role in ctx.author.roles]
+        event_warn_var = ["event", "maf", "wordle", "gartic", "item guess", "rumbl", "bingo", "hangr", "rollkill", "roll kill", "cheat", "blacktea", "greentea", "redtea", "yellowtea", "mixtea", "black tea", "green tea", "red tea", "yellow tea", "mix tea", "split or steal", "sos", "gti", "guess the item", "battle", "bloony", "gaws", "giveaway", "mudae", "host", "game"]
+        if any(word in reason.lower() for word in event_warn_var):
+            await ctx.reply("You cannot warn this user for this reason.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
         config = configuration.find_one({"_id": "config"})
         config = config["moderation"]
         logs = config["logs"]
@@ -110,6 +115,8 @@ class Moderation(commands.Cog):
         else:
             doc = doc.get("current_case")
         doc += 1
+        if any(word in reason.lower() for word in event_warn_var):
+            reason = f"[Event Warn] {reason}"
         collection.update_one({"_id": f"warn_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "warn", "date": datetime.now().strftime("%m/%d/%Y")}}}, upsert=True)
         if logs:
             embed = nextcord.Embed(title=f"Member Warn | Case #{doc}", description=f"**User Warned:** {member.name} ({member.id})\n**Moderator:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
@@ -615,6 +622,7 @@ class Moderation(commands.Cog):
             embed = nextcord.Embed(title=f"Warnings for {member.name}", color=nextcord.Color.blurple())
             start = page * page_size
             end = start + page_size
+            embed.description = f"**Total Warns:** {len(warnings)}\n**Event Warns:** {len([warning for warning in warnings if '[Event Warn]' in warning['reason']])}"
             for warning in warnings[start:end]:
                 moderator = ctx.guild.get_member(warning['moderator'])
                 embed.add_field(
