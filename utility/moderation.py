@@ -618,7 +618,7 @@ class Moderation(commands.Cog):
             embed = nextcord.Embed(title=f"Warnings for {member.name}", color=nextcord.Color.blurple())
             start = page * page_size
             end = start + page_size
-            embed.description = f"**Total Warns:** {len(warnings)}\n**Event Warns:** {len([warning for warning in warnings if '[Event Warn]' in warning['reason']])}"
+            embed.description = f"**Total Warns:** `{len(warnings)}`\n**Event Warns:** `{len([warning for warning in warnings if '[Event Warn]' in warning['reason']])}`"
             for warning in warnings[start:end]:
                 moderator = ctx.guild.get_member(warning['moderator'])
                 embed.add_field(
@@ -774,10 +774,15 @@ class Moderation(commands.Cog):
             return
         warns_cleared = 0
         for case, data in doc.items():
+            if case == "current_case":
+                continue
+            if case == "_id":
+                continue
             if int(data.get("member", 0)) == member.id and "[Event Warn]" in data.get("reason", ""):
                 collection.update_one({"_id": f"warn_logs_{ctx.guild.id}"}, {"$unset": {str(case): 1}})
                 warns_cleared += 1
         return warns_cleared
+    
     @nextcord.slash_command(name="quarantine", description="Quarantine a user")
     async def quarantine(self, interaction: nextcord.Interaction):
         pass
