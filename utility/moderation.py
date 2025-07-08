@@ -764,14 +764,24 @@ class Moderation(commands.Cog):
             await member.add_roles(ebl_role)
             await ctx.message.clear_reactions()
             embed = nextcord.Embed(title=f"Event Blacklist Added", description=f"{member.mention} has been blacklisted from events and giveaways for {readable}, for reason: {reason}", color=nextcord.Color.green())
+            if "remove warns" in reason.lower() and "dont remove warns" not in reason.lower() and "don't remove warns" not in reason.lower():
+                warns_cleared = await self.ebl_clearwarns(ctx, member)
+                embed.description = f"{member.mention} has been blacklisted from events and giveaways for {readable}, for reason: {reason} and {warns_cleared} event warns have been removed."
             embed.set_footer(text=f"Execute this command again to remove the blacklist.")
             await member.send(f"**Robbing Central:** You have been blacklisted from events and giveaways for {readable}, for reason: {reason}")
             await ctx.reply(embed=embed, mention_author=False)
             await ctx.message.add_reaction(GREEN_CHECK)
         
-        
-        
-        
+    async def ebl_clearwarns(self, ctx, member):
+        doc = collection.find_one({"_id": f"warn_logs_{ctx.guild.id}"})
+        if not doc:
+            return
+        warns_cleared = 0
+        for case, data in doc.items():
+            if int(data.get("member", 0)) == member.id and "[Event Warn]" in data.get("reason", ""):
+                collection.update_one({"_id": f"warn_logs_{ctx.guild.id}"}, {"$unset": {str(case): 1}})
+                warns_cleared += 1
+        return warns_cleared
     @nextcord.slash_command(name="quarantine", description="Quarantine a user")
     async def quarantine(self, interaction: nextcord.Interaction):
         pass
