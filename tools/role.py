@@ -361,18 +361,18 @@ class Role(commands.Cog):
         await interaction.send(content=f"Adding role `{role.name}` to users in role `{in_role.name}`", ephemeral=False)
         added = 0
         total_added = 0
-        msg = await interaction.channel.send(content=f"`Started Role In Process:` Added to {total_added}/{len(in_role.members)} members")
         role_members = in_role.members
         role_members = [member for member in role_members if role not in member.roles]
+        msg = await interaction.channel.send(content=f"`Started Role In Process:` Added to {total_added}/{len(role_members)} members")
         for member in role_members:
             if added == 10:
                 await asyncio.sleep(5)
-                await msg.edit(content=f"`Started Role In Process:` Added to {total_added}/{len(in_role.members)} members")
+                await msg.edit(content=f"`Started Role In Process:` Added to {total_added}/{len(role_members)} members")
                 added = 0
             await member.add_roles(role)
             added += 1
             total_added += 1
-        await msg.edit(content=f"Completed adding role `{role.name}` to {len(in_role.members)} users in role `{in_role.name}`")
+        await msg.edit(content=f"Completed adding role `{role.name}` to {len(role_members)} users in role `{in_role.name}`")
 
     @role_slash.subcommand(name="edit", description="Easily edit parameters of a role.")
     async def edit(self, interaction: nextcord.Interaction,
