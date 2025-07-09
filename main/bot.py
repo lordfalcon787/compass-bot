@@ -57,14 +57,6 @@ class UnfilteredBot(commands.Bot):
         if ctx.command is None:
             return
         try:
-            banned_users = misccollection.find_one({"_id": "bot_banned"})
-            if str(ctx.author.id) in banned_users:
-                embed = nextcord.Embed(title="Bot Banned", description=f"You are banned from using this bot. Please contact the bot owner if you believe this is an error.", color=16711680)
-                await ctx.reply(embed=embed, ephemeral=True)
-                return
-        except:
-            pass
-        try:
             print(f"User {ctx.author.name} invoked command {ctx.command.name} with message {ctx.message.content}")
         except:
             pass
