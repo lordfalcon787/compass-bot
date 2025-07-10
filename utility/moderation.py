@@ -102,7 +102,10 @@ class Moderation(commands.Cog):
             await ctx.reply("You cannot warn this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
-        await member.send(f"You have been warned in **{ctx.guild.name}** for reason: {reason}")
+        try:
+            await member.send(f"You have been warned in **{ctx.guild.name}** for reason: {reason}")
+        except:
+            pass
         await ctx.reply(f"Warned **{member.name}** for reason: {reason}", mention_author=False)
         await ctx.message.add_reaction(GREEN_CHECK)
         doc = collection.find_one({"_id": f"warn_logs_{ctx.guild.id}"})
