@@ -149,6 +149,8 @@ class Moderation(commands.Cog):
         if bonus > 0:
             action_parts.append(f"{bonus} Bonus{'s' if bonus != 1 else ''}")
         actions = " / ".join(action_parts)
+        if actions == "":
+            actions = "None"
         position = "None"
         if points > 0:
             all_docs = modcredits.find_one({"_id": f"mod_credits_{ctx.guild.id}"})
@@ -214,7 +216,7 @@ class Moderation(commands.Cog):
             return
         embed = nextcord.Embed(title="Moderation Credit All-Time Leaderboard", color=nextcord.Color.blurple())
         descp = ""
-        for idx, (m_id, m_data) in enumerate(alltime_doc.items(), start=1):
+        for idx, (m_id, m_data) in enumerate(alltime_doc.items(), start=0):
             if m_id == "_id":
                 continue
             if isinstance(m_data, dict):
