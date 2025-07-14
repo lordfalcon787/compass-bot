@@ -297,11 +297,12 @@ class misc(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        if before.nick is not None and after.nick is None:
-            collection = db["Freeze Nicks"]
-            doc = collection.find_one({"user_id": after.id})
-            if doc is not None and int(doc["guild_id"]) == int(after.guild.id):
-                await after.edit(nick=doc["nick"])
+        print("Nickname updated")
+        collection = db["Freeze Nicks"]
+        doc = collection.find_one({"user_id": after.id})
+        if doc is not None and int(doc["guild_id"]) == int(after.guild.id) and after.nick is not None:
+            await after.edit(nick=doc["nick"])
+        
 
 def setup(bot):
     bot.add_cog(misc(bot))
