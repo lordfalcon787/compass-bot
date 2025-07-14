@@ -40,15 +40,15 @@ class StockMarket(commands.Cog):
         await interaction.response.defer()
          
         indices = {
-            "DIA": "SPDR Dow Jones Industrial Average ETF",
-            "QQQ": "NASDAQ ETF Invesco Trust", 
-            "SPY": "SPDR S&P 500 ETF Trust",
+            "DIA": "SPDR Dow Jones",
+            "QQQ": "NASDAQ Invesco", 
+            "SPY": "SPDR S&P 500",
             "NVDA": "NVIDIA Corporation",
-            "TSLA": "Tesla, Inc.",
+            "TSLA": "Tesla Inc.",
             "AAPL": "Apple Inc.",
-            "MSFT": "Microsoft Corporation",
+            "MSFT": "Microsoft",
             "GOOG": "Alphabet Inc.",
-            "META": "Meta Platforms, Inc.",
+            "META": "Meta Platforms",
         }
         
         data_dict = {}
@@ -79,7 +79,7 @@ class StockMarket(commands.Cog):
         
         embed = nextcord.Embed(
             title="📈 Stock Market Overview",
-            description="Current prices for major market indices",
+            description="Current prices for selected stocks.",
             color=0x00ff00 if any(data["change"] > 0 for data in embed_data.values()) else 0xff0000,
             timestamp=datetime.now()
         )
