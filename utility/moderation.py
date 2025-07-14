@@ -146,8 +146,8 @@ class Moderation(commands.Cog):
             action_parts.append(f"{unbans} Unban{'s' if unbans != 1 else ''}")
         if untimeouts > 0:
             action_parts.append(f"{untimeouts} Un{'s' if untimeouts != 1 else ''}timeout")
-        if bonus > 0:
-            action_parts.append(f"{bonus} Bonus{'s' if bonus != 1 else ''}")
+        if bonus:
+            action_parts.append(f"{bonus} Bonus")
         actions = " / ".join(action_parts)
         if actions == "":
             actions = "None"
