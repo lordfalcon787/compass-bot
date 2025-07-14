@@ -216,6 +216,7 @@ class Moderation(commands.Cog):
         descp = ""
         if not alltime_doc:
             embed.description = descp
+            embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.display_avatar.url)
             await ctx.reply(embed=embed, mention_author=False)
             return
         for idx, (m_id, m_data) in enumerate(alltime_doc.items(), start=0):
@@ -226,6 +227,7 @@ class Moderation(commands.Cog):
                 if member:
                     descp += f"{idx}. {member.mention} - {m_data.get('points', 0)} Points\n"
         embed.description = descp
+        embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.display_avatar.url)
         await ctx.reply(embed=embed, mention_author=False)
 
     async def mcredit_add(self, ctx, split):
