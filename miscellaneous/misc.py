@@ -281,6 +281,7 @@ class misc(commands.Cog):
         collection = db["Freeze Nicks"]
         collection.insert_one({"user_id": user.id, "nick": nick})
         await ctx.message.add_reaction(GREEN_CHECK)
+        await ctx.reply(f"Nickname for {user.mention} has been frozen to {nick}.", mention_author=False)
 
     @commands.command(name="unfreezenick")
     async def unfreezenick(self, ctx, user: nextcord.Member):
