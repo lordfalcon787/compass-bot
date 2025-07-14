@@ -170,9 +170,9 @@ class Moderation(commands.Cog):
             await ctx.reply("Correct usage: `!mcredit add [member] [amount]`", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
-        member = split[1]
+        member = split[2]
         member = member.replace("<@", "").replace(">", "")
-        amount = split[2]
+        amount = split[3]
         member = ctx.guild.get_member(int(member))
         if not member:
             await ctx.reply("That user is not in the server.", mention_author=False)
@@ -195,9 +195,9 @@ class Moderation(commands.Cog):
             await ctx.reply("Correct usage: `!mcredit remove [member] [amount]`", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
-        member = split[1]
+        member = split[2]
         member = member.replace("<@", "").replace(">", "")
-        amount = split[2]
+        amount = split[3]
         member = ctx.guild.get_member(int(member))
         if not member:
             await ctx.reply("That user is not in the server.", mention_author=False)
