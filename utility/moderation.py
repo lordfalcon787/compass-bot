@@ -105,6 +105,7 @@ class Moderation(commands.Cog):
         bans = doc.get("bans", 0)
         unbans = doc.get("unbans", 0)
         untimeouts = doc.get("untimeouts", 0)
+        bonus = doc.get("bonus", 0)
         action_parts = []
         if warns > 0:
             action_parts.append(f"{warns} Warn{'s' if warns != 1 else ''}")
@@ -118,6 +119,8 @@ class Moderation(commands.Cog):
             action_parts.append(f"{unbans} Unban{'s' if unbans != 1 else ''}")
         if untimeouts > 0:
             action_parts.append(f"{untimeouts} Un{'s' if untimeouts != 1 else ''}timeout")
+        if bonus > 0:
+            action_parts.append(f"{bonus} Bonus{'s' if bonus != 1 else ''}")
         actions = " / ".join(action_parts)
         position = "None"
         if points > 0:
@@ -133,7 +136,7 @@ class Moderation(commands.Cog):
                         position = idx
                         break
         embed.description = f"**Target:** {member.mention}\n**Position:** {position}\n**Points:** {points}\n**Actions:** {actions}"
-        await ctx.reply(embed=embed)
+        await ctx.reply(embed=embed, mention_author=False)
 
     async def mcredit_leaderboard(self, ctx):
         doc = modcredits.find_one({"_id": f"mod_credits_{ctx.guild.id}"})
@@ -152,12 +155,62 @@ class Moderation(commands.Cog):
             if member:
                 descp += f"{idx}. {member.mention} - {pts} Points\n"
         embed.description = descp
-        await ctx.reply(embed=embed)
+        await ctx.reply(embed=embed, mention_author=False)
 
     async def mcredit_reset(self, ctx):
         if not ctx.author.guild_permissions.administrator:
             return
         modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$set": {}}, upsert=True)
+        await ctx.message.add_reaction(GREEN_CHECK)
+
+    async def mcredit_add(self, ctx, split):
+        if not ctx.author.guild_permissions.administrator:
+            return
+        if len(split) < 4:
+            await ctx.reply("Correct usage: `!mcredit add [member] [amount]`", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        member = split[1]
+        member = member.replace("<@", "").replace(">", "")
+        amount = split[2]
+        member = ctx.guild.get_member(int(member))
+        if not member:
+            await ctx.reply("That user is not in the server.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        try:
+            amount = int(amount)
+        except:
+            await ctx.reply("Invalid amount.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{member.id}.points": amount, f"{member.id}.bonus": amount}}, upsert=True)
+        await ctx.reply(f"Added `{amount}` points to **{member.name}**", mention_author=False)
+        await ctx.message.add_reaction(GREEN_CHECK)
+
+    async def mcredit_remove(self, ctx, split):
+        if not ctx.author.guild_permissions.administrator:
+            return
+        if len(split) < 4:
+            await ctx.reply("Correct usage: `!mcredit remove [member] [amount]`", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        member = split[1]
+        member = member.replace("<@", "").replace(">", "")
+        amount = split[2]
+        member = ctx.guild.get_member(int(member))
+        if not member:
+            await ctx.reply("That user is not in the server.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        try:
+            amount = int(amount)
+        except:
+            await ctx.reply("Invalid amount.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{member.id}.points": -amount, f"{member.id}.bonus": -amount}}, upsert=True)
+        await ctx.reply(f"Removed `{amount}` points from **{member.name}**", mention_author=False)
         await ctx.message.add_reaction(GREEN_CHECK)
     
     @commands.command(name="nd")
