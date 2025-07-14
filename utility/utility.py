@@ -114,8 +114,8 @@ class utility(commands.Cog):
             embed.set_thumbnail(url=member.display_avatar.url)
         except:
             pass
-        embed.add_field(name="Joined Server", value=member.joined_at.strftime('%d %B %H:%M UTC'), inline=True)
-        embed.add_field(name="Created At", value=member.created_at.strftime('%d %B %H:%M UTC'), inline=True)
+        embed.add_field(name="Joined Server", value=member.joined_at.strftime('%d %B %Y %H:%M UTC'), inline=True)
+        embed.add_field(name="Created At", value=member.created_at.strftime('%d %B %Y %H:%M UTC'), inline=True)
 
         sorted_roles = sorted([role for role in member.roles if not role.is_default()], key=lambda r: r.position, reverse=True)
         role_mentions = [role.mention for role in sorted_roles[:42]]
