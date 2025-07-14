@@ -7,3 +7,4 @@ dashboard/utils
 dashboard/venv
 dashboard/oauth.py
 STOCK_MARKET_SETUP.md
+requirements.txt

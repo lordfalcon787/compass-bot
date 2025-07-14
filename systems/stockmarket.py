@@ -8,7 +8,6 @@ class StockMarket(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.api_key = "1KC86XG04LX81C91"
-        self.base_url = "https://www.alphavantage.co/query"
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -17,14 +16,9 @@ class StockMarket(commands.Cog):
     async def get_stock_data(self, symbol):
         """Fetch stock data for the last 2 days"""
         try:
-            params = {
-                "function": "TIME_SERIES_DAILY",
-                "symbol": symbol,
-                "apikey": self.api_key,
-                "outputsize": "compact"
-            }
+            url = f'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey={self.api_key}'
             
-            response = requests.get(self.base_url, params=params)
+            response = requests.get(url)
             data = response.json()
             
             print(f"API response for {symbol}: {data}")
