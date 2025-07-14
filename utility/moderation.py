@@ -340,7 +340,8 @@ class Moderation(commands.Cog):
         if any(word in reason.lower() for word in event_warn_var):
             reason = f"[Event Warn] {reason}"
         collection.update_one({"_id": f"warn_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "warn", "date": datetime.now().strftime("%m/%d/%Y")}}}, upsert=True)
-        modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{ctx.author.id}.warns": 1, f"{ctx.author.id}.points": 1}}, upsert=True)
+        if ctx.channel.id == 1205270489954652176:
+            modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{ctx.author.id}.warns": 1, f"{ctx.author.id}.points": 1}}, upsert=True)
         if logs:
             embed = nextcord.Embed(title=f"Member Warn | Case #{doc}", description=f"**User Warned:** {member.name} ({member.id})\n**Moderator:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
             embed.set_footer(text=f"ID: {member.id}")
@@ -394,7 +395,8 @@ class Moderation(commands.Cog):
                 doc = doc.get("current_case")
             doc += 1
             collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "timeout", "date": timeout_until.strftime("%m/%d/%Y")}}}, upsert=True)
-            modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{ctx.author.id}.timeouts": 1, f"{ctx.author.id}.points": 1}}, upsert=True)
+            if ctx.channel.id == 1205270489954652176:
+                modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{ctx.author.id}.timeouts": 1, f"{ctx.author.id}.points": 1}}, upsert=True)
             if logs:
                 embed = nextcord.Embed(title=f"Member Timeout | Case #{doc}", description=f"**User Timed Out:** {member.name} ({member.id})\n**Moderator:** {ctx.author.name} ({ctx.author.id})\n**Duration:** {readable}\n**Reason:** {reason}", color=nextcord.Color.blurple())
                 embed.set_footer(text=f"ID: {member.id}")
@@ -450,7 +452,8 @@ class Moderation(commands.Cog):
             doc = doc.get("current_case")
         doc += 1
         collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "kick", "date": datetime.now().strftime("%m/%d/%Y")}}}, upsert=True)
-        modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{ctx.author.id}.kicks": 1, f"{ctx.author.id}.points": 1}}, upsert=True)
+        if ctx.channel.id == 1205270489954652176:
+            modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{ctx.author.id}.kicks": 1, f"{ctx.author.id}.points": 1}}, upsert=True)
         if logs:
             embed = nextcord.Embed(title=f"Member Kick | Case #{doc}", description=f"**User Kicked:** {member.name} ({member.id})\n**Moderator:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
             embed.set_footer(text=f"ID: {member.id}")
@@ -504,7 +507,8 @@ class Moderation(commands.Cog):
             doc = doc.get("current_case")
         doc += 1
         collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "ban", "date": datetime.now().strftime("%m/%d/%Y")}}}, upsert=True)
-        modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{ctx.author.id}.bans": 1, f"{ctx.author.id}.points": 1}}, upsert=True)
+        if ctx.channel.id == 1205270489954652176:
+            modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{ctx.author.id}.bans": 1, f"{ctx.author.id}.points": 1}}, upsert=True)
         if logs:
             embed = nextcord.Embed(title=f"Member Ban | Case #{doc}", description=f"**User Banned:** {member.name} ({member.id})\n**Moderator:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
             embed.set_footer(text=f"ID: {member.id}")
@@ -558,7 +562,8 @@ class Moderation(commands.Cog):
             doc = doc.get("current_case")
         doc += 1
         collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "unban", "date": datetime.now().strftime("%m/%d/%Y")}}}, upsert=True)
-        modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{ctx.author.id}.unbans": 1, f"{ctx.author.id}.points": 1}}, upsert=True)
+        if ctx.channel.id == 1205270489954652176:
+            modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{ctx.author.id}.unbans": 1, f"{ctx.author.id}.points": 1}}, upsert=True)
         if logs:
             embed = nextcord.Embed(title=f"Member Unban | Case #{doc}", description=f"**User Unbanned:** {member.name} ({member.id})\n**Moderator:** {ctx.author.name} ({ctx.author.id})\n**Reason:** {reason}", color=nextcord.Color.blurple())
             embed.set_footer(text=f"ID: {member.id}")
@@ -614,7 +619,8 @@ class Moderation(commands.Cog):
             doc = doc.get("current_case")
         doc += 1
         collection.update_one({"_id": f"mod_logs_{ctx.guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": ctx.author.id, "type": "untimeout", "date": datetime.now().strftime("%m/%d/%Y")}}}, upsert=True)
-        modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{ctx.author.id}.untimeouts": 1, f"{ctx.author.id}.points": 1}}, upsert=True)
+        if ctx.channel.id == 1205270489954652176:
+            modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$inc": {f"{ctx.author.id}.untimeouts": 1, f"{ctx.author.id}.points": 1}}, upsert=True)
         if logs:
             embed = nextcord.Embed(title=f"Member Timeout Removed | Case #{doc}", description=f"**User Timed Out:** {member.name} ({member.id})\n**Moderator:** {ctx.author.name} ({ctx.author.id})", color=nextcord.Color.blurple())
             embed.set_footer(text=f"ID: {member.id}")
