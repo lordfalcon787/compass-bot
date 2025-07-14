@@ -214,6 +214,10 @@ class Moderation(commands.Cog):
         alltime_doc = modcredits.find_one({"_id": f"mod_credits_{ctx.guild.id}_alltime"})
         embed = nextcord.Embed(title="Moderation Credit All-Time Leaderboard", color=nextcord.Color.blurple())
         descp = ""
+        if not alltime_doc:
+            embed.description = descp
+            await ctx.reply(embed=embed, mention_author=False)
+            return
         for idx, (m_id, m_data) in enumerate(alltime_doc.items(), start=0):
             if m_id == "_id":
                 continue
