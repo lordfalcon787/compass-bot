@@ -271,8 +271,32 @@ class misc(commands.Cog):
         await interaction.followup.send("Embed sent.", ephemeral=True)
 
 
-    
+    @commands.command(name="freezenick")
+    async def freezenick(self, ctx, user: nextcord.Member, nick: str):
+        if not ctx.author.guild_permissions.administrator:
+            await ctx.message.add_reaction(RED_X)
+            return
+        await user.edit(nick=nick)
+        collection = db["Freeze Nicks"]
+        collection.insert_one({"user_id": user.id, "nick": nick})
+        await ctx.message.add_reaction(GREEN_CHECK)
 
+    @commands.command(name="unfreezenick")
+    async def unfreezenick(self, ctx, user: nextcord.Member):
+        if not ctx.author.guild_permissions.administrator:
+            await ctx.message.add_reaction(RED_X)
+            return
+        collection = db["Freeze Nicks"]
+        collection.delete_one({"user_id": user.id})
+        await ctx.message.add_reaction(GREEN_CHECK)
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        if before.nick is not None and after.nick is None:
+            collection = db["Freeze Nicks"]
+            doc = collection.find_one({"user_id": after.id})
+            if doc is not None:
+                await after.edit(nick=doc["nick"])
 
 def setup(bot):
     bot.add_cog(misc(bot))
