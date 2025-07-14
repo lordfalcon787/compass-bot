@@ -21,10 +21,7 @@ class StockMarket(commands.Cog):
             response = requests.get(url)
             data = response.json()
             
-            print(f"API response for {symbol}: {data}")
-            
             if "Time Series (Daily)" not in data:
-                print(f"No time series data for {symbol}. Response: {data}")
                 return [], []
             
             time_series = data["Time Series (Daily)"]
@@ -55,7 +52,6 @@ class StockMarket(commands.Cog):
             "AAPL": "Apple Inc.",
             "MSFT": "Microsoft Corporation",
             "GOOG": "Alphabet Inc.",
-            "AMZN": "Amazon.com, Inc.",
             "META": "Meta Platforms, Inc.",
         }
         
@@ -70,7 +66,7 @@ class StockMarket(commands.Cog):
                 current_price = prices[0]
                 prev_price = prices[1]
                 change = current_price - prev_price
-                change_percent = (change / prev_price * 100) if prev_price != 0 else 0
+                change_percent = round((change / prev_price * 100), 2) if prev_price != 0 else 0
             else:
                 current_price = prices[0] if prices else 0
                 prev_price = 0
@@ -100,7 +96,7 @@ class StockMarket(commands.Cog):
                 name=f"{emoji} {data['name']}",
                 value=f"**Current: ${data['current']}**\n"
                       f"**Previous: ${data['previous']}**\n"
-                      f"{sign}${data['change']} ({sign}{data['change_percent']}%)",
+                      f"**Change: ${round(data['change'], 2)} ({sign}{data['change_percent']}%)**",
                 inline=True
             )
         
