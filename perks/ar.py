@@ -73,6 +73,7 @@ class AR(commands.Cog):
             for key in doc:
                 guild = key.split("_")[1]
                 guild = int(guild)
+                old_guild = guild
                 guild = self.bot.get_guild(guild)
                 if guild:
                     member = guild.get_member(user)
@@ -94,7 +95,7 @@ class AR(commands.Cog):
                         collection2.update_one({"_id": user}, {"$unset": {key: ""}})
                 else:
                     if "word" in key:
-                        collection2.update_one({"_id": "cachedwords"}, {"$pull": {str(guild.id): doc[key]}})
+                        collection2.update_one({"_id": "cachedwords"}, {"$pull": {str(old_guild): doc[key]}})
                     collection2.update_one({"_id": user}, {"$unset": {key: ""}})
         for doc in mentions:
             user = int(doc["_id"])
