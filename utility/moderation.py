@@ -67,7 +67,7 @@ class Moderation(commands.Cog):
             await self.mcredit_score(ctx, ctx.author)
             return
         second_arg = split[1]
-        args = ["add", "remove", "lb", "leaderboard", "reset"]
+        args = ["add", "remove", "lb", "leaderboard", "reset", "alltime", "total"]
         if not any(arg in second_arg for arg in args):
             second_arg = second_arg.replace("<@", "").replace(">", "")
             user = ctx.guild.get_member(int(second_arg))
@@ -88,6 +88,9 @@ class Moderation(commands.Cog):
             return
         if second_arg == "remove":
             await self.mcredit_remove(ctx, split)
+            return
+        if second_arg == "alltime" or second_arg == "total":
+            await self.mcredit_alltime(ctx)
             return
         
     async def mcredit_score(self, ctx, member):
@@ -160,8 +163,41 @@ class Moderation(commands.Cog):
     async def mcredit_reset(self, ctx):
         if not ctx.author.guild_permissions.administrator:
             return
+        old_doc = modcredits.find_one({"_id": f"mod_credits_{ctx.guild.id}"})
+        alltime_doc = modcredits.find_one({"_id": f"mod_credits_{ctx.guild.id}_alltime"})
+        if alltime_doc:
+            for m_id, m_data in old_doc.items():
+                if m_id == "_id":
+                    continue
+                if isinstance(m_data, dict):
+                    prev = alltime_doc.get(m_id, {})
+                    prev_points = prev.get("points", 0)
+                    new_points = m_data.get("points", 0) + prev_points
+                    modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}_alltime"}, {"$set": {f"{m_id}.points": new_points}}, upsert=True)
+        else:
+            for m_id, m_data in old_doc.items():
+                if m_id == "_id":
+                    continue
+                if isinstance(m_data, dict):
+                    modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}_alltime"}, {"$set": {f"{m_id}.points": m_data.get("points", 0)}}, upsert=True)
         modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$set": {}}, upsert=True)
         await ctx.message.add_reaction(GREEN_CHECK)
+
+    async def mcredit_alltime(self, ctx):
+        alltime_doc = modcredits.find_one({"_id": f"mod_credits_{ctx.guild.id}_alltime"})
+        if not alltime_doc:
+            return
+        embed = nextcord.Embed(title="Moderation Credit All-Time Leaderboard", color=nextcord.Color.blurple())
+        descp = ""
+        for idx, (m_id, m_data) in enumerate(alltime_doc.items(), start=1):
+            if m_id == "_id":
+                continue
+            if isinstance(m_data, dict):
+                member = ctx.guild.get_member(int(m_id))
+                if member:
+                    descp += f"{idx}. {member.mention} - {m_data.get('points', 0)} Points\n"
+        embed.description = descp
+        await ctx.reply(embed=embed, mention_author=False)
 
     async def mcredit_add(self, ctx, split):
         if not ctx.author.guild_permissions.administrator:
