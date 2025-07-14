@@ -180,7 +180,8 @@ class Moderation(commands.Cog):
                     continue
                 if isinstance(m_data, dict):
                     modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}_alltime"}, {"$set": {f"{m_id}.points": m_data.get("points", 0)}}, upsert=True)
-        modcredits.update_one({"_id": f"mod_credits_{ctx.guild.id}"}, {"$set": {}}, upsert=True)
+        modcredits.delete_one({"_id": f"mod_credits_{ctx.guild.id}"})
+        modcredits.insert_one({"_id": f"mod_credits_{ctx.guild.id}"})
         await ctx.message.add_reaction(GREEN_CHECK)
 
     async def mcredit_alltime(self, ctx):
