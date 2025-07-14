@@ -277,11 +277,11 @@ class misc(commands.Cog):
         if not ctx.author.guild_permissions.administrator:
             await ctx.message.add_reaction(RED_X)
             return
+        collection = db["Freeze Nicks"]
         doc = collection.find_one({"user_id": user.id})
         if doc:
             collection.delete_one({"user_id": user.id})
         await user.edit(nick=nick)
-        collection = db["Freeze Nicks"]
         collection.insert_one({"user_id": user.id, "nick": nick, "guild_id": ctx.guild.id})
         await ctx.message.add_reaction(GREEN_CHECK)
         await ctx.reply(f"Nickname for {user.mention} has been frozen to {nick}.", mention_author=False)
