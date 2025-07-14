@@ -279,7 +279,7 @@ class misc(commands.Cog):
             return
         await user.edit(nick=nick)
         collection = db["Freeze Nicks"]
-        collection.insert_one({"user_id": user.id, "nick": nick})
+        collection.insert_one({"user_id": user.id, "nick": nick, "guild_id": ctx.guild.id})
         await ctx.message.add_reaction(GREEN_CHECK)
         await ctx.reply(f"Nickname for {user.mention} has been frozen to {nick}.", mention_author=False)
 
@@ -297,7 +297,7 @@ class misc(commands.Cog):
         if before.nick is not None and after.nick is None:
             collection = db["Freeze Nicks"]
             doc = collection.find_one({"user_id": after.id})
-            if doc is not None:
+            if doc is not None and int(doc["guild_id"]) == int(after.guild.id):
                 await after.edit(nick=doc["nick"])
 
 def setup(bot):
