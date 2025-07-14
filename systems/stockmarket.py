@@ -45,11 +45,18 @@ class StockMarket(commands.Cog):
     @nextcord.slash_command(name="stocks", description="View the current stock market.")
     async def stocks(self, interaction: nextcord.Interaction):
         await interaction.response.defer()
-        
+         
         indices = {
-            "DJI": "Dow Jones Industrial Average",
-            "IXIC": "NASDAQ Composite", 
-            "SPX": "S&P 500"
+            "DIA": "SPDR Dow Jones Industrial Average ETF",
+            "QQQ": "NASDAQ ETF Invesco Trust", 
+            "SPY": "SPDR S&P 500 ETF Trust",
+            "NVDA": "NVIDIA Corporation",
+            "TSLA": "Tesla, Inc.",
+            "AAPL": "Apple Inc.",
+            "MSFT": "Microsoft Corporation",
+            "GOOG": "Alphabet Inc.",
+            "AMZN": "Amazon.com, Inc.",
+            "META": "Meta Platforms, Inc.",
         }
         
         data_dict = {}
