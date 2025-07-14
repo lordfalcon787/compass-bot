@@ -1,5 +1,5 @@
 import nextcord
-import requests
+import finnhub
 from datetime import datetime, timedelta
 from nextcord.ext import commands
 import json
@@ -7,33 +7,29 @@ import json
 class StockMarket(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.api_key = "1KC86XG04LX81C91"
+        self.api_key = "d1qksn9r01qo4qd7spq0d1qksn9r01qo4qd7spqg"
+        self.finnhub_client = finnhub.Client(api_key=self.api_key)
 
     @commands.Cog.listener()
     async def on_ready(self):
         print("StockMarket cog loaded")
 
     async def get_stock_data(self, symbol):
-        """Fetch stock data for the last 2 days"""
+        """Fetch current stock quote data"""
         try:
-            url = f'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey={self.api_key}'
+            quote = self.finnhub_client.quote(symbol)
             
-            response = requests.get(url)
-            data = response.json()
-            
-            if "Time Series (Daily)" not in data:
+            if 'c' not in quote or quote['c'] == 0:
                 return [], []
             
-            time_series = data["Time Series (Daily)"]
-            dates = sorted(time_series.keys(), reverse=True)
+            current_price = float(quote['c'])  
+            previous_close = float(quote['pc']) 
             
-            recent_dates = dates[:2]
-            recent_prices = []
+            today = datetime.now().strftime("%Y-%m-%d")
+            yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
             
-            for date in recent_dates:
-                recent_prices.append(float(time_series[date]["4. close"]))
+            return [today, yesterday], [current_price, previous_close]
             
-            return recent_dates, recent_prices
         except Exception as e:
             print(f"Error fetching data for {symbol}: {e}")
             return [], []
