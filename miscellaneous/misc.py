@@ -297,7 +297,6 @@ class misc(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        print("Nickname updated")
         collection = db["Freeze Nicks"]
         doc = collection.find_one({"user_id": after.id})
         if doc is not None and int(doc["guild_id"]) == int(after.guild.id) and after.nick is not None:
