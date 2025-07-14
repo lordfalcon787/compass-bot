@@ -272,7 +272,8 @@ class misc(commands.Cog):
 
 
     @commands.command(name="freezenick")
-    async def freezenick(self, ctx, user: nextcord.Member, nick: str):
+    async def freezenick(self, ctx, user: nextcord.Member, *nick: str):
+        nick = " ".join(nick)
         if not ctx.author.guild_permissions.administrator:
             await ctx.message.add_reaction(RED_X)
             return
