@@ -101,14 +101,38 @@ class Moderation(commands.Cog):
         embed = nextcord.Embed(title="Moderation Credit Report", color=nextcord.Color.blurple())
         embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.display_avatar.url)
         embed.set_thumbnail(url=member.display_avatar.url)
-        points = doc.get("points", 0)
-        warns = doc.get("warns", 0)
-        timeouts = doc.get("timeouts", 0)
-        kicks = doc.get("kicks", 0)
-        bans = doc.get("bans", 0)
-        unbans = doc.get("unbans", 0)
-        untimeouts = doc.get("untimeouts", 0)
-        bonus = doc.get("bonus", 0)
+        try:
+            points = doc.get("points", 0)
+        except:
+            points = 0
+        try:
+            warns = doc.get("warns", 0)
+        except:
+            warns = 0
+        try:
+            timeouts = doc.get("timeouts", 0)
+        except:
+            timeouts = 0
+        try:
+            kicks = doc.get("kicks", 0)
+        except:
+            kicks = 0
+        try:
+            bans = doc.get("bans", 0)
+        except:
+            bans = 0
+        try:
+            unbans = doc.get("unbans", 0)
+        except:
+            unbans = 0
+        try:
+            untimeouts = doc.get("untimeouts", 0)
+        except:
+            untimeouts = 0
+        try:
+            bonus = doc.get("bonus", 0)
+        except:
+            bonus = 0
         action_parts = []
         if warns > 0:
             action_parts.append(f"{warns} Warn{'s' if warns != 1 else ''}")
@@ -131,7 +155,7 @@ class Moderation(commands.Cog):
             if all_docs:
                 points_list = []
                 for m_id, m_data in all_docs.items():
-                    if isinstance(m_data, dict):
+                    if isinstance(m_data, dict) and m_id != "_id":
                         points_list.append((int(m_id), m_data.get("points", 0)))
                 points_list.sort(key=lambda x: x[1], reverse=True)
                 for idx, (m_id, pts) in enumerate(points_list, start=1):
