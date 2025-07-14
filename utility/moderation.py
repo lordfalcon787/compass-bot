@@ -212,8 +212,6 @@ class Moderation(commands.Cog):
 
     async def mcredit_alltime(self, ctx):
         alltime_doc = modcredits.find_one({"_id": f"mod_credits_{ctx.guild.id}_alltime"})
-        if not alltime_doc:
-            return
         embed = nextcord.Embed(title="Moderation Credit All-Time Leaderboard", color=nextcord.Color.blurple())
         descp = ""
         for idx, (m_id, m_data) in enumerate(alltime_doc.items(), start=0):
