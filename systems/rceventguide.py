@@ -25,6 +25,11 @@ EVENT_GUIDE_MENUS = [
         "value": "mafia"
     },
     {
+        "label": "Mafia Secret Gamemode",
+        "description": "Guide for Mafia Secret Gamemode",
+        "value": "mafia_secret"
+    },
+    {
         "label": "Gartic",
         "description": "Guide for Gartic Games",
         "value": "gartic"
@@ -121,7 +126,7 @@ Run /chatrumble on <@1291996619490984037> if you would like to host a chat rumbl
         "title": "Mafia Games",
         "description": """__How to host__
 
-- Post with @Mafia
+- Host with <@758999095070687284>
 - **Don't host any mafia with Classic gamemode unless the donor specifies, change it to random**
 - Join the game using the command `/join`
 - Make sure you are the only one in the party, if you're not, use `/clear` and rejoin the party again
@@ -139,6 +144,19 @@ __Notes__
 - If you want to host the game without playing you can press the `Leave` button once at least 1 more person has joined
 - After the game ends queue payout for winners, make sure to not queue for donor
 - Please don't double ping if you forget to ping <@&1205270486263795720>
+"""
+    },
+    "mafia_secret": {
+        "title": "Mafia Secret Gamemode",
+        "description": """**Secret Gamemode**
+
+Secret Gamemode can be turned on by going in `/settings`, clicking on `game modifiers` and toggling on the fifth option, `Secret Gamemode`.
+Secret gamemode is a mode in mafia where a third team is introduced, the 4 horsemen (plague doctor, grave robber, farmer, and doomsayer) have to work together and be the last ones standing to win. The 4 roles can communicate with eachother via Mafia Bot dms and know their teammates, similar to how being mafia aligned works. 
+- Secret Gamemode requires 19+ players 
+- Secret Gamemode is strictly confined to the random gamemode. 
+- Secret Gamemode cannot be guaranteed with custom rolelist 
+- Secret Gamemode only occurs when all 4 horsemen appear in the same game
+- Necronomicon Plague doctor must be toggled ON and other horsemen cannot be banned on `/custom rolelist ban`
 """
     },
     "gartic": {
