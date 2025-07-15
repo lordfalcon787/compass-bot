@@ -10,63 +10,63 @@ import nextcord
 
 EVENT_GUIDE_MENUS = [
     {
-        "label": "TEA EVENTS",
-        "description": "Guide for Tea Events",
+        "label": "Tea Events",
+        "description": "Guide for all the Mudae Tea Events",
         "value": "tea_events"
     },
     {
-        "label": "RUMBLE",
-        "description": "Guide for Rumble",
+        "label": "Rumble Royale",
+        "description": "Guide for Rumble Royale Events",
         "value": "rumble"
     },
     {
-        "label": "MAFIA",
-        "description": "Guide for Mafia",
+        "label": "Mafia",
+        "description": "Guide for Mafia Games",
         "value": "mafia"
     },
     {
-        "label": "GARTIC",
-        "description": "Guide for Gartic",
+        "label": "Gartic",
+        "description": "Guide for Gartic Games",
         "value": "gartic"
     },
     {
         "label": "Guess the Item",
-        "description": "Guide for GTI",
+        "description": "Guide for Guess the Item Events",
         "value": "gti"
     },
     {
         "label": "Split or Steal",
-        "description": "Guide for Split or Steal",
+        "description": "Guide for Split or Steal Events",
         "value": "split_or_steal"
     },
     {
         "label": "Evolution of Trust",
-        "description": "Guide for EOT",
+        "description": "Guide for Evolution of Trust Events",
         "value": "eot"
     },
     {
         "label": "Wordle",
-        "description": "Guide for Wordle",
+        "description": "Guide for Wordle Events",
         "value": "wordle"
     },
     {
         "label": "Rollkill",
-        "description": "Guide for Rollkill",
+        "description": "Guide for Rollkill Events",
         "value": "rollkill"
     },
     {
         "label": "Auction",
-        "description": "Guide for Auction",
+        "description": "Guide for Auction Events",
         "value": "auction"
     },
     {
         "label": "UNO",
-        "description": "Guide for Uno",
+        "description": "Guide for UNO Events",
         "value": "uno"
     },
     {
-        "label": "GTN",
-        "description": "Guide for GTN",
+        "label": "Guess the Number",
+        "description": "Guide for GTN Events",
         "value": "gtn"
     }
 ]
@@ -307,7 +307,9 @@ class RCEventGuideSelect(nextcord.ui.Select):
                 description=embed_info["description"],
                 color=nextcord.Color.blurple()
             )
-            await interaction.response.edit_message(embed=embed, view=self.view)
+            embed.set_footer(text="Created by the Robbing Central Admin Team", icon_url=interaction.guild.icon.url)
+            embed.set_thumbnail(url=interaction.guild.icon.url)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
             await interaction.response.send_message("No guide found for this selection.", ephemeral=True)
 
