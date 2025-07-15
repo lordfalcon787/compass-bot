@@ -285,11 +285,13 @@ class stafflist(commands.Cog):
 
     async def rc_staff_list(self, ctx):
         staff_roles = {
+            "1394546092393103501": "Head Administrator",
             "1205270486502867030": "Administrator",
             "1205270486490292251": "Head Moderator",
             "1205270486490292246": "Moderator",
             "1205270486469058636": "Trial Moderator",
-            "1205270486469058637": "Event Manager"
+            "1205270486469058637": "Event Manager",
+            "1394547833453019268": "Edible Item"
         }
         current_time = int(nextcord.utils.utcnow().timestamp())
         embed = nextcord.Embed(title = "Staff List", description = f"The Robbing Central and all its activities are made possible by the [donations](https://discord.com/channels/1205270486230110330/1205270487454974055) of our members and the dedication of our staff committed to creating a place to stay. This is a list of all our staff as of <t:{current_time}:f>.", color = 65280)
@@ -297,12 +299,15 @@ class stafflist(commands.Cog):
         added_members = set()
         owner = guild.owner
         embed.add_field(name="Owner", value=f"`{owner.name}` | <@{owner.id}>", inline=False)
+        ignore_list = [808878244609654784, 939307545019969536]
         for role_id, role_name in staff_roles.items():
             role = guild.get_role(int(role_id))
             if role:
                 members = []
                 for member in role.members:
-                    if member.id not in added_members or member.id == 939307545019969536:
+                    if role_name == "Administrator" and member.id in ignore_list:
+                        continue
+                    if member.id not in added_members:
                         members.append(f"`{member.name}` | {member.mention}")
                         added_members.add(member.id)
                 if members:
