@@ -73,7 +73,7 @@ EVENT_GUIDE_MENUS = [
 
 EVENT_GUIDE_EMBEDS = {
     "tea_events": {
-        "title": "TEA EVENTS",
+        "title": "Tea Events",
         "description": """**Tea Events**
 
 __1. Commands__
@@ -93,7 +93,7 @@ __2. Customization__
 """
     },
     "rumble": {
-        "title": "RUMBLE",
+        "title": "Rumble Royale",
         "description": """**Rumble**
 
 __1. Command__
@@ -118,7 +118,7 @@ Run /chatrumble on <@1291996619490984037> if you would like to host a chat rumbl
 """
     },
     "mafia": {
-        "title": "MAFIA",
+        "title": "Mafia Games",
         "description": """__How to host__
 
 - Post with @Mafia
@@ -142,7 +142,7 @@ __Notes__
 """
     },
     "gartic": {
-        "title": "GARTIC",
+        "title": "Gartic Games",
         "description": """**Gartic**
 
 __1. How to start__
