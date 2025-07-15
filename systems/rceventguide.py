@@ -45,6 +45,11 @@ EVENT_GUIDE_MENUS = [
         "value": "split_or_steal"
     },
     {
+        "label": "Simon Says Game",
+        "description": "Guide for Simon Says Game Events",
+        "value": "simon_says"
+    },
+    {
         "label": "Evolution of Trust",
         "description": "Guide for Evolution of Trust Events",
         "value": "eot"
@@ -211,6 +216,21 @@ __2. Winning__
 - If one steals and one splits the person who stole gets the whole prize
 - Queue the prize
 - If both people steal, neither person gets the prize and you redo. With another ping.
+"""
+    },
+    "simon_says": {
+        "title": "Simon Says Game",
+        "description": """**Simon Says Game**
+
+__How to host__
+- Max amount of players = 10
+- Like SOS, players will be selected randomly via a giveaway bot; I'd recommend giveaway boat as it auto gives them the player role
+- Soon as the players are selected, do an activity check e.g. you could say "Simon says say hi" and have players respond with hi back. Any players who do not provide a response back within 30 seconds max will be eliminated
+- Upon completion of the activity check, any players caught Idle chatting will result in an immediate elimination
+- Editing or deleting messages will result in an event warn
+- You can use prompts such as "Simon says say...", "Simon says tell me..", "Simon says solve...", "Simon Says answer" etc.
+- You could also use prompts to trick the players e.g. "Simon say says...", "Simon says say tell me..." Simon says teII me..." etc.
+- Players that respond incorrectly to the prompt or answer last will be eliminated; the last remaining player will win
 """
     },
     "eot": {
