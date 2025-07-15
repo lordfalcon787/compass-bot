@@ -363,7 +363,7 @@ class RCEventGuide(commands.Cog):
     async def rceventguide_cmd(self, ctx):
         embed = nextcord.Embed(
             title="RC Event Guide",
-            description="For all event managers at Robbing Central, this guide is here to help you understand how events should be hosted here and the various guidelines that exist. If you are a new staff member, make sure to read the the General Event Guidelines thorougly before, and read the corresponding event's guide to the one you are hosting before hosting the event. If you see an event missing from here, please let an admin know so they can add it. If you have any questions about the event guide, please also ask an admin.\n\nCredit points for events are listed in the embed above this message.",
+            description="For all event managers at Robbing Central, this guide is here to help you understand how events should be hosted here and the various guidelines that exist. If you see an event missing from here, please let an admin know so they can add it. If you have any questions about the event guide, please also ask an admin.\n\nCredit points for events are listed in the embed above this message.",
             color=nextcord.Color.blurple()
         )
         embed.set_footer(text="Created by the Robbing Central Admin Team", icon_url=ctx.guild.icon.url)
