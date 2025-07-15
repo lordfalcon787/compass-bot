@@ -299,6 +299,7 @@ class stafflist(commands.Cog):
         added_members = set()
         owner = guild.owner
         embed.add_field(name="Owner", value=f"`{owner.name}` | <@{owner.id}>", inline=False)
+        added_members.add(owner.id)
         ignore_list = [808878244609654784, 939307545019969536]
         for role_id, role_name in staff_roles.items():
             role = guild.get_role(int(role_id))
