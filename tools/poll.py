@@ -264,6 +264,7 @@ class Poll(commands.Cog):
         if admin_role not in interaction.user.roles and interaction.user.id != interaction.guild.owner_id:
             await interaction.send("You do not have permission to use this command.", ephemeral=True)
             return
+        description = description.replace("\\n", "\n")
         embed = nextcord.Embed(title=title, description=description, color=nextcord.Color.blue())
         embed.set_footer(text=f"Admin poll created by {interaction.user.name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else None)
         if binary:
