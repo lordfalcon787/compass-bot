@@ -358,6 +358,7 @@ class RCEventGuide(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print("RCEventGuide cog loaded")
+        self.bot.add_view(RCEventGuideMenu())
 
     @commands.command(name="rceventguide", aliases=["recg"])
     async def rceventguide_cmd(self, ctx):
