@@ -317,7 +317,7 @@ __How to host__
 
 class RCEventGuideMenu(nextcord.ui.View):
     def __init__(self):
-        super().__init__(timeout=180)
+        super().__init__(timeout=None)
         self.add_item(RCEventGuideSelect())
 
 class RCEventGuideSelect(nextcord.ui.Select):
@@ -333,7 +333,8 @@ class RCEventGuideSelect(nextcord.ui.Select):
             placeholder="Select an event guide...",
             min_values=1,
             max_values=1,
-            options=options
+            options=options,
+            custom_id="rc_event_guide_select"
         )
 
     async def callback(self, interaction: nextcord.Interaction):
