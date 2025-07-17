@@ -941,13 +941,17 @@ class Moderation(commands.Cog):
 
 
     @commands.command(name="ebl", aliases=["eventblacklist"])
-    async def ebl_cmd(self, ctx, member: nextcord.Member, duration: str = "1d", *, reason: str = "No reason provided"):
-        if ctx.guild.id != 1205270486230110330:
-            return
-        if not ctx.author.guild_permissions.manage_messages:
+    async def ebl_cmd(self, ctx, member: nextcord.Member = None, duration: str = "1d", *, reason: str = "No reason provided"):
+        if member is None:
             await ctx.message.add_reaction(RED_X)
             return
-        if 1205270486469058636 in [role.id for role in ctx.author.roles]:
+        if ctx.guild.id != 1205270486230110330:
+            return
+        author_roles = [role.id for role in ctx.author.roles]
+        if not ctx.author.guild_permissions.manage_messages and 1205270486469058637 not in author_roles:
+            await ctx.message.add_reaction(RED_X)
+            return
+        if 1205270486469058636 in author_roles and 1205270486469058637 not in author_roles:
             await ctx.message.add_reaction(RED_X)
             return
         ebl_role = ctx.guild.get_role(1205270486359998556)
