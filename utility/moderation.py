@@ -62,6 +62,9 @@ class Moderation(commands.Cog):
     async def mcredits_cmd(self, ctx):
         if ctx.guild.id != 1205270486230110330:
             return
+        allowed_channels = [1205579598411202681, 1205270489954652174]
+        if ctx.channel.id not in allowed_channels or not ctx.author.guild_permissions.administrator:
+            return
         split = ctx.message.content.split(" ")
         if len(split) < 2:
             await self.mcredit_score(ctx, ctx.author)
