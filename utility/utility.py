@@ -134,6 +134,18 @@ class utility(commands.Cog):
         embed.timestamp = datetime.utcnow()
         await message.channel.send(embed=embed)
 
+    @commands.command(name="creset")
+    async def creset_cmd(self, ctx):
+        if not ctx.author.guild_permissions.administrator:
+            await ctx.message.add_reaction(RED_X)
+            return
+        overwrite = ctx.channel.overwrites_for(ctx.guild.default_role)
+        overwrite.view_channel = None
+        await ctx.channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
+        await ctx.message.add_reaction(GREEN_CHECK)
+        await asyncio.sleep(1)
+        await ctx.message.delete()
+
     @commands.command(name="userinfo", aliases=["ui", "w", "whois"])
     async def userinfo_cmd(self, ctx):
         await self.user_info(ctx.message)
