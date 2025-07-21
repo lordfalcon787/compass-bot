@@ -125,7 +125,7 @@ class utility(commands.Cog):
             else:
                 return f"{', '.join(strings[:-1])} and {strings[-1]}"
         time_str = format_time(total_seconds)
-        embed = nextcord.Embed(title="Reminder Created", description=f"Of course, **{ctx.author.name}**. I will remind you about: {message} in {time_str}.", color=nextcord.Color.blurple())
+        embed = nextcord.Embed(title="Reminder Created", description=f"Of course, **{ctx.author.name}**, I will remind you in **{time_str}** about:\n\n{message}", color=nextcord.Color.blurple())
         if total_seconds < 3600:
             asyncio.create_task(self.reminder_fulfilled(reminder_data))
         await ctx.message.add_reaction(GREEN_CHECK)
