@@ -107,7 +107,6 @@ class utility(commands.Cog):
         await ctx.message.add_reaction(GREEN_CHECK)
 
     async def reminder_fulfilled(self, reminder_data):
-        reminder_collection.delete_one({"_id": reminder_data["_id"]})
         time_left = (reminder_data["end_time"] - datetime.now()).total_seconds()
         if time_left < 0:
             time_left = 0
@@ -137,7 +136,15 @@ class utility(commands.Cog):
             time_ago_str = " ".join(strings) + " ago"
         embed = nextcord.Embed(title="Your Reminder", description=f"You asked to be reminded about: {reminder_data['reminder']} {time_ago_str}.", color=nextcord.Color.blurple())
         embed.add_field(name="Activation Message", value=f"https://discord.com/channels/{reminder_data['guild']}/{reminder_data['channel']}/{reminder_data['_id']}")
-        await reminder_data["channel"].send(embed=embed)
+        user = self.bot.get_user(reminder_data["user"])
+        if not user:
+            reminder_collection.delete_one({"_id": reminder_data["_id"]})
+            return
+        try:
+            reminder_collection.delete_one({"_id": reminder_data["_id"]})
+            await user.send(embed=embed)
+        except:
+            pass
 
     def get_best_match(self, members, args):
         name_dict = {}
