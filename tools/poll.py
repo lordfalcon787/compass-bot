@@ -666,14 +666,15 @@ class Poll(commands.Cog):
                 return
 
             choice_data = []
-            if poll.get("binary", False):
+            # Check if this is an admin poll (has yes/no/abstain keys)
+            if "yes" in poll and "no" in poll:
                 yes_voters = poll.get("yes", [])
                 no_voters = poll.get("no", [])
                 abstain_voters = poll.get("abstain", [])
-                binary_choices = [("Yes", yes_voters), ("No", no_voters)]
+                admin_choices = [("Yes", yes_voters), ("No", no_voters)]
                 if "abstain" in poll:
-                    binary_choices.append(("Abstain", abstain_voters))
-                for choice_text, voters in binary_choices:
+                    admin_choices.append(("Abstain", abstain_voters))
+                for choice_text, voters in admin_choices:
                     voter_strings = []
                     for voter_id in voters:
                         try:
@@ -685,6 +686,7 @@ class Poll(commands.Cog):
                     if voter_strings:
                         choice_data.append((choice_text, voter_strings))
             else:
+                # Handle regular polls with choice_0, choice_1, etc.
                 for i in range(10):
                     choice_key = f"choice_{i}"
                     choice_text_key = f"choice_{i}_text"
