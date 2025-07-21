@@ -1,7 +1,10 @@
+import random
 import nextcord
-from nextcord.ext import commands
+import asyncio
+from nextcord.ext import commands, tasks
 from utils.mongo_connection import MongoConnection
 from typing import Dict, List, Any
+from datetime import datetime, timedelta
 
 mongo = MongoConnection.get_instance()
 db = mongo.get_db()
@@ -42,9 +45,33 @@ class Lottery(commands.Cog):
         self.bot = bot
         self.extractor = PrecisionExtractor()
 
+    @tasks.loop(hours=1)
+    async def check_lottery(self):
+        doc = collection.find_one({"_id": "lottery"})
+        if doc:
+            if doc["status"] == "active":
+                total_entries = sum(doc["entries"].values())
+                guild = self.bot.get_guild(1205270486230110330)
+                embed = nextcord.Embed(
+                    title="Robbing Central Lottery",
+                    description=f"**Current Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries}`\n**Ends** | <t:{int(doc['end_time'].timestamp())}:R>",
+                    color=nextcord.Color.blurple()
+                )
+                embed.set_footer(text=f"Robbing Central Lotteries", icon_url=guild.icon.url)
+                embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
+                channel = guild.get_channel(lottery_channel)
+                message = await channel.fetch_message(doc["message_id"])
+                await message.edit(embed=embed)
+                embed.title = "Robbing Central Lottery Updated"
+                log_channel = guild.get_channel(lottery_logs)
+                await log_channel.send(embed=embed)
+            if doc["end_time"] - datetime.now() <= timedelta(hours=1):
+                await self.end_lottery(doc, True)
+            
     @commands.Cog.listener()
     async def on_ready(self):
         print("Lottery cog loaded.")
+        self.check_lottery.start()
 
     async def extract(self, message):
         target = message
@@ -56,9 +83,170 @@ class Lottery(commands.Cog):
         content_pieces = self.extractor.extract_content(raw_json)
         return content_pieces
 
-    @nextcord.slash_command(name="lottery")
+    @nextcord.slash_command(name="lottery", guild_ids=[1205270486230110330])
     async def lottery(self, interaction: nextcord.Interaction):
         pass
+    
+    async def end_lottery(self, doc, bool):
+        if bool:
+            seconds_till_end = (doc["end_time"] - datetime.now()).total_seconds()
+            await asyncio.sleep(seconds_till_end)
+        collection.update_one({"_id": "lottery"}, {"$set": {"status": "ended"}})
+        guild = self.bot.get_guild(1205270486230110330)
+        channel = guild.get_channel(lottery_channel)
+        message = await channel.fetch_message(doc["message_id"])
+        doc = collection.find_one({"_id": "lottery"})
+        total_entries = sum(doc["entries"].values())
+        entries = []
+        for entrant, entry in doc["entries"].items():
+            entries.extend([entrant] * entry)
+        if len(entries) == 0:
+            embed = nextcord.Embed(title="Lottery Ended", description="No entries were made, the lottery has been cancelled.", color=nextcord.Color.red())
+            embed.set_footer(text=f"Robbing Central Lotteries", icon_url=guild.icon.url)
+            embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
+            await message.edit(embed=embed, view=None)
+            collection.delete_one({"_id": "lottery"})
+            log_channel = guild.get_channel(lottery_logs)
+            await log_channel.send(embed=embed)
+            return
+        winner = random.choice(entries)
+        embed = nextcord.Embed(title="Lottery Ended", description=f"**Winner** | <@{winner}>\n**Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries}`\n**Ends** | `Ended`", color=nextcord.Color.green())
+        embed.set_footer(text=f"Robbing Central Lotteries", icon_url=guild.icon.url)
+        embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
+        await message.edit(embed=embed, view=None)
+        log_channel = guild.get_channel(lottery_logs)
+        await log_channel.send(embed=embed)
+        collection.delete_one({"_id": "lottery"})
+        await self.bot.get_cog("payouts").queue_payout([int(winner), doc["pool"], None, message.id, "lottery"], message)
+    
+    async def cancel_lottery(self, doc):
+        guild = self.bot.get_guild(1205270486230110330)
+        channel = guild.get_channel(lottery_channel)
+        message = await channel.fetch_message(doc["message_id"])
+        total_entries = sum(doc["entries"].values())
+        embed = nextcord.Embed(title="Lottery Cancelled", description=f"**Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries}`\n**Ends** | `Ended`", color=nextcord.Color.red())
+        embed.set_footer(text=f"Robbing Central Lotteries", icon_url=guild.icon.url)
+        embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
+        await message.edit(embed=embed, view=None)
+        log_channel = guild.get_channel(lottery_logs)
+        await log_channel.send(embed=embed)
+        collection.delete_one({"_id": "lottery"})
+
+    @lottery.subcommand(name="end")
+    async def end(self, interaction: nextcord.Interaction):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": "lottery"})
+        if not doc:
+            await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
+            return
+        await self.end_lottery(doc, False)
+        await interaction.response.send_message("Lottery ended successfully.", ephemeral=True)
+
+    @lottery.subcommand(name="cancel")
+    async def cancel(self, interaction: nextcord.Interaction):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": "lottery"})
+        if not doc:
+            await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
+            return
+        await self.cancel_lottery(doc)
+        await interaction.response.send_message("Lottery cancelled successfully.", ephemeral=True)
+
+    @lottery.subcommand(name="addentries")
+    async def addentries(self, interaction: nextcord.Interaction, user: nextcord.Member, quantity: int):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": "lottery"})
+        if not doc:
+            await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
+            return
+        if user.id not in doc["entries"]:
+            doc["entries"][user.id] = 0
+        doc["entries"][user.id] += quantity
+        collection.update_one({"_id": "lottery"}, {"$set": {"entries": doc["entries"]}})
+        await interaction.response.send_message(f"Added {quantity} entries to {user.mention}.", ephemeral=True)
+
+    @lottery.subcommand(name="removeentries")
+    async def removeentries(self, interaction: nextcord.Interaction, user: nextcord.Member, quantity: int):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": "lottery"})
+        if not doc:
+            await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
+            return
+        if user.id not in doc["entries"]:
+            doc["entries"][user.id] = 0
+        doc["entries"][user.id] -= quantity
+        collection.update_one({"_id": "lottery"}, {"$set": {"entries": doc["entries"]}})
+        await interaction.response.send_message(f"Removed {quantity} entries from {user.mention}.", ephemeral=True)
+
+    @lottery.subcommand(name="create")
+    async def create(self, interaction: nextcord.Interaction, entry_cost: str, days: str, initial_pool: str):
+        if interaction.channel.id != lottery_channel:
+            await interaction.response.send_message("This command can only be used in the lottery channel.", ephemeral=True)
+            return
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": "lottery"})
+        if doc:
+            await interaction.response.send_message("There is already an ongoing lottery.", ephemeral=True)
+            return
+        multipliers = {'k': 1000, 'm': 1000000, 'b': 1000000000, 't': 1000000000000}
+
+        def parse_quantity(quantity_str):
+            quantity = quantity_str.lower().replace(',', '').strip()
+            if quantity and quantity[-1] in multipliers:
+                try:
+                    numeric_part = float(quantity[:-1])
+                    multiplier = multipliers[quantity[-1]]
+                    return int(numeric_part * multiplier)
+                except ValueError:
+                    return None
+            else:
+                try:
+                    return int(quantity)
+                except ValueError:
+                    return None
+
+        entry_cost_val = parse_quantity(entry_cost)
+        if entry_cost_val is None or entry_cost_val <= 0:
+            await interaction.response.send_message("Invalid entry cost. Please use a number (optionally with k, m, b, or t).", ephemeral=True)
+            return
+
+        initial_pool_val = parse_quantity(initial_pool)
+        if initial_pool_val is None or initial_pool_val < 0:
+            await interaction.response.send_message("Invalid initial pool. Please use a number (optionally with k, m, b, or t).", ephemeral=True)
+            return
+
+        try:
+            days_val = float(days)
+            if days_val <= 0:
+                raise ValueError
+        except ValueError:
+            await interaction.response.send_message("Invalid number of days. Please enter a positive number.", ephemeral=True)
+            return
+        end_time = datetime.now() + timedelta(days=days_val)
+        collection.insert_one({"_id": "lottery", "pool": initial_pool_val, "entries": {}, "start_time": datetime.now(), "entry": entry_cost_val, "days": days_val, "end_time": end_time, "host": interaction.user.id, "status": "active", "message_id": None})
+        embed = nextcord.Embed(
+            title="Robbing Central Lottery",
+            description=f"**Current Prize Pool** | `⏣ {initial_pool_val:,}`\n**Entry Cost** | `⏣ {entry_cost_val:,}`\n**Total Entries** | `0`\n**Ends** | <t:{int(end_time.timestamp())}:R>",
+            color=nextcord.Color.blurple()
+        )
+        embed.set_footer(text=f"Robbing Central Lotteries", icon_url=interaction.guild.icon.url)
+        embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
+        view = nextcord.ui.View()
+        view.add_item(nextcord.ui.Button(label="🎰 Enter Lottery", style=nextcord.ButtonStyle.green, url=f"https://discord.com/channels/{interaction.guild.id}/{lottery_entry}"))
+        message = await interaction.channel.send(embed=embed, view=view)
+        collection.update_one({"_id": "lottery"}, {"$set": {"message_id": message.id}})
+        await interaction.response.send_message("Lottery created successfully.", ephemeral=True)
+        
 
     @commands.Cog.listener()
     async def on_message(self, message):
