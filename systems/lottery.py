@@ -164,6 +164,99 @@ class Lottery(commands.Cog):
         await self.cancel_lottery(doc)
         await interaction.response.send_message("Lottery cancelled successfully.", ephemeral=True)
 
+    @lottery.subcommand(name="setpool", description="Sets the current lottery's pool.")
+    async def setpool(self, interaction: nextcord.Interaction, amount: str):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": "lottery"})
+        if not doc:
+            await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
+            return
+        multipliers = {'k': 1000, 'm': 1000000, 'b': 1000000000, 't': 1000000000000}
+        def parse_quantity(quantity_str):
+            quantity = quantity_str.lower().replace(',', '').strip()
+            if quantity and quantity[-1] in multipliers:
+                try:
+                    numeric_part = float(quantity[:-1])
+                    multiplier = multipliers[quantity[-1]]
+                    return int(numeric_part * multiplier)
+                except ValueError:
+                    return None
+            else:
+                try:
+                    return int(quantity)
+                except ValueError:
+                    return None
+        amount = parse_quantity(amount)
+        if amount is None or amount <= 0:
+            await interaction.response.send_message("Invalid amount. Please use a number (optionally with k, m, b, or t).", ephemeral=True)
+            return
+        collection.update_one({"_id": "lottery"}, {"$set": {"pool": amount}})
+        await interaction.response.send_message(f"Set the lottery pool to {amount:,}.", ephemeral=True)
+
+    @lottery.subcommand(name="addpool", description="Adds to the current lottery's pool.")
+    async def addpool(self, interaction: nextcord.Interaction, amount: str):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": "lottery"})
+        if not doc:
+            await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
+            return
+        multipliers = {'k': 1000, 'm': 1000000, 'b': 1000000000, 't': 1000000000000}
+        def parse_quantity(quantity_str):
+            quantity = quantity_str.lower().replace(',', '').strip()
+            if quantity and quantity[-1] in multipliers:
+                try:
+                    numeric_part = float(quantity[:-1])
+                    multiplier = multipliers[quantity[-1]]
+                    return int(numeric_part * multiplier)
+                except ValueError:
+                    return None
+            else:
+                try:
+                    return int(quantity)
+                except ValueError:
+                    return None
+        amount = parse_quantity(amount)
+        if amount is None or amount <= 0:
+            await interaction.response.send_message("Invalid amount. Please use a number (optionally with k, m, b, or t).", ephemeral=True)
+            return
+        collection.update_one({"_id": "lottery"}, {"$inc": {"pool": amount}})
+        await interaction.response.send_message(f"Added {amount:,} to the lottery pool.", ephemeral=True)
+
+    @lottery.subcommand(name="removepool", description="Removes from the current lottery's pool.")
+    async def removepool(self, interaction: nextcord.Interaction, amount: str):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": "lottery"})
+        if not doc:
+            await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
+            return
+        multipliers = {'k': 1000, 'm': 1000000, 'b': 1000000000, 't': 1000000000000}
+        def parse_quantity(quantity_str):
+            quantity = quantity_str.lower().replace(',', '').strip()
+            if quantity and quantity[-1] in multipliers:
+                try:
+                    numeric_part = float(quantity[:-1])
+                    multiplier = multipliers[quantity[-1]]
+                    return int(numeric_part * multiplier)
+                except ValueError:
+                    return None
+            else:
+                try:
+                    return int(quantity)
+                except ValueError:
+                    return None
+        amount = parse_quantity(amount)
+        if amount is None or amount <= 0:
+            await interaction.response.send_message("Invalid amount. Please use a number (optionally with k, m, b, or t).", ephemeral=True)
+            return
+        collection.update_one({"_id": "lottery"}, {"$inc": {"pool": -amount}})
+        await interaction.response.send_message(f"Removed {amount:,} from the lottery pool.", ephemeral=True)
+
     @lottery.subcommand(name="addentries", description="Adds entries to a user for the current lottery.")
     async def addentries(self, interaction: nextcord.Interaction, user: nextcord.Member, quantity: int):
         if not interaction.user.guild_permissions.administrator:
