@@ -282,6 +282,9 @@ class Lottery(commands.Cog):
             embed.set_footer(text=f"Robbing Central Lotteries", icon_url=message.guild.icon.url)
             await message.reply(content=f"{message.interaction.user.mention}", embed=embed)
             log_channel = message.guild.get_channel(lottery_logs)
+            doc = collection.find_one({"_id": "lottery"})
+            total_entries = sum(doc["entries"].values())
+            embed.description = f"**Total Entries:** | `{total_entries:,}`\n**Entries** | `{entries:,}`\n**Donated** | `⏣ {amount:,}`\n**Cost Per Entry** | `⏣ {entry:,}`\n**Entrant** | {message.interaction.user.mention}"
             await log_channel.send(embed=embed)
             await message.add_reaction(GREEN_CHECK)
         else:
