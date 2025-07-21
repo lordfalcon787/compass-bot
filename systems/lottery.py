@@ -257,6 +257,19 @@ class Lottery(commands.Cog):
         collection.update_one({"_id": "lottery"}, {"$inc": {"pool": -amount}})
         await interaction.response.send_message(f"Removed {amount:,} from the lottery pool.", ephemeral=True)
 
+    @lottery.subcommand(name="viewstats", description="Views the current lottery's stats.")
+    async def viewstats(self, interaction: nextcord.Interaction):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": "lottery"})
+        if not doc:
+            await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
+            return
+        embed = nextcord.Embed(title="Lottery Stats", description=f"**Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{sum(doc['entries'].values()):,}`", color=nextcord.Color.blurple())
+        embed.set_footer(text=f"Robbing Central Lotteries", icon_url=interaction.guild.icon.url)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
     @lottery.subcommand(name="addentries", description="Adds entries to a user for the current lottery.")
     async def addentries(self, interaction: nextcord.Interaction, user: nextcord.Member, quantity: int):
         if not interaction.user.guild_permissions.administrator:
@@ -271,6 +284,10 @@ class Lottery(commands.Cog):
         doc["entries"][str(user.id)] += quantity
         collection.update_one({"_id": "lottery"}, {"$set": {"entries": doc["entries"]}})
         await interaction.response.send_message(f"Added {quantity} entries to {user.mention}.", ephemeral=True)
+        log_channel = interaction.guild.get_channel(lottery_logs)
+        embed = nextcord.Embed(title="Lottery Entries Added", description=f"**Entries** | `{quantity:,}`\n**Entrant** | {user.mention}\n**Added By** | {interaction.user.mention}", color=nextcord.Color.blurple())
+        embed.set_footer(text=f"Robbing Central Lotteries", icon_url=interaction.guild.icon.url)
+        await log_channel.send(embed=embed)
 
     @lottery.subcommand(name="removeentries", description="Removes entries from a user for the current lottery.")
     async def removeentries(self, interaction: nextcord.Interaction, user: nextcord.Member, quantity: int):
@@ -286,6 +303,10 @@ class Lottery(commands.Cog):
         doc["entries"][str(user.id)] -= quantity
         collection.update_one({"_id": "lottery"}, {"$set": {"entries": doc["entries"]}})
         await interaction.response.send_message(f"Removed {quantity} entries from {user.mention}.", ephemeral=True)
+        log_channel = interaction.guild.get_channel(lottery_logs)
+        embed = nextcord.Embed(title="Lottery Entries Removed", description=f"**Entries** | `{quantity:,}`\n**Entrant** | {user.mention}\n**Removed By** | {interaction.user.mention}", color=nextcord.Color.blurple())
+        embed.set_footer(text=f"Robbing Central Lotteries", icon_url=interaction.guild.icon.url)
+        await log_channel.send(embed=embed)
 
     @lottery.subcommand(name="create", description="Creates a new lottery.")
     async def create(self, interaction: nextcord.Interaction, entry_cost: str, days: str, initial_pool: str):
