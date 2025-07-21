@@ -54,7 +54,7 @@ class Lottery(commands.Cog):
                 guild = self.bot.get_guild(1205270486230110330)
                 embed = nextcord.Embed(
                     title="Robbing Central Lottery",
-                    description=f"**Current Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries:,}`\n**Ends** | <t:{int(doc['end_time'].timestamp())}:R>",
+                    description=f"**Current Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries:,}`\n**Status** | Ends <t:{int(doc['end_time'].timestamp())}:R>",
                     color=nextcord.Color.blurple()
                 )
                 embed.set_footer(text=f"Robbing Central Lotteries", icon_url=guild.icon.url)
@@ -110,7 +110,7 @@ class Lottery(commands.Cog):
             await log_channel.send(embed=embed)
             return
         winner = random.choice(entries)
-        embed = nextcord.Embed(title="Lottery Ended", description=f"**Winner** | <@{winner}>\n**Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries}`\n**Ends** | `Ended`", color=nextcord.Color.green())
+        embed = nextcord.Embed(title="Lottery Ended", description=f"**Winner** | <@{winner}>\n**Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries}`\n**Status** | `Ended`", color=nextcord.Color.green())
         embed.set_footer(text=f"Robbing Central Lotteries", icon_url=guild.icon.url)
         embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
         await message.edit(embed=embed, view=None)
@@ -125,7 +125,7 @@ class Lottery(commands.Cog):
         channel = guild.get_channel(lottery_channel)
         message = await channel.fetch_message(doc["message_id"])
         total_entries = sum(doc["entries"].values())
-        embed = nextcord.Embed(title="Lottery Cancelled", description=f"**Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries}`\n**Ends** | `Ended`", color=nextcord.Color.red())
+        embed = nextcord.Embed(title="Lottery Cancelled", description=f"**Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries}`\n**Status** | `Ended`", color=nextcord.Color.red())
         embed.set_footer(text=f"Robbing Central Lotteries", icon_url=guild.icon.url)
         embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
         await message.edit(embed=embed, view=None)
@@ -237,7 +237,7 @@ class Lottery(commands.Cog):
         collection.insert_one({"_id": "lottery", "pool": initial_pool_val, "entries": {}, "start_time": datetime.now(), "entry": entry_cost_val, "days": days_val, "end_time": end_time, "host": interaction.user.id, "status": "active", "message_id": None})
         embed = nextcord.Embed(
             title="Robbing Central Lottery",
-            description=f"**Current Prize Pool** | `⏣ {initial_pool_val:,}`\n**Entry Cost** | `⏣ {entry_cost_val:,}`\n**Total Entries** | `0`\n**Ends** | <t:{int(end_time.timestamp())}:R>",
+            description=f"**Current Prize Pool** | `⏣ {initial_pool_val:,}`\n**Entry Cost** | `⏣ {entry_cost_val:,}`\n**Total Entries** | `0`\n**Status** | Ends <t:{int(end_time.timestamp())}:R>",
             color=nextcord.Color.blurple()
         )
         embed.set_footer(text=f"Robbing Central Lotteries", icon_url=interaction.guild.icon.url)
@@ -274,7 +274,7 @@ class Lottery(commands.Cog):
             if entries < 1:
                 await message.reply(f"Invalid donation, one entry costs ⏣ {entry:,}.")
                 return
-            collection.update_one({"_id": "lottery"}, {"$inc": {f"entries.{message.author.id}": entries, "pool": amount}})
+            collection.update_one({"_id": "lottery"}, {"$inc": {f"entries.{message.interaction.user.id}": entries, "pool": amount}})
             embed = nextcord.Embed(
                 title="Lottery Entries Added",
                 description=f"**Entries** | `{entries:,}`\n**Donated** | `⏣ {amount:,}`\n**Cost Per Entry** | `⏣ {entry:,}`\n**Entrant** | {message.interaction.user.mention}",
