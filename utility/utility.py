@@ -59,12 +59,15 @@ class utility(commands.Cog):
         self.bot.add_view(View())
 
     @commands.command(name="reminder", aliases=["remind", "rm"])
-    async def reminder_cmd(self, ctx, time, *, message):
+    async def reminder_cmd(self, ctx, time, *, message=None):
         if time.lower() == "list":
             await self.list_reminders(ctx)
             return
         if time.lower() == "delete":
             await self.delete_reminder(ctx)
+            return
+        if message is None:
+            await ctx.reply("Please specify a reminder message.", mention_author=False)
             return
         date_formats = ["%m/%d/%Y", "%m/%d/%y", "%m/%d"]
         parsed_date = None
