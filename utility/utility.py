@@ -102,7 +102,7 @@ class utility(commands.Cog):
         else:
             current_reminder_id = current_reminder_id["current_reminder_id"]
         current_reminder_id += 1
-        reminder_collection.update_one({"_id": "current_reminder_id"}, {"$set": {"current_reminder_id": current_reminder_id}})
+        reminder_collection.update_one({"_id": "current_reminder_id"}, {"$set": {"current_reminder_id": current_reminder_id}}, upsert=True)
         reminder_data = {
             "_id": ctx.message.id,
             "sent_time": datetime.now(),
