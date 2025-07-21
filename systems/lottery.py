@@ -114,6 +114,7 @@ class Lottery(commands.Cog):
         embed.set_footer(text=f"Robbing Central Lotteries", icon_url=guild.icon.url)
         embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
         await message.edit(embed=embed, view=None)
+        await message.reply(f"<@{winner}> you have won the lottery! Your prize will be queued in <#1205270487643459616> momentarily.")
         log_channel = guild.get_channel(lottery_logs)
         await log_channel.send(embed=embed)
         collection.delete_one({"_id": "lottery"})
