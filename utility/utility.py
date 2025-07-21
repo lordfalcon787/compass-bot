@@ -3,8 +3,8 @@ import nextcord
 import asyncio
 
 from fuzzywuzzy import fuzz
-from nextcord.ext import commands
 from datetime import datetime, timedelta
+from nextcord.ext import commands, tasks
 from utils.mongo_connection import MongoConnection
 
 GREEN_CHECK = "<:green_check2:1291173532432203816>"
@@ -18,6 +18,7 @@ RC_ID = 1205270486230110330
 mongo = MongoConnection.get_instance()
 db = mongo.get_db()
 configuration = db["Configuration"]
+reminder_collection = db["Reminders"]
 
 class View(nextcord.ui.View):
     def __init__(self, timeout=180):
@@ -45,10 +46,98 @@ class utility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+
+    @tasks.loop(hours=1)
+    async def reminder_task(self):
+        docs = reminder_collection.find()
+        for doc in docs:
+            if doc["end_time"] < datetime.now() + timedelta(hours=1):
+                asyncio.create_task(self.reminder_fulfilled(doc))
+
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Utility cog loaded.")
         self.bot.add_view(View())
+
+    @commands.command(name="reminder", aliases=["remind", "rm"])
+    async def reminder_cmd(self, ctx, time, *, message):
+        if not ctx.author.guild_permissions.administrator:
+            await ctx.message.add_reaction(RED_X)
+            return
+        date_formats = ["%m/%d/%Y", "%m/%d/%y", "%m/%d"]
+        parsed_date = None
+        for fmt in date_formats:
+            try:
+                parsed_date = datetime.strptime(time, fmt)
+                if fmt == "%m/%d":
+                    parsed_date = parsed_date.replace(year=datetime.now().year)
+                    if parsed_date < datetime.now():
+                        parsed_date = parsed_date.replace(year=parsed_date.year + 1)
+                break
+            except ValueError:
+                continue
+
+        if parsed_date:
+            now = datetime.now()
+            total_seconds = int((parsed_date - now).total_seconds())
+            if total_seconds < 0:
+                total_seconds = 0
+        else:
+            time_expr = time.replace("y", "*31536000+").replace("w", "*604800+").replace("d", "*86400+").replace("h", "*3600+").replace("m", "*60+").replace("s", "*1+")
+            if time_expr.endswith('+'):
+                time_expr = time_expr[:-1]
+            try:
+                total_seconds = int(eval(time_expr))
+            except Exception:
+                total_seconds = 0
+        end_time = datetime.now() + timedelta(seconds=total_seconds)
+        reminder_data = {
+            "_id": ctx.message.id,
+            "sent_time": datetime.now(),
+            "end_time": end_time,
+            "user": ctx.author.id,
+            "channel": ctx.channel.id,
+            "guild": ctx.guild.id,
+            "reminder": message
+        }
+        reminder_collection.insert_one(reminder_data)
+        if total_seconds < 3600:
+            asyncio.create_task(self.reminder_fulfilled(reminder_data))
+            return
+        await ctx.message.add_reaction(GREEN_CHECK)
+
+    async def reminder_fulfilled(self, reminder_data):
+        reminder_collection.delete_one({"_id": reminder_data["_id"]})
+        time_left = (reminder_data["end_time"] - datetime.now()).total_seconds()
+        if time_left < 0:
+            time_left = 0
+        await asyncio.sleep(time_left)
+        time_ago = datetime.now() - reminder_data["sent_time"]
+        seconds = int(time_ago.total_seconds())
+        periods = [
+            ('year', 31536000),
+            ('month', 2592000),
+            ('week', 604800),
+            ('day', 86400),
+            ('hour', 3600),
+            ('minute', 60),
+            ('second', 1)
+        ]
+        strings = []
+        for period_name, period_seconds in periods:
+            if seconds >= period_seconds:
+                period_value, seconds = divmod(seconds, period_seconds)
+                if period_value == 1:
+                    strings.append(f"{period_value} {period_name}")
+                else:
+                    strings.append(f"{period_value} {period_name}s")
+        if not strings:
+            time_ago_str = "just now"
+        else:
+            time_ago_str = " ".join(strings) + " ago"
+        embed = nextcord.Embed(title="Your Reminder", description=f"You asked to be reminded about: {reminder_data['reminder']} {time_ago_str}.", color=nextcord.Color.blurple())
+        embed.add_field(name="Activation Message", value=f"https://discord.com/channels/{reminder_data['guild']}/{reminder_data['channel']}/{reminder_data['_id']}")
+        await reminder_data["channel"].send(embed=embed)
 
     def get_best_match(self, members, args):
         name_dict = {}
