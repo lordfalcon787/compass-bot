@@ -46,7 +46,6 @@ class utility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-
     @tasks.loop(hours=1)
     async def reminder_task(self):
         docs = reminder_collection.find()
@@ -103,6 +102,7 @@ class utility(commands.Cog):
         reminder_collection.insert_one(reminder_data)
         if total_seconds < 3600:
             asyncio.create_task(self.reminder_fulfilled(reminder_data))
+            await ctx.message.add_reaction(GREEN_CHECK)
             return
         await ctx.message.add_reaction(GREEN_CHECK)
 
