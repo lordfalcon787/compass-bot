@@ -270,6 +270,24 @@ class Lottery(commands.Cog):
         embed.set_footer(text=f"Robbing Central Lotteries", icon_url=interaction.guild.icon.url)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
+    @lottery.subcommand(name="update", description="Updates the current lottery's embed")
+    async def update(self, interaction: nextcord.Interaction):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        doc = collection.find_one({"_id": "lottery"})
+        if not doc:
+            await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
+            return
+        guild = self.bot.get_guild(1205270486230110330)
+        channel = guild.get_channel(lottery_channel)
+        message = await channel.fetch_message(doc["message_id"])
+        embed = nextcord.Embed(title="Robbing Central Lottery", description=f"**Current Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{sum(doc['entries'].values()):,}`\n**Status** | Ends <t:{int(doc['end_time'].timestamp())}:R>", color=nextcord.Color.blurple())
+        embed.set_footer(text=f"Robbing Central Lotteries", icon_url=guild.icon.url)
+        embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
+        await message.edit(embed=embed)
+        await interaction.response.send_message("Lottery embed updated successfully.", ephemeral=True)
+
     @lottery.subcommand(name="addentries", description="Adds entries to a user for the current lottery.")
     async def addentries(self, interaction: nextcord.Interaction, user: nextcord.Member, quantity: int):
         if not interaction.user.guild_permissions.administrator:
