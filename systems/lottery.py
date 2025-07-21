@@ -336,7 +336,7 @@ class Lottery(commands.Cog):
         await log_channel.send(embed=embed)
 
     @lottery.subcommand(name="create", description="Creates a new lottery.")
-    async def create(self, interaction: nextcord.Interaction, entry_cost: str, days: str, initial_pool: str):
+    async def create(self, interaction: nextcord.Interaction, entry_cost: str, days: str, initial_pool: str, ping: bool):
         if interaction.channel.id != lottery_channel:
             await interaction.response.send_message("This command can only be used in the lottery channel.", ephemeral=True)
             return
@@ -392,7 +392,8 @@ class Lottery(commands.Cog):
         embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
         view = nextcord.ui.View()
         view.add_item(nextcord.ui.Button(label="🎰 Enter Lottery", style=nextcord.ButtonStyle.green, url=f"https://discord.com/channels/{interaction.guild.id}/{lottery_entry}"))
-        message = await interaction.channel.send(embed=embed, view=view)
+        content = f"<@&1396956584470384701>" if ping else None
+        message = await interaction.channel.send(content=content, embed=embed, view=view)
         collection.update_one({"_id": "lottery"}, {"$set": {"message_id": message.id}})
         await interaction.response.send_message("Lottery created successfully.", ephemeral=True)
         
