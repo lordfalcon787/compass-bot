@@ -160,7 +160,7 @@ class utility(commands.Cog):
             time_ago_str = "just now"
         else:
             time_ago_str = " ".join(strings) + " ago"
-        embed = nextcord.Embed(title="Your Reminder", description=f"You asked to be reminded about: {reminder_data['reminder']} {time_ago_str}.", color=nextcord.Color.blurple())
+        embed = nextcord.Embed(title="Your Reminder", description=f'You asked to be reminded about "{reminder_data["reminder"]}" **{time_ago_str}**.', color=nextcord.Color.blurple())
         embed.add_field(name="Activation Message", value=f"https://discord.com/channels/{reminder_data['guild']}/{reminder_data['channel']}/{reminder_data['_id']}")
         user = self.bot.get_user(reminder_data["user"])
         if not user:
