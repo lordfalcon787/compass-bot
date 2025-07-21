@@ -95,8 +95,9 @@ class utility(commands.Cog):
         end_time = datetime.now() + timedelta(seconds=total_seconds)
         current_reminder_id = reminder_collection.find_one({"_id": "current_reminder_id"})
         if not current_reminder_id:
-            current_reminder_id = 0
-        current_reminder_id = current_reminder_id["current_reminder_id"]
+            current_reminder_id = 1
+        else:
+            current_reminder_id = current_reminder_id["current_reminder_id"]
         current_reminder_id += 1
         reminder_collection.update_one({"_id": "current_reminder_id"}, {"$set": {"current_reminder_id": current_reminder_id}})
         reminder_data = {
