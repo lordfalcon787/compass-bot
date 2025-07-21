@@ -50,15 +50,14 @@ class utility(commands.Cog):
     async def reminder_task(self):
         docs = reminder_collection.find()
         for doc in docs:
-            print(doc["end_time"])
             if doc["end_time"] < datetime.now() + timedelta(hours=1):
-                print("Reminder fulfilled")
                 asyncio.create_task(self.reminder_fulfilled(doc))
 
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Utility cog loaded.")
         self.bot.add_view(View())
+        self.reminder_task.start()
 
     @commands.command(name="reminder", aliases=["remind", "rm"])
     async def reminder_cmd(self, ctx, time, *, message=None):
@@ -281,7 +280,11 @@ class utility(commands.Cog):
             await ctx.send("Please specify a reminder ID to delete.")
             return
         reminder_id = split[2]
-        reminder_collection.delete_one({"reminder_id": reminder_id})
+        reminders = reminder_collection.find_one({"reminder_id": reminder_id})
+        if not reminders:
+            await ctx.send("No reminders found with that ID.")
+            return
+        reminder_collection.delete_one({"_id": reminders["_id"]})
         await ctx.message.add_reaction(GREEN_CHECK)
         await ctx.reply(f"Reminder #{reminder_id} deleted.", mention_author=False)
 
