@@ -164,7 +164,7 @@ class Lottery(commands.Cog):
         await self.cancel_lottery(doc)
         await interaction.response.send_message("Lottery cancelled successfully.", ephemeral=True)
 
-    @lottery.subcommand(name="addentries")
+    @lottery.subcommand(name="addentries", description="Adds entries to a user for the current lottery.")
     async def addentries(self, interaction: nextcord.Interaction, user: nextcord.Member, quantity: int):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
@@ -179,7 +179,7 @@ class Lottery(commands.Cog):
         collection.update_one({"_id": "lottery"}, {"$set": {"entries": doc["entries"]}})
         await interaction.response.send_message(f"Added {quantity} entries to {user.mention}.", ephemeral=True)
 
-    @lottery.subcommand(name="removeentries")
+    @lottery.subcommand(name="removeentries", description="Removes entries from a user for the current lottery.")
     async def removeentries(self, interaction: nextcord.Interaction, user: nextcord.Member, quantity: int):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
@@ -194,7 +194,7 @@ class Lottery(commands.Cog):
         collection.update_one({"_id": "lottery"}, {"$set": {"entries": doc["entries"]}})
         await interaction.response.send_message(f"Removed {quantity} entries from {user.mention}.", ephemeral=True)
 
-    @lottery.subcommand(name="create")
+    @lottery.subcommand(name="create", description="Creates a new lottery.")
     async def create(self, interaction: nextcord.Interaction, entry_cost: str, days: str, initial_pool: str):
         if interaction.channel.id != lottery_channel:
             await interaction.response.send_message("This command can only be used in the lottery channel.", ephemeral=True)
