@@ -249,12 +249,12 @@ class Lottery(commands.Cog):
         
 
     @commands.Cog.listener()
-    async def on_message(self, message):
-        if message.channel.id != lottery_entry:
+    async def on_raw_message_edit(self, payload):
+        if payload.channel_id != lottery_entry:
             return
+        message = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
         if message.author.id != 270904126974590976:
             return
-        
         content = await self.extract(message)
         content = " ".join(content)
         if "successfully donated" not in content.lower():
