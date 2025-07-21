@@ -66,7 +66,7 @@ class Lottery(commands.Cog):
                 log_channel = guild.get_channel(lottery_logs)
                 await log_channel.send(embed=embed)
             if doc["end_time"] - datetime.now() <= timedelta(hours=1):
-                await self.end_lottery(doc, True)
+                asyncio.create_task(self.end_lottery(doc, True))
             
     @commands.Cog.listener()
     async def on_ready(self):
