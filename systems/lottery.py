@@ -280,7 +280,7 @@ class Lottery(commands.Cog):
                 color=nextcord.Color.blurple()
             )
             embed.set_footer(text=f"Robbing Central Lotteries", icon_url=message.guild.icon.url)
-            await message.reply(embed=embed)
+            await message.reply(content=f"{message.interaction.user.mention}", embed=embed)
             log_channel = message.guild.get_channel(lottery_logs)
             await log_channel.send(embed=embed)
             await message.add_reaction(GREEN_CHECK)
