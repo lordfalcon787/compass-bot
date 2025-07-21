@@ -264,7 +264,8 @@ class Poll(commands.Cog):
         if admin_role not in interaction.user.roles and interaction.user.id != interaction.guild.owner_id:
             await interaction.send("You do not have permission to use this command.", ephemeral=True)
             return
-        description = description.replace("\\n", "\n")
+        if description:
+            description = description.replace("\\n", "\n")
         embed = nextcord.Embed(title=title, description=description, color=nextcord.Color.blue())
         embed.set_footer(text=f"Admin poll created by {interaction.user.name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else None)
         if binary:
@@ -272,6 +273,7 @@ class Poll(commands.Cog):
         else:
             view = AdminPollView()
         message = await interaction.channel.send(embed=embed, view=view)
+        await message.create_thread(name=f"Poll Discussion", auto_archive_duration=60)
         if binary:
             collection.insert_one({"_id": str(message.id), "title": title, "description": description, "binary": binary, "creator": str(interaction.user.id), "created_at": datetime.utcnow(), "yes": [], "no": []})
         else:
@@ -325,6 +327,7 @@ class Poll(commands.Cog):
         choice2: str = SlashOption(description="Second choice"),
         description: Optional[str] = SlashOption(description="The description of the poll"),
         image: Optional[nextcord.Attachment] = SlashOption(description="The image to display on the embed."),
+        thread: Optional[bool] = SlashOption(description="Whether a discussion thread should be created", required=False),
         choice3: Optional[str] = SlashOption(description="Third choice", required=False),
         choice4: Optional[str] = SlashOption(description="Fourth choice", required=False),
         choice5: Optional[str] = SlashOption(description="Fifth choice", required=False),
@@ -381,6 +384,8 @@ class Poll(commands.Cog):
             view.add_item(button)
 
         message2 = await interaction.channel.send(embed=embed, view=view)
+        if thread:
+            await message2.create_thread(name=f"Poll Discussion", auto_archive_duration=60)
         await interaction.response.send_message("Poll created", ephemeral=True)
 
         poll_data = {
@@ -409,6 +414,7 @@ class Poll(commands.Cog):
         title: str = SlashOption(description="The title of the poll"),
         choice1: str = SlashOption(description="First choice"),
         choice2: str = SlashOption(description="Second choice"),
+        thread: Optional[bool] = SlashOption(description="Whether a discussion thread should be created", required=False),
         anonymous: Optional[bool] = SlashOption(description="Whether the poll should be anonymous"),
         description: Optional[str] = SlashOption(description="The description of the poll"),
         image: Optional[nextcord.Attachment] = SlashOption(description="The image to display on the embed."),
@@ -475,6 +481,8 @@ class Poll(commands.Cog):
             view.add_item(button)
 
         message2 = await interaction.channel.send(embed=embed, view=view)
+        if thread:
+            await message2.create_thread(name=f"Poll Discussion", auto_archive_duration=60)
         await interaction.response.send_message("Poll created", ephemeral=True)
 
         poll_data = {
