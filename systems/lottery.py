@@ -118,7 +118,7 @@ class Lottery(commands.Cog):
         log_channel = guild.get_channel(lottery_logs)
         await log_channel.send(embed=embed)
         collection.delete_one({"_id": "lottery"})
-        await self.bot.get_cog("payouts").queue_payout([int(winner), doc["pool"], None, message.id, "lottery"], message)
+        await self.bot.get_cog("payouts").queue_payout([int(winner), doc["pool"], None, message.id, "Lottery Payout"], message)
     
     async def cancel_lottery(self, doc):
         guild = self.bot.get_guild(1205270486230110330)
@@ -131,9 +131,16 @@ class Lottery(commands.Cog):
         await message.edit(embed=embed, view=None)
         log_channel = guild.get_channel(lottery_logs)
         await log_channel.send(embed=embed)
+        entry_cost = doc["entry"]
+        for user, entries in doc["entries"].items():
+            try:
+                amount = entry_cost * entries
+                await self.bot.get_cog("payouts").queue_payout([int(user), amount, None, message.id, "Lottery Refund"], message)
+            except Exception as e:
+                print(e)
         collection.delete_one({"_id": "lottery"})
 
-    @lottery.subcommand(name="end")
+    @lottery.subcommand(name="end", description="Ends the current lottery and selects a winner.")
     async def end(self, interaction: nextcord.Interaction):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
@@ -145,7 +152,7 @@ class Lottery(commands.Cog):
         await self.end_lottery(doc, False)
         await interaction.response.send_message("Lottery ended successfully.", ephemeral=True)
 
-    @lottery.subcommand(name="cancel")
+    @lottery.subcommand(name="cancel", description="Cancels the current lottery and refunds all entries.")
     async def cancel(self, interaction: nextcord.Interaction):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
