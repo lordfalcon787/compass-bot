@@ -50,7 +50,9 @@ class utility(commands.Cog):
     async def reminder_task(self):
         docs = reminder_collection.find()
         for doc in docs:
+            print(doc["end_time"])
             if doc["end_time"] < datetime.now() + timedelta(hours=1):
+                print("Reminder fulfilled")
                 asyncio.create_task(self.reminder_fulfilled(doc))
 
     @commands.Cog.listener()
