@@ -54,7 +54,7 @@ class Lottery(commands.Cog):
                 guild = self.bot.get_guild(1205270486230110330)
                 embed = nextcord.Embed(
                     title="Robbing Central Lottery",
-                    description=f"**Current Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries}`\n**Ends** | <t:{int(doc['end_time'].timestamp())}:R>",
+                    description=f"**Current Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries:,}`\n**Ends** | <t:{int(doc['end_time'].timestamp())}:R>",
                     color=nextcord.Color.blurple()
                 )
                 embed.set_footer(text=f"Robbing Central Lotteries", icon_url=guild.icon.url)
@@ -276,7 +276,7 @@ class Lottery(commands.Cog):
             collection.update_one({"_id": "lottery"}, {"$inc": {f"entries.{message.author.id}": entries, "pool": amount}})
             embed = nextcord.Embed(
                 title="Lottery Entries Added",
-                description=f"**Entries** | `{entries}`\n**Donated** | `⏣ {amount:,}`\n**Cost Per Entry** | `⏣ {entry:,}`\n**Entrant** | {message.interaction.user.mention}",
+                description=f"**Entries** | `{entries:,}`\n**Donated** | `⏣ {amount:,}`\n**Cost Per Entry** | `⏣ {entry:,}`\n**Entrant** | {message.interaction.user.mention}",
                 color=nextcord.Color.blurple()
             )
             embed.set_footer(text=f"Robbing Central Lotteries", icon_url=message.guild.icon.url)
