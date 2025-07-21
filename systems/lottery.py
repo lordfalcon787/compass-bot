@@ -85,8 +85,19 @@ class Lottery(commands.Cog):
             if entries < 1:
                 await message.reply(f"Invalid donation, one entry costs ⏣ {entry:,}.")
                 return
-            collection.update_one({"_id": "lottery"}, {"$inc": {f"entries.{message.author.id}": entries}})
+            collection.update_one({"_id": "lottery"}, {"$inc": {f"entries.{message.author.id}": entries, "pool": amount}})
+            embed = nextcord.Embed(
+                title="Lottery Entries Added",
+                description=f"**Entries** | `{entries}`\n**Donated** | `⏣ {amount:,}`\n**Cost Per Entry** | `⏣ {entry:,}`\n**Entrant** | {message.interaction.user.mention}",
+                color=nextcord.Color.blurple()
+            )
+            embed.set_footer(text=f"Robbing Central Lotteries", icon_url=message.guild.icon.url)
+            await message.reply(embed=embed)
+            log_channel = message.guild.get_channel(lottery_logs)
+            await log_channel.send(embed=embed)
             await message.add_reaction(GREEN_CHECK)
+        else:
+            await message.reply("Invalid donation, only coins are accepted for lotteries.", mention_author=False)
 
 
 def setup(bot):
