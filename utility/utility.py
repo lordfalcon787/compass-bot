@@ -48,9 +48,14 @@ class utility(commands.Cog):
 
     @tasks.loop(hours=1)
     async def reminder_task(self):
-        docs = reminder_collection.find()
+        docs = list(reminder_collection.find())
+        print(len(docs))
         for doc in docs:
+            print(doc["_id"])
+            if doc["_id"] == "current_reminder_id":
+                continue
             if doc["end_time"] < datetime.now() + timedelta(hours=1):
+                print("Reminder fulfilled")
                 asyncio.create_task(self.reminder_fulfilled(doc))
 
     @commands.Cog.listener()
@@ -279,7 +284,11 @@ class utility(commands.Cog):
         if len(split) < 3:
             await ctx.send("Please specify a reminder ID to delete.")
             return
-        reminder_id = split[2]
+        try:
+            reminder_id = int(split[2])
+        except:
+            await ctx.send("Please specify a valid reminder ID.")
+            return
         reminders = reminder_collection.find_one({"reminder_id": reminder_id})
         if not reminders:
             await ctx.send("No reminders found with that ID.")
