@@ -267,8 +267,8 @@ class Lottery(commands.Cog):
             await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
             return
         if user.id not in doc["entries"]:
-            doc["entries"][user.id] = 0
-        doc["entries"][user.id] += quantity
+            doc["entries"][str(user.id)] = 0
+        doc["entries"][str(user.id)] += quantity
         collection.update_one({"_id": "lottery"}, {"$set": {"entries": doc["entries"]}})
         await interaction.response.send_message(f"Added {quantity} entries to {user.mention}.", ephemeral=True)
 
@@ -282,8 +282,8 @@ class Lottery(commands.Cog):
             await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
             return
         if user.id not in doc["entries"]:
-            doc["entries"][user.id] = 0
-        doc["entries"][user.id] -= quantity
+            doc["entries"][str(user.id)] = 0
+        doc["entries"][str(user.id)] -= quantity
         collection.update_one({"_id": "lottery"}, {"$set": {"entries": doc["entries"]}})
         await interaction.response.send_message(f"Removed {quantity} entries from {user.mention}.", ephemeral=True)
 
