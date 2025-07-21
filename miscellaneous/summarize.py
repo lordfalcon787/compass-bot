@@ -6,6 +6,10 @@ import json
 with open("config.json", "r") as file:
     config = json.load(file)
 
+loading_emoji = "<a:loading_animation:1218134049780928584>"
+GREEN_CHECK = "<:green_check2:1291173532432203816>"
+RED_X = "<:red_x2:1292657124832448584>"
+
 class Summarize(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -25,7 +29,7 @@ class Summarize(commands.Cog):
         if not ctx.message.reference:
             await ctx.reply("Please reply to a message to summarize it.", mention_author=False)
             return
-            
+        await ctx.message.add_reaction(loading_emoji)
         message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
         
         try:
@@ -45,11 +49,12 @@ class Summarize(commands.Cog):
                 color=nextcord.Color.blurple()
             )
             embed.set_footer(text=f"Requested by {ctx.author}")
-            
-            await ctx.message.add_reaction("✅")
+            await ctx.message.clear_reactions()
+            await ctx.message.add_reaction(GREEN_CHECK)
             await ctx.message.reference.resolved.reply(embed=embed, mention_author=False)
             
         except Exception as e:
+            await ctx.message.clear_reactions()
             print(e)
             await ctx.reply("Sorry, there was an error summarizing that message.", mention_author=False)
 
