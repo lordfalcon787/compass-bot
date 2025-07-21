@@ -1,13 +1,17 @@
 import nextcord
 from nextcord.ext import commands
 from openai import OpenAI
+import json
+
+with open("config.json", "r") as file:
+    config = json.load(file)
 
 class Summarize(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         if not hasattr(Summarize, '_client'):
             Summarize._client = OpenAI(
-                api_key="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",
+                api_key=config["api_key"],
                 base_url="https://openrouter.ai/api/v1"
             )
         self.client = Summarize._client
