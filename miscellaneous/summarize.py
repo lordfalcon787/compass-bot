@@ -2,6 +2,9 @@ import nextcord
 from nextcord.ext import commands
 from openai import OpenAI
 import json
+import time
+
+_last_summarize_time = 0
 
 with open("config.json", "r") as file:
     config = json.load(file)
@@ -26,6 +29,13 @@ class Summarize(commands.Cog):
 
     @commands.command(name="summarize")
     async def summarize(self, ctx):
+        global _last_summarize_time
+        now = time.time()
+        if now - _last_summarize_time < 60:
+            await ctx.reply("This command can only be used once per minute. Please wait a bit before trying again.", mention_author=False)
+            return
+        _last_summarize_time = now
+
         if not ctx.message.reference:
             await ctx.reply("Please reply to a message to summarize it.", mention_author=False)
             return
