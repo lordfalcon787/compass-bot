@@ -424,7 +424,7 @@ class Poll(commands.Cog):
         choices = [choice1, choice2, choice3, choice4, choice5, choice6, choice7, choice8, choice9, choice10]
         choices = [choice for choice in choices if choice is not None]
 
-        if interaction.channel.id == 1205579598411202681:
+        if interaction.channel.id == 1205579598411202681 or interaction.channel.id == 1394712365509120101:
             await interaction.response.send_message("Please use `/poll admin` for polls in this channel.", ephemeral=True)
             return
 
@@ -630,9 +630,12 @@ class Poll(commands.Cog):
             return
         elif not message.embeds[0].footer:
             return
-        elif not message.embeds[0].footer.text.startswith("Poll created by") and not message.embeds[0].footer.text.startswith("Admin poll created by"):
+        footer_text = message.embeds[0].footer.text
+        is_user_poll = footer_text.startswith("Poll created by")
+        is_admin_poll = footer_text.startswith("Admin poll created by")
+        if not (is_user_poll or is_admin_poll):
             return
-        elif "anonymous" in message.embeds[0].footer.text:
+        elif "anonymous" in footer_text:
             await payload.member.send("This poll is anonymous. You are unable to see the results.")
             return
         elif payload.emoji.name != "📊":
@@ -653,119 +656,123 @@ class Poll(commands.Cog):
                         pass
                 await message.clear_reactions()
                 return
-            
+
             choice_data = []
-            # Handle binary polls
             if poll.get("binary", False):
                 yes_voters = poll.get("yes", [])
                 no_voters = poll.get("no", [])
                 abstain_voters = poll.get("abstain", [])
-                
-                for choice_text, voters in [("Yes", yes_voters), ("No", no_voters), ("Abstain", abstain_voters)]:
+                binary_choices = [("Yes", yes_voters), ("No", no_voters)]
+                if "abstain" in poll:
+                    binary_choices.append(("Abstain", abstain_voters))
+                for choice_text, voters in binary_choices:
                     voter_strings = []
                     for voter_id in voters:
-                        user = await self.bot.fetch_user(int(voter_id))
+                        try:
+                            user = await self.bot.fetch_user(int(voter_id))
+                        except Exception:
+                            user = None
                         if user:
                             voter_strings.append(f"`{user.name}` | <@{user.id}>")
                     if voter_strings:
                         choice_data.append((choice_text, voter_strings))
             else:
-                # Handle regular polls
                 for i in range(10):
                     choice_key = f"choice_{i}"
                     choice_text_key = f"choice_{i}_text"
                     if choice_key in poll and choice_text_key in poll:
                         choice_text = poll[choice_text_key]
                         voters = poll[choice_key]
-                        
                         voter_strings = []
                         for voter_id in voters:
-                            user = await self.bot.fetch_user(int(voter_id))
+                            try:
+                                user = await self.bot.fetch_user(int(voter_id))
+                            except Exception:
+                                user = None
                             if user:
                                 voter_strings.append(f"`{user.name}` | <@{user.id}>")
-                        
                         if voter_strings:
                             choice_data.append((choice_text, voter_strings))
 
-            # Split into pages of 5 choices each
             pages = []
             current_page = nextcord.Embed(title="Poll Results", color=0x00ff00)
             field_count = 0
 
             for choice_text, voter_strings in choice_data:
-                # Split voter strings into chunks of 15 to stay under 1024 chars
                 chunks = []
                 current_chunk = []
                 current_length = 0
-                
+
                 for voter in voter_strings:
-                    if current_length + len(voter) + 1 > 1000:  # Leave some buffer
+                    if current_length + len(voter) + 1 > 1000:
                         chunks.append(current_chunk)
                         current_chunk = [voter]
                         current_length = len(voter)
                     else:
                         current_chunk.append(voter)
-                        current_length += len(voter) + 1  # +1 for newline
-                
+                        current_length += len(voter) + 1
+
                 if current_chunk:
                     chunks.append(current_chunk)
 
-                # Add fields for this choice, creating new pages as needed
                 for chunk_idx, chunk in enumerate(chunks):
                     value = "\n".join(chunk)
                     name = f"{choice_text}" if chunk_idx == 0 else f"{choice_text} (cont.)"
-                    
+
                     if field_count >= 5:
                         pages.append(current_page)
                         current_page = nextcord.Embed(title="Poll Results", color=0x00ff00)
                         field_count = 0
-                    
+
                     current_page.add_field(name=name, value=value, inline=False)
                     field_count += 1
 
             if field_count > 0:
                 pages.append(current_page)
 
-            # Set footer for all pages
             for i, page in enumerate(pages):
-                page.set_footer(text=f"Poll results for {payload.message_id} | Page {i+1}/{len(pages)}", 
-                              icon_url=message.embeds[0].footer.icon_url)
+                page.set_footer(
+                    text=f"Poll results for {payload.message_id} | Page {i+1}/{len(pages)}",
+                    icon_url=message.embeds[0].footer.icon_url
+                )
 
             await message.clear_reactions()
-            
+
             user = await self.bot.fetch_user(payload.user_id)
             if user:
                 try:
                     if pages:
                         current_page = 0
                         view = nextcord.ui.View(timeout=300)
-                        
+
                         async def previous_callback(interaction: nextcord.Interaction):
                             nonlocal current_page
                             current_page = (current_page - 1) % len(pages)
                             await interaction.response.edit_message(embed=pages[current_page])
-                            
+
                         async def next_callback(interaction: nextcord.Interaction):
                             nonlocal current_page
                             current_page = (current_page + 1) % len(pages)
                             await interaction.response.edit_message(embed=pages[current_page])
-                            
+
                         prev_button = nextcord.ui.Button(label="Previous", style=nextcord.ButtonStyle.gray)
                         next_button = nextcord.ui.Button(label="Next", style=nextcord.ButtonStyle.gray)
-                        
+
                         prev_button.callback = previous_callback
                         next_button.callback = next_callback
-                        
+
                         if len(pages) > 1:
                             view.add_item(prev_button)
                             view.add_item(next_button)
-                            
+
                         await user.send(embed=pages[0], view=view)
                     else:
                         result_embed = nextcord.Embed(title="Poll Results", color=0x00ff00)
                         result_embed.description = "No votes recorded yet"
-                        result_embed.set_footer(text=f"Poll results for {payload.message_id}",
-                                              icon_url=message.embeds[0].footer.icon_url)
+                        result_embed.set_footer(
+                            text=f"Poll results for {payload.message_id}",
+                            icon_url=message.embeds[0].footer.icon_url
+                        )
                         await user.send(embed=result_embed)
                 except nextcord.Forbidden:
                     pass
