@@ -47,7 +47,8 @@ class Summarize(commands.Cog):
             await ctx.message.add_reaction("✅")
             await ctx.message.reference.resolved.reply(embed=embed, mention_author=False)
             
-        except:
+        except Exception as e:
+            print(e)
             await ctx.reply("Sorry, there was an error summarizing that message.", mention_author=False)
 
     @commands.Cog.listener()
