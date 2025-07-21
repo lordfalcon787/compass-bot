@@ -48,7 +48,7 @@ class Summarize(commands.Cog):
                 messages=[
                     {
                         "role": "user", 
-                        "content": f"Summarize the following text in 2 sentences or less: {message.content}"
+                        "content": f"Summarize the following text in 2 sentences or less using simple language: {message.content}"
                     }
                 ]
             )
@@ -82,7 +82,7 @@ class Summarize(commands.Cog):
                     messages=[
                         {
                             "role": "user",
-                            "content": f"Summarize the following text in 2 sentences or less: {message.content}"
+                            "content": f"Summarize the following text in 2 sentences or less using simple language: {message.content}"
                         }
                     ]
                 )
