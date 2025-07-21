@@ -1,11 +1,8 @@
 import nextcord
 from nextcord.ext import commands
 from openai import OpenAI
-import json
-with open("config.json", "r") as file:
-    config = json.load(file)
 
-api_key = config["api_key"]
+api_key = "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"
 
 class Summarize(commands.Cog):
     def __init__(self, bot):
@@ -31,7 +28,7 @@ class Summarize(commands.Cog):
         
         try:
             response = self.client.chat.completions.create(
-                model="meta-llama/llama-3.2-3b-instruct:free",
+                model="nousresearch/deephermes-3-llama-3-8b-preview:free",
                 messages=[
                     {
                         "role": "user", 
