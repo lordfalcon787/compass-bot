@@ -60,8 +60,11 @@ class utility(commands.Cog):
 
     @commands.command(name="reminder", aliases=["remind", "rm"])
     async def reminder_cmd(self, ctx, time, *, message):
-        if not ctx.author.guild_permissions.administrator:
-            await ctx.message.add_reaction(RED_X)
+        if time.lower() == "list":
+            await self.list_reminders(ctx)
+            return
+        if time.lower() == "delete":
+            await self.delete_reminder(ctx)
             return
         date_formats = ["%m/%d/%Y", "%m/%d/%y", "%m/%d"]
         parsed_date = None
@@ -138,8 +141,80 @@ class utility(commands.Cog):
         await ctx.message.add_reaction(GREEN_CHECK)
         await ctx.reply(embed=embed, mention_author=False)
 
+    async def list_reminders(self, ctx):
+        import math
+        from nextcord.ui import View, Button
+
+        docs = list(reminder_collection.find({"user": ctx.author.id}))
+        if not docs:
+            await ctx.reply("There are no reminders set.", mention_author=False)
+            return
+
+        reminders_per_page = 10
+        total_pages = math.ceil(len(docs) / reminders_per_page)
+
+        def get_embed(page):
+            start = page * reminders_per_page
+            end = start + reminders_per_page
+            embed = nextcord.Embed(
+                title=f"Reminders (Page {page+1}/{total_pages})",
+                color=nextcord.Color.blurple()
+            )
+            for doc in docs[start:end]:
+                user = self.bot.get_user(doc['user'])
+                user_mention = user.mention if user else f"<@{doc['user']}>"
+                channel_mention = f"<#{doc['channel']}>"
+                reminder_text = doc.get('reminder', 'No reminder text')
+                embed.add_field(
+                    name=f"Reminder #{doc['reminder_id']}",
+                    value=f"By: {user_mention}\nIn: {channel_mention}\nAbout: {reminder_text}",
+                    inline=False
+                )
+            embed.set_footer(text="Use the buttons below to navigate pages.")
+            return embed
+
+        class RemindersView(View):
+            def __init__(self, author, timeout=60):
+                super().__init__(timeout=timeout)
+                self.page = 0
+                self.author = author
+
+            async def interaction_check(self, interaction):
+                return interaction.user.id == self.author.id
+
+            @Button(label="Previous", style=nextcord.ButtonStyle.primary, emoji="⬅️", disabled=True)
+            async def previous(self, button: Button, interaction: nextcord.Interaction):
+                self.page -= 1
+                if self.page == 0:
+                    self.previous.disabled = True
+                self.next.disabled = False
+                await interaction.response.edit_message(embed=get_embed(self.page), view=self)
+
+            @Button(label="Next", style=nextcord.ButtonStyle.primary, emoji="➡️", disabled=(total_pages <= 1))
+            async def next(self, button: Button, interaction: nextcord.Interaction):
+                self.page += 1
+                if self.page == total_pages - 1:
+                    self.next.disabled = True
+                self.previous.disabled = False
+                await interaction.response.edit_message(embed=get_embed(self.page), view=self)
+
+        view = RemindersView(ctx.author)
+        await ctx.reply(embed=get_embed(0), view=view, mention_author=False)
+
+    async def delete_reminder(self, ctx):
+        split = ctx.message.content.split(" ")
+        if len(split) < 3:
+            await ctx.send("Please specify a reminder ID to delete.")
+            return
+        reminder_id = split[2]
+        reminder_collection.delete_one({"reminder_id": reminder_id})
+        await ctx.message.add_reaction(GREEN_CHECK)
+        await ctx.reply(f"Reminder #{reminder_id} deleted.", mention_author=False)
 
     async def reminder_fulfilled(self, reminder_data):
+        doc = reminder_collection.find_one({"_id": reminder_data["_id"]})
+        if not doc:
+            return
         time_left = (reminder_data["end_time"] - datetime.now()).total_seconds()
         if time_left < 0:
             time_left = 0
