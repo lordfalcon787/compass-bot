@@ -100,11 +100,37 @@ class utility(commands.Cog):
             "reminder": message
         }
         reminder_collection.insert_one(reminder_data)
+        def format_time(seconds):
+            periods = [
+                ('year', 31536000),
+                ('month', 2592000),
+                ('week', 604800),
+                ('day', 86400),
+                ('hour', 3600),
+                ('minute', 60),
+                ('second', 1)
+            ]
+            strings = []
+            for period_name, period_seconds in periods:
+                if seconds >= period_seconds:
+                    period_value, seconds = divmod(seconds, period_seconds)
+                    if period_value == 1:
+                        strings.append(f"{period_value} {period_name}")
+                    else:
+                        strings.append(f"{period_value} {period_name}s")
+            if not strings:
+                return "0 seconds"
+            if len(strings) == 1:
+                return strings[0]
+            else:
+                return f"{', '.join(strings[:-1])} and {strings[-1]}"
+        time_str = format_time(total_seconds)
+        embed = nextcord.Embed(title="Reminder Created", description=f"Of course, **{ctx.author.name}**. I will remind you about: {message} in {time_str}.", color=nextcord.Color.blurple())
         if total_seconds < 3600:
             asyncio.create_task(self.reminder_fulfilled(reminder_data))
-            await ctx.message.add_reaction(GREEN_CHECK)
-            return
         await ctx.message.add_reaction(GREEN_CHECK)
+        await ctx.reply(embed=embed, mention_author=False)
+
 
     async def reminder_fulfilled(self, reminder_data):
         time_left = (reminder_data["end_time"] - datetime.now()).total_seconds()
