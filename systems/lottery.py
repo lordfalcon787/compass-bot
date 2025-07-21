@@ -287,6 +287,10 @@ class Lottery(commands.Cog):
         embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
         await message.edit(embed=embed)
         await interaction.response.send_message("Lottery embed updated successfully.", ephemeral=True)
+        log_channel = interaction.guild.get_channel(lottery_logs)
+        embed = nextcord.Embed(title="Lottery Embed Updated", description=f"**Updated By** | {interaction.user.mention}", color=nextcord.Color.blurple())
+        embed.set_footer(text=f"Robbing Central Lotteries", icon_url=interaction.guild.icon.url)
+        await log_channel.send(embed=embed)
 
     @lottery.subcommand(name="addentries", description="Adds entries to a user for the current lottery.")
     async def addentries(self, interaction: nextcord.Interaction, user: nextcord.Member, quantity: int):
