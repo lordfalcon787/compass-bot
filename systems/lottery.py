@@ -91,6 +91,11 @@ class Lottery(commands.Cog):
         if bool:
             seconds_till_end = (doc["end_time"] - datetime.now()).total_seconds()
             await asyncio.sleep(seconds_till_end)
+        check_doc = collection.find_one({"_id": "lottery"})
+        if not check_doc:
+            return
+        if check_doc["status"] == "ended":
+            return
         collection.update_one({"_id": "lottery"}, {"$set": {"status": "ended"}})
         guild = self.bot.get_guild(1205270486230110330)
         channel = guild.get_channel(lottery_channel)
