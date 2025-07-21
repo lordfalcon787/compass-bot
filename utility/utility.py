@@ -155,54 +155,122 @@ class utility(commands.Cog):
             return
 
         reminders_per_page = 10
-        total_pages = math.ceil(len(docs) / reminders_per_page)
+
+        class RemindersView(View):
+            def __init__(self, docs, reminders_per_page):
+                super().__init__(timeout=120)
+                self.docs = docs
+                self.reminders_per_page = reminders_per_page
+                self.max_page = math.ceil(len(docs) / reminders_per_page)
+                self.current_page = 0
+                self.update_buttons()
+
+            def update_buttons(self):
+                self.clear_items()
+                self.add_item(Button(label="⏪", style=1, custom_id="first", disabled=self.current_page == 0))
+                self.add_item(Button(label="◀️", style=1, custom_id="prev", disabled=self.current_page == 0))
+                self.add_item(Button(label=f"Page {self.current_page+1}/{self.max_page}", style=2, disabled=True))
+                self.add_item(Button(label="▶️", style=1, custom_id="next", disabled=self.current_page == self.max_page-1))
+                self.add_item(Button(label="⏩", style=1, custom_id="last", disabled=self.current_page == self.max_page-1))
+
+            async def interaction_check(self, interaction):
+                return interaction.user.id == interaction.message.interaction.user.id if interaction.message.interaction else True
+
+            async def on_timeout(self):
+                for item in self.children:
+                    item.disabled = True
+                if self.message:
+                    await self.message.edit(view=self)
+
+            @property
+            def message(self):
+                return getattr(self, "_message", None)
+
+            @message.setter
+            def message(self, value):
+                self._message = value
+
+            async def button_callback(self, interaction, action):
+                if action == "first":
+                    self.current_page = 0
+                elif action == "prev":
+                    if self.current_page > 0:
+                        self.current_page -= 1
+                elif action == "next":
+                    if self.current_page < self.max_page - 1:
+                        self.current_page += 1
+                elif action == "last":
+                    self.current_page = self.max_page - 1
+                self.update_buttons()
+                embed = get_embed(self.current_page)
+                await interaction.response.edit_message(embed=embed, view=self)
 
         def get_embed(page):
             start = page * reminders_per_page
             end = start + reminders_per_page
             embed = nextcord.Embed(
-                title=f"Reminders (Page {page+1}/{total_pages})",
+                title=f"Your Reminders (Page {page+1}/{math.ceil(len(docs)/reminders_per_page)})",
                 color=nextcord.Color.blurple()
             )
-            for doc in docs[start:end]:
-                user = self.bot.get_user(doc['user'])
-                user_mention = user.mention if user else f"<@{doc['user']}>"
-                channel_mention = f"<#{doc['channel']}>"
-                reminder_text = doc.get('reminder', 'No reminder text')
+            for i, doc in enumerate(docs[start:end], start=start+1):
+                reminder = doc.get("reminder", "No message")
+                reminder_id = doc.get("reminder_id", "N/A")
+                end_time = doc.get("end_time")
+                if isinstance(end_time, str):
+                    try:
+                        from dateutil.parser import parse
+                        end_time = parse(end_time)
+                    except Exception:
+                        end_time = None
+                if end_time:
+                    time_left = (end_time - datetime.now()).total_seconds()
+                    if time_left < 0:
+                        time_left = 0
+                    def format_time(seconds):
+                        periods = [
+                            ('year', 31536000),
+                            ('month', 2592000),
+                            ('week', 604800),
+                            ('day', 86400),
+                            ('hour', 3600),
+                            ('minute', 60),
+                            ('second', 1)
+                        ]
+                        strings = []
+                        for period_name, period_seconds in periods:
+                            if seconds >= period_seconds:
+                                period_value, seconds = divmod(seconds, period_seconds)
+                                if period_value == 1:
+                                    strings.append(f"{period_value} {period_name}")
+                                else:
+                                    strings.append(f"{period_value} {period_name}s")
+                        if not strings:
+                            return "0 seconds"
+                        if len(strings) == 1:
+                            return strings[0]
+                        else:
+                            return f"{', '.join(strings[:-1])} and {strings[-1]}"
+                    time_str = format_time(int(time_left))
+                else:
+                    time_str = "Unknown"
                 embed.add_field(
-                    name=f"Reminder #{doc['reminder_id']}",
-                    value=f"By: {user_mention}\nIn: {channel_mention}\nAbout: {reminder_text}",
+                    name=f"#{reminder_id} - in {time_str}",
+                    value=reminder,
                     inline=False
                 )
-            embed.set_footer(text="Use the buttons below to navigate pages.")
+            if not embed.fields:
+                embed.description = "No reminders on this page."
             return embed
 
-        class RemindersView(View):
-            def __init__(self, author, timeout=60):
-                super().__init__(timeout=timeout)
-                self.page = 0
-                self.author = author
+        view = RemindersView(docs, reminders_per_page)
 
-            async def interaction_check(self, interaction):
-                return interaction.user.id == self.author.id
+        async def button_handler(interaction):
+            action = interaction.data["custom_id"]
+            await view.button_callback(interaction, action)
 
-            @Button(label="Previous", style=nextcord.ButtonStyle.primary, emoji="⬅️", disabled=True)
-            async def previous(self, button: Button, interaction: nextcord.Interaction):
-                self.page -= 1
-                if self.page == 0:
-                    self.previous.disabled = True
-                self.next.disabled = False
-                await interaction.response.edit_message(embed=get_embed(self.page), view=self)
-
-            @Button(label="Next", style=nextcord.ButtonStyle.primary, emoji="➡️", disabled=(total_pages <= 1))
-            async def next(self, button: Button, interaction: nextcord.Interaction):
-                self.page += 1
-                if self.page == total_pages - 1:
-                    self.next.disabled = True
-                self.previous.disabled = False
-                await interaction.response.edit_message(embed=get_embed(self.page), view=self)
-
-        view = RemindersView(ctx.author)
+        for btn in view.children:
+            if isinstance(btn, Button) and btn.custom_id in {"first", "prev", "next", "last"}:
+                btn.callback = button_handler
         await ctx.reply(embed=get_embed(0), view=view, mention_author=False)
 
     async def delete_reminder(self, ctx):
