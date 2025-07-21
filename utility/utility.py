@@ -90,6 +90,12 @@ class utility(commands.Cog):
             except Exception:
                 total_seconds = 0
         end_time = datetime.now() + timedelta(seconds=total_seconds)
+        current_reminder_id = reminder_collection.find_one({"_id": "current_reminder_id"})
+        if not current_reminder_id:
+            current_reminder_id = 0
+        current_reminder_id = current_reminder_id["current_reminder_id"]
+        current_reminder_id += 1
+        reminder_collection.update_one({"_id": "current_reminder_id"}, {"$set": {"current_reminder_id": current_reminder_id}})
         reminder_data = {
             "_id": ctx.message.id,
             "sent_time": datetime.now(),
@@ -97,6 +103,7 @@ class utility(commands.Cog):
             "user": ctx.author.id,
             "channel": ctx.channel.id,
             "guild": ctx.guild.id,
+            "reminder_id": current_reminder_id,
             "reminder": message
         }
         reminder_collection.insert_one(reminder_data)
@@ -125,7 +132,7 @@ class utility(commands.Cog):
             else:
                 return f"{', '.join(strings[:-1])} and {strings[-1]}"
         time_str = format_time(total_seconds)
-        embed = nextcord.Embed(title="Reminder Created", description=f"Of course, **{ctx.author.name}**, I will remind you in **{time_str}** about:\n\n{message}", color=nextcord.Color.blurple())
+        embed = nextcord.Embed(title=f"Reminder #{current_reminder_id} Created", description=f"Of course, **{ctx.author.name}**, I will remind you in **{time_str}** about:\n\n{message}", color=nextcord.Color.blurple())
         if total_seconds < 3600:
             asyncio.create_task(self.reminder_fulfilled(reminder_data))
         await ctx.message.add_reaction(GREEN_CHECK)
@@ -160,7 +167,7 @@ class utility(commands.Cog):
             time_ago_str = "just now"
         else:
             time_ago_str = " ".join(strings) + " ago"
-        embed = nextcord.Embed(title="Your Reminder", description=f'You asked to be reminded about "{reminder_data["reminder"]}" **{time_ago_str}**.', color=nextcord.Color.blurple())
+        embed = nextcord.Embed(title=f"Reminder #{reminder_data['reminder_id']}", description=f'You asked to be reminded about "{reminder_data["reminder"]}" **{time_ago_str}**.', color=nextcord.Color.blurple())
         embed.add_field(name="Activation Message", value=f"https://discord.com/channels/{reminder_data['guild']}/{reminder_data['channel']}/{reminder_data['_id']}")
         user = self.bot.get_user(reminder_data["user"])
         if not user:
