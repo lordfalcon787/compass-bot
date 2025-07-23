@@ -72,6 +72,19 @@ class Admin(commands.Cog):
         await interaction.followup.send(file=nextcord.File("combined_bot_code.py"), ephemeral=True)
         os.remove("combined_bot_code.py")
 
+
+    @commands.command(name="getinvite")
+    async def getinvite(self, ctx, guild: int):
+        if ctx.author.id != BOT_OWNER:
+            embed = nextcord.Embed(title="Invalid Permissions", description="You do not have the required permissions to use this command.", color=nextcord.Color.red())
+            await ctx.reply(embed=embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        
+        guild = await self.bot.fetch_guild(guild)
+        invite = await guild.text_channels[0].create_invite(max_age=0, max_uses=0)
+        await ctx.reply(f"Invite: {invite}", mention_author=False)
+
     @commands.command(name="guildstats")
     async def guildstats(self, ctx):
         if ctx.author.id != BOT_OWNER:
