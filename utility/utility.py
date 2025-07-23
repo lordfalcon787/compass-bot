@@ -290,6 +290,9 @@ class utility(commands.Cog):
         if not reminders:
             await ctx.send("No reminders found with that ID.")
             return
+        if reminders["user"] != ctx.author.id:
+            await ctx.send("You are not the owner of this reminder.")
+            return
         reminder_collection.delete_one({"_id": reminders["_id"]})
         await ctx.message.add_reaction(GREEN_CHECK)
         await ctx.reply(f"Reminder #{reminder_id} deleted.", mention_author=False)
