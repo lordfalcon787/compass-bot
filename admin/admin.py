@@ -81,9 +81,56 @@ class Admin(commands.Cog):
             await ctx.message.add_reaction(RED_X)
             return
         
-        guild = await self.bot.fetch_guild(guild)
-        invite = await guild.text_channels[0].create_invite(max_age=0, max_uses=0)
-        await ctx.reply(f"Invite: {invite}", mention_author=False)
+        try:
+            guild = await self.bot.fetch_guild(guild)
+            
+            invite_channel = None
+            if guild.text_channels:
+                invite_channel = guild.text_channels[0]
+            elif guild.channels:
+                for channel in guild.channels:
+                    if hasattr(channel, 'create_invite'):
+                        invite_channel = channel
+                        break
+            
+            if invite_channel is None:
+                embed = nextcord.Embed(
+                    title="Error", 
+                    description=f"No suitable channel found in guild `{guild.name}` to create an invite.", 
+                    color=nextcord.Color.red()
+                )
+                await ctx.reply(embed=embed, mention_author=False)
+                await ctx.message.add_reaction(RED_X)
+                return
+            
+            invite = await invite_channel.create_invite(max_age=0, max_uses=0)
+            await ctx.reply(f"Invite: {invite}", mention_author=False)
+            await ctx.message.add_reaction(GREEN_CHECK)
+            
+        except nextcord.Forbidden:
+            embed = nextcord.Embed(
+                title="Error", 
+                description="Bot doesn't have permission to create invites in this guild.", 
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+        except nextcord.NotFound:
+            embed = nextcord.Embed(
+                title="Error", 
+                description="Guild not found. Please check the guild ID.", 
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+        except Exception as e:
+            embed = nextcord.Embed(
+                title="Error", 
+                description=f"An unexpected error occurred: {str(e)}", 
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed, mention_author=False)
+            await ctx.message.add_reaction(RED_X)
 
     @commands.command(name="guildstats")
     async def guildstats(self, ctx):
