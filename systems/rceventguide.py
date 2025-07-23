@@ -363,6 +363,8 @@ class RCEventGuide(commands.Cog):
 
     @commands.command(name="rceventguide", aliases=["recg"])
     async def rceventguide_cmd(self, ctx):
+        if not ctx.author.guild_permissions.administrator:
+            return
         embed = nextcord.Embed(
             title="RC Event Guide",
             description="For all event managers at Robbing Central, this guide is here to help you understand how events should be hosted here and the various guidelines that exist. If you see an event missing from here, please let an admin know so they can add it. If you have any questions about the event guide, please also ask an admin.\n\nCredit points for events are listed in the embed above this message.",
