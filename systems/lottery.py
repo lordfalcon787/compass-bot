@@ -61,10 +61,23 @@ class Lottery(commands.Cog):
                 embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
                 channel = guild.get_channel(lottery_channel)
                 message = await channel.fetch_message(doc["message_id"])
-                await message.edit(embed=embed)
-                embed.title = "Robbing Central Lottery Updated"
-                log_channel = guild.get_channel(lottery_logs)
-                await log_channel.send(embed=embed)
+                current_embed = message.embeds[0] if message.embeds else None
+                is_same = False
+                if current_embed:
+                    if (
+                        current_embed.title == embed.title and
+                        current_embed.description == embed.description and
+                        current_embed.colour == embed.colour and
+                        (current_embed.footer.text if current_embed.footer else None) == (embed.footer.text if embed.footer else None) and
+                        (current_embed.footer.icon_url if current_embed.footer else None) == (embed.footer.icon_url if embed.footer else None) and
+                        (current_embed.thumbnail.url if current_embed.thumbnail else None) == (embed.thumbnail.url if embed.thumbnail else None)
+                    ):
+                        is_same = True
+                if not is_same:
+                    await message.edit(embed=embed)
+                    embed.title = "Robbing Central Lottery Updated"
+                    log_channel = guild.get_channel(lottery_logs)
+                    await log_channel.send(embed=embed)
             if doc["end_time"] - datetime.now() <= timedelta(hours=1):
                 asyncio.create_task(self.end_lottery(doc, True))
             
