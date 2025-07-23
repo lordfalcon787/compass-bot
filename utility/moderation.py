@@ -547,7 +547,7 @@ class Moderation(commands.Cog):
             await ctx.message.add_reaction(RED_X)
             return
         try:
-            await ctx.guild.unban(member)
+            await ctx.guild.unban(member, reason=reason)
         except nextcord.Forbidden:
             await ctx.reply("I do not have permission to unban this user.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
