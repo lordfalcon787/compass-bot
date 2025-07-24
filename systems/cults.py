@@ -184,6 +184,14 @@ class Cults(commands.Cog):
             return
         collection.update_one({"_id": "cult_points"}, {"$inc": {f"{user.id}.points": amount}})
         await interaction.response.send_message(f"Added {amount} points to {user.mention}.", ephemeral=False)
+
+    @cult.subcommand(name="setpoints", description="Set points for a user.")
+    async def setpoints(self, interaction: nextcord.Interaction, user: nextcord.Member, amount: int):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
+            return
+        collection.update_one({"_id": "cult_points"}, {"$set": {f"{user.id}.points": amount}})
+        await interaction.response.send_message(f"Set {amount} points for {user.mention}.", ephemeral=False)
     
     @cult.subcommand(name="remove", description="Remove points from a user.")
     async def remove(self, interaction: nextcord.Interaction, user: nextcord.Member, amount: int):
