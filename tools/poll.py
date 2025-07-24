@@ -300,14 +300,14 @@ class Poll(commands.Cog):
         if "binary" in doc:
             yes = doc["yes"]
             no = doc["no"]
-            if len(yes) > 0:
+            if yes:
                 button = nextcord.ui.Button(style=nextcord.ButtonStyle.success, label=f"Yes [{len(yes)}]", custom_id=f"poll_choice_disabled_0", disabled=True)
                 view.add_item(button)
             if "abstain" in doc:
                 abstain = doc["abstain"]
                 button = nextcord.ui.Button(style=nextcord.ButtonStyle.secondary, label=f"Abstain [{len(abstain)}]", custom_id=f"poll_choice_disabled_1", disabled=True)
                 view.add_item(button)
-            if len(no) > 0:
+            if no:
                 button = nextcord.ui.Button(style=nextcord.ButtonStyle.danger, label=f"No [{len(no)}]", custom_id=f"poll_choice_disabled_2", disabled=True)
                 view.add_item(button)
             bool = True
