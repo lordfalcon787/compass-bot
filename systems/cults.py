@@ -155,6 +155,7 @@ class Cults(commands.Cog):
 
     @assign.on_autocomplete("cult")
     @deassign.on_autocomplete("cult")
+    @setowner.on_autocomplete("cult")
     @view.on_autocomplete("cult")
     @delete.on_autocomplete("cult")
     async def cult_autocomplete(self, interaction: nextcord.Interaction, current: str):
