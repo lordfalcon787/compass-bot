@@ -86,7 +86,7 @@ class Cults(commands.Cog):
             await interaction.response.send_message("That user is already in a cult, please remove them from that cult first.", ephemeral=False)
             return
         try:
-            user.add_roles(interaction.guild.get_role(doc[cult]["role"]))
+            await user.add_roles(interaction.guild.get_role(doc[cult]["role"]))
         except:
             await interaction.response.send_message("Failed to add cult role to user.", ephemeral=False)
             return
@@ -125,7 +125,7 @@ class Cults(commands.Cog):
         except:
             pass
         try:
-            user.remove_roles(interaction.guild.get_role(doc[cult]["role"]))
+            await user.remove_roles(interaction.guild.get_role(doc[cult]["role"]))
         except:
             pass
         if is_owner:
