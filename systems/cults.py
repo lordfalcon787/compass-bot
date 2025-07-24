@@ -81,6 +81,10 @@ class Cults(commands.Cog):
         if user.id in doc[cult]["members"]:
             await interaction.response.send_message("That user is already in that cult.", ephemeral=False)
             return
+        members_count = len(doc[cult]["members"])
+        if members_count >= 10:
+            await interaction.response.send_message("That cult has reached the maximum number of members.", ephemeral=False)
+            return
         all_members = [member for cult_data in doc.values() if isinstance(cult_data, dict) and "members" in cult_data for member in cult_data["members"]]
         if user.id in all_members:
             await interaction.response.send_message("That user is already in a cult, please remove them from that cult first.", ephemeral=False)
@@ -154,7 +158,8 @@ class Cults(commands.Cog):
                 pass
         role = f"<@&{doc[cult]['role']}>" if "role" in doc[cult] else "None"
         owner = f"<@{doc[cult]['owner']}>" if "owner" in doc[cult] else "None"
-        embed = nextcord.Embed(title=f"Cult {cult}", description=f"**Role:** {role}\n**Owner:** {owner}\n**Members:** {members_str}\n**Total Points:** {points}")
+        cult_size = len(doc[cult]["members"])
+        embed = nextcord.Embed(title=f"Cult {cult}", description=f"**Role:** {role}\n**Owner:** {owner}\n**Members [{cult_size}/10]:** {members_str}\n**Total Points:** {points}")
         await interaction.response.send_message(embed=embed, ephemeral=False)
 
     @cult.subcommand(name="delete", description="Delete a cult")
