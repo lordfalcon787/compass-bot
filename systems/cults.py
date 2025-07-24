@@ -248,7 +248,8 @@ class Cults(commands.Cog):
             title="Cult Leaderboard",
             description=desc
         )
-
+        embed.color = nextcord.Color.yellow()
+        embed.set_footer(text="Robbing Central Cults", icon_url=interaction.guild.icon.url)
         await interaction.response.send_message(embed=embed, ephemeral=False)
 
     @cult.subcommand(name="userleaderboard", description="View the user leaderboard.")
@@ -299,8 +300,10 @@ class Cults(commands.Cog):
                 page_points = self.sorted_points[start:end]
                 embed = nextcord.Embed(
                     title=f"Cult User Leaderboard (Page {self.page+1}/{self.max_page+1})",
-                    description="\n".join([f"{i+1+start}. {member} - {points['points']}" for i, (member, points) in enumerate(page_points)])
+                    description="\n".join([f"{i+1+start}. <@{member}> - {points['points']}" for i, (member, points) in enumerate(page_points)])
                 )
+                embed.color = nextcord.Color.yellow()
+                embed.set_footer(text=f"Page {self.page+1}/{self.max_page+1}", icon_url=interaction.guild.icon.url)
                 self.update_buttons()
                 await interaction.response.edit_message(embed=embed, view=self)
 
@@ -310,9 +313,10 @@ class Cults(commands.Cog):
         max_pages = (len(sorted_points) - 1) // 10 + 1
         embed = nextcord.Embed(
             title=f"Cult User Leaderboard (Page 1/{max_pages})",
-            description="\n".join([f"{i+1}. {member} - {points['points']}" for i, (member, points) in enumerate(page_points)])
+            description="\n".join([f"{i+1}. <@{member}> - {points['points']}" for i, (member, points) in enumerate(page_points)])
         )
-        embed.set_footer(text=f"Page 1/{max_pages}")
+        embed.set_footer(text=f"Page 1/{max_pages}", icon_url=interaction.guild.icon.url)
+        embed.color = nextcord.Color.yellow()
         view = LeaderboardView(sorted_points)
         await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
 
