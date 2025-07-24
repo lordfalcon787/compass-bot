@@ -240,7 +240,7 @@ class Cults(commands.Cog):
         leaderboard.sort(key=lambda x: x[1], reverse=True)
 
         if leaderboard:
-            desc = "\n".join([f"{i+1}. {cult_name} - {points} Points" for i, (cult_name, points) in enumerate(leaderboard)])
+            desc = "\n".join([f"{i+1}. `{cult_name}` - {points} Points" for i, (cult_name, points) in enumerate(leaderboard)])
         else:
             desc = "No cults found."
 
@@ -254,7 +254,15 @@ class Cults(commands.Cog):
     @cult.subcommand(name="userleaderboard", description="View the user leaderboard.")
     async def userleaderboard(self, interaction: nextcord.Interaction):
         doc = collection.find_one({"_id": "cult_points"})
-        sorted_points = sorted(doc.items(), key=lambda x: x[1]["points"], reverse=True)
+        if not doc:
+            await interaction.response.send_message("No cult points data found.", ephemeral=True)
+            return
+        user_points = {k: v for k, v in doc.items() if k != "_id" and isinstance(v, dict) and "points" in v}
+        sorted_points = sorted(user_points.items(), key=lambda x: x[1]["points"], reverse=True)
+        
+        if not sorted_points:
+            await interaction.response.send_message("No user points data found.", ephemeral=True)
+            return
 
         from nextcord.ui import View, Button
 
@@ -290,7 +298,7 @@ class Cults(commands.Cog):
                 end = start + 10
                 page_points = self.sorted_points[start:end]
                 embed = nextcord.Embed(
-                    title=f"Cult Leaderboard (Page {self.page+1}/{self.max_page+1})",
+                    title=f"Cult User Leaderboard (Page {self.page+1}/{self.max_page+1})",
                     description="\n".join([f"{i+1+start}. {member} - {points['points']}" for i, (member, points) in enumerate(page_points)])
                 )
                 self.update_buttons()
@@ -299,11 +307,12 @@ class Cults(commands.Cog):
         start = 0
         end = 10
         page_points = sorted_points[start:end]
+        max_pages = (len(sorted_points) - 1) // 10 + 1
         embed = nextcord.Embed(
-            title=f"Cult Leaderboard (Page 1/{(len(sorted_points)-1)//10+1})",
+            title=f"Cult User Leaderboard (Page 1/{max_pages})",
             description="\n".join([f"{i+1}. {member} - {points['points']}" for i, (member, points) in enumerate(page_points)])
         )
-        embed.set_footer(text=f"Page 1/{len(sorted_points)//10+1}")
+        embed.set_footer(text=f"Page 1/{max_pages}")
         view = LeaderboardView(sorted_points)
         await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
 
