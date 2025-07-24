@@ -1,5 +1,5 @@
 import nextcord
-from nextcord.ext import commands, application_checks
+from nextcord.ext import commands, application_checks, tasks
 from nextcord import SlashOption
 from typing import Optional
 from datetime import datetime, timedelta
@@ -233,6 +233,26 @@ class Poll(commands.Cog):
         print("Poll cog is ready")
         self.bot.add_view(AdminPollView())
         self.bot.add_view(BinaryView())
+        self.admin_poll_update.start()
+
+    @tasks.loop(hours=1)
+    async def admin_poll_update(self):
+        time = datetime.utcnow() - timedelta(hours=24)
+        docs = list(collection.find({
+            "binary": False,
+            "created_at": {"$lt": time}
+        }))
+        docs2 = list(collection.find({
+            "binary": True,
+            "created_at": {"$lt": time}
+        }))
+        all_docs = docs + docs2
+        admin_poll_channel = self.bot.get_channel(1394712365509120101)
+        for doc in all_docs:
+            bool = await self.disable_poll(doc, admin_poll_channel)
+            if bool:
+                collection.delete_one({"_id": doc["_id"]})
+        
 
     async def ban_check(interaction: nextcord.Interaction):
         banned_users = misc.find_one({"_id": "bot_banned"})
@@ -280,21 +300,7 @@ class Poll(commands.Cog):
             collection.insert_one({"_id": str(message.id), "title": title, "description": description, "binary": binary, "creator": str(interaction.user.id), "created_at": datetime.utcnow(), "yes": [], "no": [], "abstain": []})
         await interaction.followup.send("Poll created", ephemeral=True)
         
-        
-
-    @poll.subcommand(name="end", description="End a poll")
-    @application_checks.guild_only()
-    @application_checks.check(ban_check)
-    async def poll_end(self, interaction: nextcord.Interaction, poll_id: str = SlashOption(description="The message ID of the poll to end")):
-        await interaction.response.defer(ephemeral=True)
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.send("You do not have permission to use this command.", ephemeral=True)
-            return
-
-        doc = collection.find_one({"_id": poll_id})
-        if not doc:
-            await interaction.send("Poll not found", ephemeral=True)
-            return
+    async def disable_poll(self, doc, channel):
         view = nextcord.ui.View()
         bool = False
         if "binary" in doc:
@@ -326,10 +332,29 @@ class Poll(commands.Cog):
                 choice_votes = 0
             button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label=f"{choice_text} [{choice_votes}]", custom_id=f"poll_choice_disabled_{i}", disabled=True)
             view.add_item(button)
-        channel = self.bot.get_channel(interaction.channel.id)
-        poll_msg = await channel.fetch_message(poll_id)
+        poll_msg = await channel.fetch_message(int(doc["_id"]))
         await poll_msg.edit(view=view)
-        await interaction.send("Poll ended.", ephemeral=True)
+        return True
+
+    @poll.subcommand(name="end", description="End a poll")
+    @application_checks.guild_only()
+    @application_checks.check(ban_check)
+    async def poll_end(self, interaction: nextcord.Interaction, poll_id: str = SlashOption(description="The message ID of the poll to end")):
+        await interaction.response.defer(ephemeral=True)
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.send("You do not have permission to use this command.", ephemeral=True)
+            return
+
+        doc = collection.find_one({"_id": poll_id})
+        if not doc:
+            await interaction.send("Poll not found", ephemeral=True)
+            return
+        bool = await self.disable_poll(doc, interaction.channel)
+        if bool:
+            collection.delete_one({"_id": poll_id})
+            await interaction.send("Poll ended.", ephemeral=True)
+        else:
+            await interaction.send("An unknown error occurred.", ephemeral=True)
         
     @poll.subcommand(name="anonymous", description="Create an anonymous poll")
     @application_checks.guild_only()
