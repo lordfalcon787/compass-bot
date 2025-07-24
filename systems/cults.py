@@ -21,15 +21,46 @@ class Cults(commands.Cog):
         pass
 
     @cult.subcommand(name="create", description="Create a new cult")
-    async def create(self, interaction: nextcord.Interaction, cult_name: str):
+    async def create(self, interaction: nextcord.Interaction, cult_name: str, role: nextcord.Role = SlashOption(description="The role to assign to the cult.", autocomplete=True)):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         if cult_name in collection.find_one({"_id": "cult_list"}):
             await interaction.response.send_message("That cult already exists.", ephemeral=False)
             return
-        collection.update_one({"_id": "cult_list"}, {"$set": {cult_name: {"members": []}}}, upsert=True)
-        await interaction.response.send_message(f"Cult {cult_name} created successfully.", ephemeral=False)
+        collection.update_one({"_id": "cult_list"}, {"$set": {cult_name: {"members": [], "role": role.id}}}, upsert=True)
+        await interaction.response.send_message(f"Cult `{cult_name}` created successfully.", ephemeral=False)
+
+    @cult.subcommand(name="resetpoints", description="Reset points for everyone.")
+    async def resetpoints(self, interaction: nextcord.Interaction):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
+            return
+        doc = collection.find_one({"_id": "cult_points"})
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
+            return
+        if not doc:
+            await interaction.response.send_message("No cult points data found.", ephemeral=False)
+            return
+        update_dict = {}
+        for user_id, data in doc.items():
+            if user_id == "_id":
+                continue
+            update_dict[f"{user_id}.points"] = 0
+        if update_dict:
+            collection.update_one({"_id": "cult_points"}, {"$set": update_dict})
+            await interaction.response.send_message("All cult points have been reset to 0.", ephemeral=False)
+        else:
+            await interaction.response.send_message("No users found to reset points for.", ephemeral=False)
+
+    @cult.subcommand(name="role", description="Set the role for a cult")
+    async def role(self, interaction: nextcord.Interaction, cult: str = SlashOption(description="The cult to set the role for.", autocomplete=True), role: nextcord.Role = SlashOption(description="The role to assign to the cult.", autocomplete=True)):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
+            return
+        collection.update_one({"_id": "cult_list"}, {"$set": {f"{cult}.role": role.id}})
+        await interaction.response.send_message(f"Role for cult `{cult}` set to {role.mention}.", ephemeral=False)
     
     @cult.subcommand(name="assign", description="Assign user to a cult")
     async def assign(self, interaction: nextcord.Interaction, user: nextcord.Member, cult: str = SlashOption(description="The cult to assign the user to.", autocomplete=True)):
@@ -47,9 +78,14 @@ class Cults(commands.Cog):
         if user.id in all_members:
             await interaction.response.send_message("That user is already in a cult, please remove them from that cult first.", ephemeral=False)
             return
+        try:
+            user.add_roles(interaction.guild.get_role(doc[cult]["role"]))
+        except:
+            await interaction.response.send_message("Failed to add cult role to user.", ephemeral=False)
+            return
         collection.update_one({"_id": "cult_list"}, {"$push": {f"{cult}.members": user.id}})
         collection.update_one({"_id": "cult_points"}, {"$set": {f"{user.id}.cult": cult}})
-        await interaction.response.send_message(f"User {user.mention} assigned to cult {cult}.", ephemeral=False)
+        await interaction.response.send_message(f"User {user.mention} assigned to cult `{cult}`.", ephemeral=False)
 
     @cult.subcommand(name="deassign", description="Remove a user from a cult")
     async def deassign(self, interaction: nextcord.Interaction, user: nextcord.Member, cult: str = SlashOption(description="The cult to remove the user from.", autocomplete=True)):
@@ -80,10 +116,14 @@ class Cults(commands.Cog):
             collection.update_one({"_id": "cult_points"}, {"$unset": {f"{user.id}.cult": ""}})
         except:
             pass
+        try:
+            user.remove_roles(interaction.guild.get_role(doc[cult]["role"]))
+        except:
+            pass
         if is_owner:
-            await interaction.response.send_message(f"User {user.mention} removed from cult {cult}. (They were the owner, so the cult now has no owner.)", ephemeral=False)
+            await interaction.response.send_message(f"User {user.mention} removed from cult `{cult}`. (They were the owner, so the cult now has no owner.)", ephemeral=False)
         else:
-            await interaction.response.send_message(f"User {user.mention} removed from cult {cult}.", ephemeral=False)
+            await interaction.response.send_message(f"User {user.mention} removed from cult `{cult}`.", ephemeral=False)
     
     @cult.subcommand(name="view", description="View a cult's members and statistics.")
     async def view(self, interaction: nextcord.Interaction, cult: str = SlashOption(description="The cult to view.", autocomplete=True)):
@@ -103,8 +143,9 @@ class Cults(commands.Cog):
                 points += cult_points[str(member)]["points"]
             except:
                 pass
+        role = f"<@&{doc[cult]['role']}>" if "role" in doc[cult] else "None"
         owner = f"<@{doc[cult]['owner']}>" if "owner" in doc[cult] else "None"
-        embed = nextcord.Embed(title=f"Cult {cult}", description=f"**Owner:** {owner}\n**Members:** {members_str}\n**Total Points:** {points}")
+        embed = nextcord.Embed(title=f"Cult {cult}", description=f"**Role:** {role}\n**Owner:** {owner}\n**Members:** {members_str}\n**Total Points:** {points}")
         await interaction.response.send_message(embed=embed, ephemeral=False)
 
     @cult.subcommand(name="delete", description="Delete a cult")
@@ -131,7 +172,7 @@ class Cults(commands.Cog):
             await interaction.response.send_message("That user is not in that cult, please assign them to the cult first.", ephemeral=False)
             return
         collection.update_one({"_id": "cult_list"}, {"$set": {f"{cult}.owner": user.id}})
-        await interaction.response.send_message(f"Owner of cult {cult} set to {user.mention}.", ephemeral=False)
+        await interaction.response.send_message(f"Owner of cult `{cult}` set to {user.mention}.", ephemeral=False)
 
     @cult.subcommand(name="add", description="Add points to a user.")
     async def add(self, interaction: nextcord.Interaction, user: nextcord.Member, amount: int):
@@ -248,6 +289,7 @@ class Cults(commands.Cog):
     @deassign.on_autocomplete("cult")
     @setowner.on_autocomplete("cult")
     @view.on_autocomplete("cult")
+    @role.on_autocomplete("cult")
     @delete.on_autocomplete("cult")
     async def cult_autocomplete(self, interaction: nextcord.Interaction, current: str):
         try:
