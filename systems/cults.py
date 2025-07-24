@@ -147,11 +147,92 @@ class Cults(commands.Cog):
 
     @cult.subcommand(name="leaderboard", description="View the cult leaderboard.")
     async def leaderboard(self, interaction: nextcord.Interaction):
-        pass
+        doc = collection.find_one({"_id": "cult_list"})
+        cult_points = collection.find_one({"_id": "cult_points"})
+        if not doc or not cult_points:
+            await interaction.response.send_message("No cults or points data found.", ephemeral=True)
+            return
+
+        leaderboard = []
+        for cult_name, cult_data in doc.items():
+            if cult_name == "_id":
+                continue
+            members = cult_data.get("members", [])
+            total_points = 0
+            for member_id in members:
+                user_points = cult_points.get(str(member_id), {}).get("points", 0)
+                total_points += user_points
+            leaderboard.append((cult_name, total_points))
+
+        leaderboard.sort(key=lambda x: x[1], reverse=True)
+
+        if leaderboard:
+            desc = "\n".join([f"{i+1}. {cult_name} - {points} Points" for i, (cult_name, points) in enumerate(leaderboard)])
+        else:
+            desc = "No cults found."
+
+        embed = nextcord.Embed(
+            title="Cult Leaderboard",
+            description=desc
+        )
+
+        await interaction.response.send_message(embed=embed, ephemeral=False)
 
     @cult.subcommand(name="userleaderboard", description="View the user leaderboard.")
     async def userleaderboard(self, interaction: nextcord.Interaction):
-        pass
+        doc = collection.find_one({"_id": "cult_points"})
+        sorted_points = sorted(doc.items(), key=lambda x: x[1]["points"], reverse=True)
+
+        from nextcord.ui import View, Button
+
+        class LeaderboardView(View):
+            def __init__(self, sorted_points, page=0):
+                super().__init__(timeout=120)
+                self.sorted_points = sorted_points
+                self.page = page
+                self.max_page = (len(sorted_points) - 1) // 10
+                self.update_buttons()
+
+            def update_buttons(self):
+                self.clear_items()
+                prev_button = Button(label="Previous", style=nextcord.ButtonStyle.primary, disabled=self.page == 0)
+                next_button = Button(label="Next", style=nextcord.ButtonStyle.primary, disabled=self.page == self.max_page)
+                prev_button.callback = self.prev_page
+                next_button.callback = self.next_page
+                self.add_item(prev_button)
+                self.add_item(next_button)
+
+            async def prev_page(self, interaction: nextcord.Interaction):
+                if self.page > 0:
+                    self.page -= 1
+                    await self.update_embed(interaction)
+
+            async def next_page(self, interaction: nextcord.Interaction):
+                if self.page < self.max_page:
+                    self.page += 1
+                    await self.update_embed(interaction)
+
+            async def update_embed(self, interaction):
+                start = self.page * 10
+                end = start + 10
+                page_points = self.sorted_points[start:end]
+                embed = nextcord.Embed(
+                    title=f"Cult Leaderboard (Page {self.page+1}/{self.max_page+1})",
+                    description="\n".join([f"{i+1+start}. {member} - {points['points']}" for i, (member, points) in enumerate(page_points)])
+                )
+                self.update_buttons()
+                await interaction.response.edit_message(embed=embed, view=self)
+
+        start = 0
+        end = 10
+        page_points = sorted_points[start:end]
+        embed = nextcord.Embed(
+            title=f"Cult Leaderboard (Page 1/{(len(sorted_points)-1)//10+1})",
+            description="\n".join([f"{i+1}. {member} - {points['points']}" for i, (member, points) in enumerate(page_points)])
+        )
+        embed.set_footer(text=f"Page 1/{len(sorted_points)//10+1}")
+        view = LeaderboardView(sorted_points)
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
 
     @assign.on_autocomplete("cult")
     @deassign.on_autocomplete("cult")
