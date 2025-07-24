@@ -66,6 +66,12 @@ class Cults(commands.Cog):
                 collection.update_one({"_id": "cult_points"}, {"$unset": {f"{user.id}.cult": ""}})
                 await interaction.response.send_message(f"User {user.mention} removed from cult {cult}.", ephemeral=False)
                 return
+
+        is_owner = False
+        if "owner" in doc[cult] and doc[cult]["owner"] == user.id:
+            is_owner = True
+            collection.update_one({"_id": "cult_list"}, {"$unset": {f"{cult}.owner": ""}})
+
         try:
             collection.update_one({"_id": "cult_list"}, {"$pull": {f"{cult}.members": user.id}})
         except:
@@ -74,7 +80,10 @@ class Cults(commands.Cog):
             collection.update_one({"_id": "cult_points"}, {"$unset": {f"{user.id}.cult": ""}})
         except:
             pass
-        await interaction.response.send_message(f"User {user.mention} removed from cult {cult}.", ephemeral=False)
+        if is_owner:
+            await interaction.response.send_message(f"User {user.mention} removed from cult {cult}. (They were the owner, so the cult now has no owner.)", ephemeral=False)
+        else:
+            await interaction.response.send_message(f"User {user.mention} removed from cult {cult}.", ephemeral=False)
     
     @cult.subcommand(name="view", description="View a cult's members and statistics.")
     async def view(self, interaction: nextcord.Interaction, cult: str = SlashOption(description="The cult to view.", autocomplete=True)):
@@ -94,7 +103,8 @@ class Cults(commands.Cog):
                 points += cult_points[str(member)]["points"]
             except:
                 pass
-        embed = nextcord.Embed(title=f"Cult {cult}", description=f"**Owner:** <@{doc[cult]['owner']}>\n**Members:** {members_str}\n**Total Points:** {points}")
+        owner = f"<@{doc[cult]['owner']}>" if "owner" in doc[cult] else "None"
+        embed = nextcord.Embed(title=f"Cult {cult}", description=f"**Owner:** {owner}\n**Members:** {members_str}\n**Total Points:** {points}")
         await interaction.response.send_message(embed=embed, ephemeral=False)
 
     @cult.subcommand(name="delete", description="Delete a cult")
