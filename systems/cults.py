@@ -8,6 +8,9 @@ mongo = MongoConnection.get_instance()
 db = mongo.get_db()
 collection = db["Cults"]
 
+user_access_ids = [821285989007228928]
+role_access_ids = [1375928800046616766]
+
 class Cults(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -22,7 +25,8 @@ class Cults(commands.Cog):
 
     @cult.subcommand(name="create", description="Create a new cult")
     async def create(self, interaction: nextcord.Interaction, cult_name: str, role: nextcord.Role = SlashOption(description="The role to assign to the cult.", autocomplete=True)):
-        if not interaction.user.guild_permissions.administrator:
+        user_roles = [role.id for role in interaction.user.roles]
+        if interaction.user.id not in user_access_ids and not interaction.user.guild_permissions.administrator and not any(role_id in user_roles for role_id in role_access_ids):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         if cult_name in collection.find_one({"_id": "cult_list"}):
@@ -33,7 +37,8 @@ class Cults(commands.Cog):
 
     @cult.subcommand(name="resetpoints", description="Reset points for everyone.")
     async def resetpoints(self, interaction: nextcord.Interaction):
-        if not interaction.user.guild_permissions.administrator:
+        user_roles = [role.id for role in interaction.user.roles]
+        if interaction.user.id not in user_access_ids and not interaction.user.guild_permissions.administrator and not any(role_id in user_roles for role_id in role_access_ids):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         doc = collection.find_one({"_id": "cult_points"})
@@ -56,7 +61,8 @@ class Cults(commands.Cog):
 
     @cult.subcommand(name="role", description="Set the role for a cult")
     async def role(self, interaction: nextcord.Interaction, cult: str = SlashOption(description="The cult to set the role for.", autocomplete=True), role: nextcord.Role = SlashOption(description="The role to assign to the cult.", autocomplete=True)):
-        if not interaction.user.guild_permissions.administrator:
+        user_roles = [role.id for role in interaction.user.roles]
+        if interaction.user.id not in user_access_ids and not interaction.user.guild_permissions.administrator and not any(role_id in user_roles for role_id in role_access_ids):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         collection.update_one({"_id": "cult_list"}, {"$set": {f"{cult}.role": role.id}})
@@ -64,7 +70,8 @@ class Cults(commands.Cog):
     
     @cult.subcommand(name="assign", description="Assign user to a cult")
     async def assign(self, interaction: nextcord.Interaction, user: nextcord.Member, cult: str = SlashOption(description="The cult to assign the user to.", autocomplete=True)):
-        if not interaction.user.guild_permissions.administrator:
+        user_roles = [role.id for role in interaction.user.roles]
+        if interaction.user.id not in user_access_ids and not interaction.user.guild_permissions.administrator and not any(role_id in user_roles for role_id in role_access_ids):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         doc = collection.find_one({"_id": "cult_list"})
@@ -89,7 +96,8 @@ class Cults(commands.Cog):
 
     @cult.subcommand(name="deassign", description="Remove a user from a cult")
     async def deassign(self, interaction: nextcord.Interaction, user: nextcord.Member, cult: str = SlashOption(description="The cult to remove the user from.", autocomplete=True)):
-        if not interaction.user.guild_permissions.administrator:
+        user_roles = [role.id for role in interaction.user.roles]
+        if interaction.user.id not in user_access_ids and not interaction.user.guild_permissions.administrator and not any(role_id in user_roles for role_id in role_access_ids):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         doc = collection.find_one({"_id": "cult_list"})
@@ -127,7 +135,8 @@ class Cults(commands.Cog):
     
     @cult.subcommand(name="view", description="View a cult's members and statistics.")
     async def view(self, interaction: nextcord.Interaction, cult: str = SlashOption(description="The cult to view.", autocomplete=True)):
-        if not interaction.user.guild_permissions.administrator:
+        user_roles = [role.id for role in interaction.user.roles]
+        if interaction.user.id not in user_access_ids and not interaction.user.guild_permissions.administrator and not any(role_id in user_roles for role_id in role_access_ids):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         doc = collection.find_one({"_id": "cult_list"})
@@ -150,7 +159,8 @@ class Cults(commands.Cog):
 
     @cult.subcommand(name="delete", description="Delete a cult")
     async def delete(self, interaction: nextcord.Interaction, cult: str = SlashOption(description="The cult to delete.", autocomplete=True)):
-        if not interaction.user.guild_permissions.administrator:
+        user_roles = [role.id for role in interaction.user.roles]
+        if interaction.user.id not in user_access_ids and not interaction.user.guild_permissions.administrator and not any(role_id in user_roles for role_id in role_access_ids):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         if cult not in collection.find_one({"_id": "cult_list"}):
@@ -161,7 +171,8 @@ class Cults(commands.Cog):
 
     @cult.subcommand(name="setowner", description="Set the owner of a cult")
     async def setowner(self, interaction: nextcord.Interaction, user: nextcord.Member, cult: str = SlashOption(description="The cult to set the owner of.", autocomplete=True)):
-        if not interaction.user.guild_permissions.administrator:
+        user_roles = [role.id for role in interaction.user.roles]
+        if interaction.user.id not in user_access_ids and not interaction.user.guild_permissions.administrator and not any(role_id in user_roles for role_id in role_access_ids):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         doc = collection.find_one({"_id": "cult_list"})
@@ -176,7 +187,8 @@ class Cults(commands.Cog):
 
     @cult.subcommand(name="add", description="Add points to a user.")
     async def add(self, interaction: nextcord.Interaction, user: nextcord.Member, amount: int):
-        if not interaction.user.guild_permissions.administrator:
+        user_roles = [role.id for role in interaction.user.roles]
+        if interaction.user.id not in user_access_ids and not interaction.user.guild_permissions.administrator and not any(role_id in user_roles for role_id in role_access_ids):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         if user not in interaction.guild.members:
@@ -187,7 +199,8 @@ class Cults(commands.Cog):
 
     @cult.subcommand(name="setpoints", description="Set points for a user.")
     async def setpoints(self, interaction: nextcord.Interaction, user: nextcord.Member, amount: int):
-        if not interaction.user.guild_permissions.administrator:
+        user_roles = [role.id for role in interaction.user.roles]
+        if interaction.user.id not in user_access_ids and not interaction.user.guild_permissions.administrator and not any(role_id in user_roles for role_id in role_access_ids):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         collection.update_one({"_id": "cult_points"}, {"$set": {f"{user.id}.points": amount}})
@@ -195,7 +208,8 @@ class Cults(commands.Cog):
     
     @cult.subcommand(name="remove", description="Remove points from a user.")
     async def remove(self, interaction: nextcord.Interaction, user: nextcord.Member, amount: int):
-        if not interaction.user.guild_permissions.administrator:
+        user_roles = [role.id for role in interaction.user.roles]
+        if interaction.user.id not in user_access_ids and not interaction.user.guild_permissions.administrator and not any(role_id in user_roles for role_id in role_access_ids):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         if user not in interaction.guild.members:
