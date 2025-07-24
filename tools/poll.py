@@ -332,9 +332,16 @@ class Poll(commands.Cog):
                 choice_votes = 0
             button = nextcord.ui.Button(style=nextcord.ButtonStyle.primary, label=f"{choice_text} [{choice_votes}]", custom_id=f"poll_choice_disabled_{i}", disabled=True)
             view.add_item(button)
-        poll_msg = await channel.fetch_message(int(doc["_id"]))
-        await poll_msg.edit(view=view)
-        return True
+        try:
+            poll_msg = await channel.fetch_message(int(doc["_id"]))
+            await poll_msg.edit(view=view)
+            return True
+        except nextcord.errors.NotFound:
+            collection.delete_one({"_id": doc["_id"]})
+            return False
+        except Exception as e:
+            print(f"Error disabling poll {doc['_id']}: {e}")
+            return False
 
     @poll.subcommand(name="end", description="End a poll")
     @application_checks.guild_only()
