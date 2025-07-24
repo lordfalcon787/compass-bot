@@ -183,7 +183,7 @@ class Cults(commands.Cog):
             await interaction.response.send_message("That user is not in the server.", ephemeral=False)
             return
         collection.update_one({"_id": "cult_points"}, {"$inc": {f"{user.id}.points": amount}})
-        await interaction.response.send_message(f"Added {amount} points to {user.mention}.", ephemeral=False)
+        await interaction.response.send_message(f"Added `{amount}` points to {user.mention}.", ephemeral=False)
 
     @cult.subcommand(name="setpoints", description="Set points for a user.")
     async def setpoints(self, interaction: nextcord.Interaction, user: nextcord.Member, amount: int):
@@ -191,7 +191,7 @@ class Cults(commands.Cog):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         collection.update_one({"_id": "cult_points"}, {"$set": {f"{user.id}.points": amount}})
-        await interaction.response.send_message(f"Set {amount} points for {user.mention}.", ephemeral=False)
+        await interaction.response.send_message(f"Set `{amount}` points for {user.mention}.", ephemeral=False)
     
     @cult.subcommand(name="remove", description="Remove points from a user.")
     async def remove(self, interaction: nextcord.Interaction, user: nextcord.Member, amount: int):
@@ -202,7 +202,7 @@ class Cults(commands.Cog):
             await interaction.response.send_message("That user is not in the server.", ephemeral=False)
             return
         collection.update_one({"_id": "cult_points"}, {"$inc": {f"{user.id}.points": -amount}})
-        await interaction.response.send_message(f"Removed {amount} points from {user.mention}.", ephemeral=False)
+        await interaction.response.send_message(f"Removed `{amount}` points from {user.mention}.", ephemeral=False)
 
     @cult.subcommand(name="leaderboard", description="View the cult leaderboard.")
     async def leaderboard(self, interaction: nextcord.Interaction):
