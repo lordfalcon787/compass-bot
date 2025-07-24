@@ -240,7 +240,7 @@ class Cults(commands.Cog):
         leaderboard.sort(key=lambda x: x[1], reverse=True)
 
         if leaderboard:
-            desc = "\n".join([f"{i+1}. `{cult_name}` - {points} Points" for i, (cult_name, points) in enumerate(leaderboard)])
+            desc = "\n".join([f"{i+1}. `{cult_name}` | {points} Points" for i, (cult_name, points) in enumerate(leaderboard)])
         else:
             desc = "No cults found."
 
@@ -248,7 +248,7 @@ class Cults(commands.Cog):
             title="Cult Leaderboard",
             description=desc
         )
-        embed.color = nextcord.Color.yellow()
+        embed.color = 16776960
         embed.set_footer(text="Robbing Central Cults", icon_url=interaction.guild.icon.url)
         await interaction.response.send_message(embed=embed, ephemeral=False)
 
@@ -302,7 +302,7 @@ class Cults(commands.Cog):
                     title=f"Cult User Leaderboard (Page {self.page+1}/{self.max_page+1})",
                     description="\n".join([f"{i+1+start}. <@{member}> - {points['points']}" for i, (member, points) in enumerate(page_points)])
                 )
-                embed.color = nextcord.Color.yellow()
+                embed.color = 16776960
                 embed.set_footer(text=f"Page {self.page+1}/{self.max_page+1}", icon_url=interaction.guild.icon.url)
                 self.update_buttons()
                 await interaction.response.edit_message(embed=embed, view=self)
@@ -316,7 +316,7 @@ class Cults(commands.Cog):
             description="\n".join([f"{i+1}. <@{member}> - {points['points']}" for i, (member, points) in enumerate(page_points)])
         )
         embed.set_footer(text=f"Page 1/{max_pages}", icon_url=interaction.guild.icon.url)
-        embed.color = nextcord.Color.yellow()
+        embed.color = 16776960
         view = LeaderboardView(sorted_points)
         await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
 
