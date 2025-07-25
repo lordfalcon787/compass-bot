@@ -250,7 +250,10 @@ class Auction(commands.Cog):
         guild = str(message.guild.id)
         time = int(datetime.now().timestamp())
         if time - last_bid < 5:
-            await message.message.add_reaction(RED_X)
+            try:
+                await message.message.add_reaction(RED_X)
+            except:
+                pass
             return
         if guild not in lock_on_end:
             lock_on_end = False
@@ -354,8 +357,10 @@ class Auction(commands.Cog):
         view.add_item(button)
         
         response = await message.channel.send(content=f"<@{Buyer}> you have won the auction! Please pay `⏣ {Price:,}` using `/serverevents donate`", embed=embed, view=view)
-        
-        await message.message.add_reaction(GREEN_CHECK)
+        try:
+            await message.message.add_reaction(GREEN_CHECK)
+        except:
+            pass
         collection.delete_one({"_id": message.channel.id})
         
         await asyncio.sleep(3)
