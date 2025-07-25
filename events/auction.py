@@ -55,6 +55,7 @@ class Auction(commands.Cog):
         self.cache = {}
         self.sticky_bid_locks = {}
         self.guide_locks = {}
+        self.last_bid = {}
         self.extractor = PrecisionExtractor()
         self.queue_payout_lock = asyncio.Lock()
         
@@ -73,6 +74,12 @@ class Auction(commands.Cog):
             self.cache_auction.start()
         self.bot.add_view(Use())
         print("Auction cog loaded.")
+        asyncio.create_task(self.update_last_bid_cache())
+
+    async def update_last_bid_cache(self):
+        docs = collection.find({})
+        for doc in docs:
+            self.last_bid[doc["_id"]] = {"time": doc["last_bid"], "going": doc["going"]}
 
     @tasks.loop(seconds=30)
     async def cache_auction(self):
@@ -338,7 +345,7 @@ class Auction(commands.Cog):
                 await interaction.send("Payouts cog is not loaded. Please queue manually.", ephemeral=True)
             
 
-        view = nextcord.ui.View()
+        view = nextcord.ui.View(timeout=None)
         button = nextcord.ui.Button(label="Queue Payouts", style=nextcord.ButtonStyle.primary, custom_id="payout_callback")
         button.callback = button_callback
         view.add_item(button)
@@ -398,8 +405,31 @@ class Auction(commands.Cog):
             response = await message.channel.send(embed=embed)
             asyncio.create_task(self.delete_sticky(message, doc["Sticky"]))
             time = int(datetime.now().timestamp())
-            collection.update_one({"_id": message.channel.id}, {"$set": {"Price": amount, "Buyer": message.author.id, "Sticky": response.id, "last_bid": time}})
+            collection.update_one({"_id": message.channel.id}, {"$set": {"Price": amount, "Buyer": message.author.id, "Sticky": response.id, "last_bid": time, "going": "ONCE"}})
+            self.last_bid[message.channel.id] = {"time": time, "going": "ONCE"}
             await message.add_reaction(GREEN_CHECK)
+            asyncio.create_task(self.check_last_bid(message, time))
+
+    async def check_last_bid(self, message, time):
+        await asyncio.sleep(10)
+        last_bid = self.last_bid.get(message.channel.id)
+        if last_bid:
+            last_bid = last_bid.get("time")
+            going = last_bid.get("going")
+            if last_bid == time:
+                if going == "ONCE":
+                    await message.channel.send(f"# GOING ONCE")
+                    self.last_bid[message.channel.id] = {"time": time, "going": "TWICE"}
+                    collection.update_one({"_id": message.channel.id}, {"$set": {"going": "TWICE"}})
+                elif going == "TWICE":
+                    collection.update_one({"_id": message.channel.id}, {"$set": {"going": "THREE"}})
+                    self.last_bid[message.channel.id] = {"time": time, "going": "THREE"}
+                    await message.channel.send(f"# GOING TWICE")
+                elif going == "THREE":
+                    msg = await message.channel.send(f"# SOLD")
+                    await self.end_auction(msg)
+                    self.last_bid[message.channel.id] = {}
+                return
             
 
     async def set_auction(self, message):
