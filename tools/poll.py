@@ -239,14 +239,9 @@ class Poll(commands.Cog):
     async def admin_poll_update(self):
         time = datetime.utcnow() - timedelta(hours=24)
         docs = list(collection.find({
-            "binary": False,
             "created_at": {"$lt": time}
         }))
-        docs2 = list(collection.find({
-            "binary": True,
-            "created_at": {"$lt": time}
-        }))
-        all_docs = docs + docs2
+        all_docs = [doc for doc in docs if "yes" in doc]
         admin_poll_channel = self.bot.get_channel(1394712365509120101)
         for doc in all_docs:
             bool = await self.disable_poll(doc, admin_poll_channel)
