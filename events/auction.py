@@ -417,17 +417,19 @@ class Auction(commands.Cog):
         await asyncio.sleep(10)
         last_bid = self.last_bid.get(message.channel.id)
         if last_bid:
-            last_bid = last_bid.get("time")
             going = last_bid.get("going")
+            last_bid = last_bid.get("time")
             if last_bid == time:
                 if going == "ONCE":
-                    await message.channel.send(f"# GOING ONCE")
                     self.last_bid[message.channel.id] = {"time": time, "going": "TWICE"}
                     collection.update_one({"_id": message.channel.id}, {"$set": {"going": "TWICE"}})
+                    await message.channel.send(f"# GOING ONCE")
+                    asyncio.create_task(self.check_last_bid(message, time))
                 elif going == "TWICE":
                     collection.update_one({"_id": message.channel.id}, {"$set": {"going": "THREE"}})
                     self.last_bid[message.channel.id] = {"time": time, "going": "THREE"}
                     await message.channel.send(f"# GOING TWICE")
+                    asyncio.create_task(self.check_last_bid(message, time))
                 elif going == "THREE":
                     msg = await message.channel.send(f"# SOLD")
                     await self.end_auction(msg)
