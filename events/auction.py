@@ -79,7 +79,10 @@ class Auction(commands.Cog):
     async def update_last_bid_cache(self):
         docs = collection.find({})
         for doc in docs:
-            self.last_bid[doc["_id"]] = {"time": doc["last_bid"], "going": doc["going"]}
+            try:
+                self.last_bid[doc["_id"]] = {"time": doc["last_bid"], "going": doc["going"]}
+            except:
+                pass
 
     @tasks.loop(seconds=30)
     async def cache_auction(self):
