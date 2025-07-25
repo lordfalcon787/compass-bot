@@ -1262,7 +1262,7 @@ class payouts(commands.Cog):
             embed.add_field(name="Prize Info", value=f"{DOT} **Won:** `⏣  {quan:,}`", inline=True)
         view = QueueView()
         view.add_item(nextcord.ui.Button(label="Event Message", url=f"{msg.jump_url}", emoji="🔗"))
-        wh = GetWebhook.get_webhook(channel)
+        wh = await GetWebhook.get_webhook(channel)
         response = await wh.send(embed=embed, view=view, wait=True)
         doc = {
             "_id": response.id,
