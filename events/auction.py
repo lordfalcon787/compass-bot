@@ -111,7 +111,7 @@ class Auction(commands.Cog):
             if message.channel.id != auction_channel:
                 return
 
-            if not any(role in manager for role in roles):
+            if not any(role in manager for role in roles) and not message.author.guild_permissions.administrator:
                 await message.message.add_reaction(RED_X)
                 return
             if len(message.message.content.split(" ")) == 1:
