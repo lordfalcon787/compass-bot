@@ -419,7 +419,7 @@ class Auction(commands.Cog):
             asyncio.create_task(self.check_last_bid(message, time))
 
     async def check_last_bid(self, message, time):
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
         last_bid = self.last_bid.get(message.channel.id)
         if last_bid:
             going = last_bid.get("going")
