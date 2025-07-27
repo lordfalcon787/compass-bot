@@ -1,7 +1,7 @@
 import nextcord
 from typing import List
 from nextcord import SlashOption
-from nextcord.ext import commands
+from nextcord.ext import commands, tasks
 from utils.mongo_connection import MongoConnection
 
 mongo = MongoConnection.get_instance()
@@ -18,6 +18,32 @@ class Cults(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print("Cults cog loaded")
+
+    @tasks.loop(hours=1)
+    async def update_cult_list_message(self):
+        doc = collection.find_one({"_id": "cult_list_message"})
+        if not doc:
+            return
+        doc = collection.find_one({"_id": "cult_list"})
+        if not doc:
+            return
+        guild = self.bot.get_guild(1205270486230110330)
+        channel = guild.get_channel(doc["channel"])
+        message = guild.get_message(doc["msg"])
+        if not channel or not message:
+            return
+        descp = ""
+        for cult in doc:
+            if cult == "_id":
+                continue
+            cult_name = cult
+            cult_role = f"<@&{doc[cult]['role']}>" if "role" in doc[cult] else "None"
+            cult_members_str = ", ".join([f"<@{member}>" for member in doc[cult]["members"]])
+            descp = f"{descp}{cult_name} / {cult_role}\n**Members:**{cult_members_str}\n\n"
+        embed = nextcord.Embed(title="Cult List", description=descp)
+        embed.set_footer(text="Robbing Central Cults", icon_url=guild.icon.url)
+        embed.color = 16776960
+        await message.edit(embed=embed)
 
     @nextcord.slash_command(name="cult", description="Cults", guild_ids=[1205270486230110330])
     async def cult(self, interaction: nextcord.Interaction):
@@ -161,6 +187,31 @@ class Cults(commands.Cog):
         cult_size = len(doc[cult]["members"])
         embed = nextcord.Embed(title=f"Cult {cult}", description=f"**Role:** {role}\n**Owner:** {owner}\n**Members [{cult_size}/10]:** {members_str}\n**Total Points:** {points}")
         await interaction.response.send_message(embed=embed, ephemeral=False)
+
+    @cult.subcommand(name="list", description="View a list of all cults.")
+    async def list(self, interaction: nextcord.Interaction):
+        user_roles = [role.id for role in interaction.user.roles]
+        if interaction.user.id not in user_access_ids and not interaction.user.guild_permissions.administrator and not any(role_id in user_roles for role_id in role_access_ids):
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
+            return
+        doc = collection.find_one({"_id": "cult_list"})
+        if not doc:
+            await interaction.response.send_message("No cults found.", ephemeral=False)
+            return
+        descp = ""
+        for cult in doc:
+            if cult == "_id":
+                continue
+            cult_name = cult
+            cult_role = f"<@&{doc[cult]['role']}>" if "role" in doc[cult] else "None"
+            cult_members_str = ", ".join([f"<@{member}>" for member in doc[cult]["members"]])
+            descp = f"{descp}{cult_name} / {cult_role}\n**Members:**{cult_members_str}\n\n"
+        embed = nextcord.Embed(title="Cult List", description=descp)
+        embed.set_footer(text="Robbing Central Cults", icon_url=interaction.guild.icon.url)
+        embed.color = 16776960
+        await interaction.response.send_message("Sent cult list to channel.", ephemeral=True)
+        msg = await interaction.channel.send(embed=embed)
+        collection.update_one({"_id": "cult_list_message"}, {"$set": {f"msg": msg.id, "channel": interaction.channel.id}}, upsert=True)
 
     @cult.subcommand(name="delete", description="Delete a cult")
     async def delete(self, interaction: nextcord.Interaction, cult: str = SlashOption(description="The cult to delete.", autocomplete=True)):
