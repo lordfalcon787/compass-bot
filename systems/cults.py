@@ -47,7 +47,7 @@ class Cults(commands.Cog):
                     total_points += points[str(member)]["points"]
                 except:
                     pass
-            embed.add_field(name=f"{cult_name}", value=f"**Role:** {cult_role}\n**Owner:** {owner}\n**Members:**{cult_members_str}\n**Total Points:** {total_points}\n\n", inline=False)
+            embed.add_field(name=f"{cult_name}", value=f"**Role:** {cult_role}\n**Owner:** {owner}\n**Total Points:** {total_points}\n**Members:**{cult_members_str}\n\n", inline=False)
         embed.set_footer(text="Robbing Central Cults", icon_url=guild.icon.url)
         embed.color = 16776960
         await message.edit(embed=embed)
@@ -220,7 +220,7 @@ class Cults(commands.Cog):
                     total_points += points[str(member)]["points"]
                 except:
                     pass
-            embed.add_field(name=f"{cult_name}", value=f"**Role:** {cult_role}\n**Owner:** {owner}\n**Members:**{cult_members_str}\n**Total Points:** {total_points}\n\n", inline=False)
+            embed.add_field(name=f"{cult_name}", value=f"**Role:** {cult_role}\n**Owner:** {owner}\n**Total Points:** {total_points}\n**Members:**{cult_members_str}\n\n", inline=False)
         embed.set_footer(text="Robbing Central Cults", icon_url=interaction.guild.icon.url)
         embed.color = 16776960
         await interaction.response.send_message("Sent cult list to channel.", ephemeral=True)
