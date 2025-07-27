@@ -18,6 +18,7 @@ class Cults(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print("Cults cog loaded")
+        self.update_cult_list_message.start()
 
     @tasks.loop(hours=1)
     async def update_cult_list_message(self):
