@@ -31,7 +31,7 @@ class Cults(commands.Cog):
             return
         guild = self.bot.get_guild(1205270486230110330)
         channel = guild.get_channel(doc_1["channel"])
-        message = guild.get_message(doc_1["msg"])
+        message = await channel.fetch_message(doc_1["msg"])
         if not channel or not message:
             return
         embed = nextcord.Embed(title="Cult List")
