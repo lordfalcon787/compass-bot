@@ -198,15 +198,15 @@ class Cults(commands.Cog):
         if not doc:
             await interaction.response.send_message("No cults found.", ephemeral=False)
             return
-        descp = ""
+        embed = nextcord.Embed(title="Cult List")
         for cult in doc:
             if cult == "_id":
                 continue
             cult_name = cult
             cult_role = f"<@&{doc[cult]['role']}>" if "role" in doc[cult] else "None"
+            owner = f"<@{doc[cult]['owner']}>" if "owner" in doc[cult] else "None"
             cult_members_str = ", ".join([f"<@{member}>" for member in doc[cult]["members"]])
-            descp = f"{descp}{cult_name} / {cult_role}\n**Members:**{cult_members_str}\n\n"
-        embed = nextcord.Embed(title="Cult List", description=descp)
+            embed.add_field(name=f"{cult_name} / {cult_role}", value=f"**Owner:** {owner}\n**Members:**{cult_members_str}\n\n", inline=False)
         embed.set_footer(text="Robbing Central Cults", icon_url=interaction.guild.icon.url)
         embed.color = 16776960
         await interaction.response.send_message("Sent cult list to channel.", ephemeral=True)
