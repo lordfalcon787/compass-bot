@@ -1006,11 +1006,21 @@ class Moderation(commands.Cog):
             embed = nextcord.Embed(title=f"Event Blacklist Added", description=f"{member.mention} has been blacklisted from events and giveaways for {readable}, for reason: {reason}", color=nextcord.Color.green())
             if "remove warns" in reason.lower() and "dont remove warns" not in reason.lower() and "don't remove warns" not in reason.lower():
                 warns_cleared = await self.ebl_clearwarns(ctx, member)
+                reason = reason.replace("remove warns", "").replace("dont remove warns", "").replace("don't remove warns", "").replace("remove warn", "").replace("dont remove warn", "").replace("don't remove warn", "").strip()
                 embed.description = f"{member.mention} has been blacklisted from events and giveaways for {readable}, for reason: {reason} and {warns_cleared} event warns have been removed."
             embed.set_footer(text=f"Execute this command again to remove the blacklist.")
             await member.send(f"**Robbing Central:** You have been blacklisted from events and giveaways for {readable}, for reason: {reason}")
             await ctx.reply(embed=embed, mention_author=False)
             await ctx.message.add_reaction(GREEN_CHECK)
+            config = configuration.find_one({"_id": "config"})
+            logs = config["moderation"]["logs"]
+            logs = logs.get(str(ctx.guild.id))
+            if logs:
+                logs = self.bot.get_channel(int(logs))
+                try:
+                    await logs.send(embed=embed)
+                except:
+                    pass
         
     async def ebl_clearwarns(self, ctx, member):
         doc = collection.find_one({"_id": f"warn_logs_{ctx.guild.id}"})
