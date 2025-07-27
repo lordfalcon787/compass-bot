@@ -226,7 +226,8 @@ class Cults(commands.Cog):
         embed.color = 16776960
         await interaction.response.send_message("Sent cult list to channel.", ephemeral=True)
         msg = await interaction.channel.send(embed=embed)
-        collection.update_one({"_id": "cult_list_message"}, {"$set": {f"msg": msg.id, "channel": interaction.channel.id}}, upsert=True)
+        if interaction.channel.id == 1392613844639289537:
+            collection.update_one({"_id": "cult_list_message"}, {"$set": {f"msg": msg.id, "channel": interaction.channel.id}}, upsert=True)
 
     @cult.subcommand(name="delete", description="Delete a cult")
     async def delete(self, interaction: nextcord.Interaction, cult: str = SlashOption(description="The cult to delete.", autocomplete=True)):
