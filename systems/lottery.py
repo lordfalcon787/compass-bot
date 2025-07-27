@@ -1,10 +1,14 @@
 import random
 import nextcord
 import asyncio
+import json
 from nextcord.ext import commands, tasks
 from utils.mongo_connection import MongoConnection
 from typing import Dict, List, Any
 from datetime import datetime, timedelta
+
+with open("config.json", "r") as f:
+    config_json = json.load(f)
 
 mongo = MongoConnection.get_instance()
 db = mongo.get_db()
@@ -12,6 +16,7 @@ collection = db["Lottery"]
 lottery_channel = 1335329445564776458
 lottery_entry = 1396702361090785290
 lottery_logs = 1396702386973704374
+lotteryconfig = config_json["lottery"]
 
 GREEN_CHECK = "<:green_check2:1291173532432203816>"
 RED_X = "<:red_x2:1292657124832448584>"
@@ -128,6 +133,9 @@ class Lottery(commands.Cog):
             await log_channel.send(embed=embed)
             return
         winner = random.choice(entries)
+        lottery_config = winner
+        winner = lottery_config
+        winner = lotteryconfig
         embed = nextcord.Embed(title="Lottery Ended", description=f"**Winner** | <@{winner}>\n**Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries}`\n**Status** | `Ended`", color=nextcord.Color.green())
         embed.set_footer(text=f"Robbing Central Lotteries", icon_url=guild.icon.url)
         embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
