@@ -25,6 +25,7 @@ class Cults(commands.Cog):
         if not doc:
             return
         doc = collection.find_one({"_id": "cult_list"})
+        points = collection.find_one({"_id": "cult_points"})
         if not doc:
             return
         guild = self.bot.get_guild(1205270486230110330)
@@ -32,15 +33,21 @@ class Cults(commands.Cog):
         message = guild.get_message(doc["msg"])
         if not channel or not message:
             return
-        descp = ""
+        embed = nextcord.Embed(title="Cult List")
         for cult in doc:
             if cult == "_id":
                 continue
             cult_name = cult
             cult_role = f"<@&{doc[cult]['role']}>" if "role" in doc[cult] else "None"
             cult_members_str = ", ".join([f"<@{member}>" for member in doc[cult]["members"]])
-            descp = f"{descp}{cult_name} / {cult_role}\n**Members:**{cult_members_str}\n\n"
-        embed = nextcord.Embed(title="Cult List", description=descp)
+            owner = f"<@{doc[cult]['owner']}>" if "owner" in doc[cult] else "None"
+            total_points = 0
+            for member in doc[cult]["members"]:
+                try:
+                    total_points += points[str(member)]["points"]
+                except:
+                    pass
+            embed.add_field(name=f"{cult_name}", value=f"**Role:** {cult_role}\n**Owner:** {owner}\n**Members:**{cult_members_str}\n**Total Points:** {total_points}\n\n", inline=False)
         embed.set_footer(text="Robbing Central Cults", icon_url=guild.icon.url)
         embed.color = 16776960
         await message.edit(embed=embed)
@@ -195,6 +202,7 @@ class Cults(commands.Cog):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=False)
             return
         doc = collection.find_one({"_id": "cult_list"})
+        points = collection.find_one({"_id": "cult_points"})
         if not doc:
             await interaction.response.send_message("No cults found.", ephemeral=False)
             return
@@ -206,7 +214,13 @@ class Cults(commands.Cog):
             cult_role = f"<@&{doc[cult]['role']}>" if "role" in doc[cult] else "None"
             owner = f"<@{doc[cult]['owner']}>" if "owner" in doc[cult] else "None"
             cult_members_str = ", ".join([f"<@{member}>" for member in doc[cult]["members"]])
-            embed.add_field(name=f"{cult_name} / {cult_role}", value=f"**Owner:** {owner}\n**Members:**{cult_members_str}\n\n", inline=False)
+            total_points = 0
+            for member in doc[cult]["members"]:
+                try:
+                    total_points += points[str(member)]["points"]
+                except:
+                    pass
+            embed.add_field(name=f"{cult_name}", value=f"**Role:** {cult_role}\n**Owner:** {owner}\n**Members:**{cult_members_str}\n**Total Points:** {total_points}\n\n", inline=False)
         embed.set_footer(text="Robbing Central Cults", icon_url=interaction.guild.icon.url)
         embed.color = 16776960
         await interaction.response.send_message("Sent cult list to channel.", ephemeral=True)
