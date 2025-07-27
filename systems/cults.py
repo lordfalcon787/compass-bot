@@ -22,28 +22,28 @@ class Cults(commands.Cog):
 
     @tasks.loop(hours=1)
     async def update_cult_list_message(self):
-        doc = collection.find_one({"_id": "cult_list_message"})
-        if not doc:
+        doc_1 = collection.find_one({"_id": "cult_list_message"})
+        if not doc_1:
             return
-        doc = collection.find_one({"_id": "cult_list"})
+        doc_2 = collection.find_one({"_id": "cult_list"})
         points = collection.find_one({"_id": "cult_points"})
-        if not doc:
+        if not doc_2:
             return
         guild = self.bot.get_guild(1205270486230110330)
-        channel = guild.get_channel(doc["channel"])
-        message = guild.get_message(doc["msg"])
+        channel = guild.get_channel(doc_1["channel"])
+        message = guild.get_message(doc_1["msg"])
         if not channel or not message:
             return
         embed = nextcord.Embed(title="Cult List")
-        for cult in doc:
+        for cult in doc_2:
             if cult == "_id":
                 continue
             cult_name = cult
-            cult_role = f"<@&{doc[cult]['role']}>" if "role" in doc[cult] else "None"
-            cult_members_str = ", ".join([f"<@{member}>" for member in doc[cult]["members"]])
-            owner = f"<@{doc[cult]['owner']}>" if "owner" in doc[cult] else "None"
+            cult_role = f"<@&{doc_2[cult]['role']}>" if "role" in doc_2[cult] else "None"
+            cult_members_str = ", ".join([f"<@{member}>" for member in doc_2[cult]["members"]])
+            owner = f"<@{doc_2[cult]['owner']}>" if "owner" in doc_2[cult] else "None"
             total_points = 0
-            for member in doc[cult]["members"]:
+            for member in doc_2[cult]["members"]:
                 try:
                     total_points += points[str(member)]["points"]
                 except:
