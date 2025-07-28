@@ -383,7 +383,7 @@ class Lottery(commands.Cog):
             return embed
 
         class EntriesView(nextcord.ui.View):
-            def __init__(self, author, timeout=60):
+            def __init__(self, author, timeout=180):
                 super().__init__(timeout=timeout)
                 self.page = 0
                 self.author = author
