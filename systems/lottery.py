@@ -374,7 +374,7 @@ class Lottery(commands.Cog):
             )
             descp = ""
             total_entries = sum(entry for _, entry in entries_list)
-            embed.set_footer(text=f"Robbing Central Lotteries - Page {page+1}/{total_pages} | Total Entries: `{total_entries:,}`", icon_url=interaction.guild.icon.url)
+            embed.set_footer(text=f"Robbing Central Lotteries - Page {page+1}/{total_pages} | {total_entries:,} Total Entries", icon_url=interaction.guild.icon.url)
             for idx, (user_id, entry) in enumerate(page_entries, start=start + 1):
                 user_display = f"<@{user_id}>"
                 line = f"{idx}. {user_display} - `{entry:,}` Entries"
