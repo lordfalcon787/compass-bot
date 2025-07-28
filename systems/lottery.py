@@ -337,6 +337,103 @@ class Lottery(commands.Cog):
         embed.set_footer(text=f"Robbing Central Lotteries", icon_url=interaction.guild.icon.url)
         await log_channel.send(embed=embed)
 
+    @lottery.subcommand(name="myentries", description="See your entries for the current lottery.")
+    async def myentries(self, interaction: nextcord.Interaction):
+        doc = collection.find_one({"_id": "lottery"})
+        if not doc:
+            await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
+            return
+        if interaction.user.id not in doc["entries"]:
+            await interaction.response.send_message("You have no entries for the current lottery.", ephemeral=True)
+            return
+        entries = doc["entries"][str(interaction.user.id)]
+        await interaction.response.send_message(content=f"You have `{entries:,}` entries for the current lottery.", ephemeral=True)
+
+    @lottery.subcommand(name="entries", description="Views the entries for the current lottery.")
+    async def entries(self, interaction: nextcord.Interaction):
+        import math
+        from nextcord.ui import View, Button
+
+        doc = collection.find_one({"_id": "lottery"})
+        if not doc:
+            await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
+            return
+
+        entries = doc["entries"]
+        entries_list = list(entries.items())
+        per_page = 10
+        total_pages = max(1, math.ceil(len(entries_list) / per_page))
+
+        def get_embed(page: int):
+            sorted_entries = sorted(entries_list, key=lambda x: x[1], reverse=True)
+            start = page * per_page
+            end = start + per_page
+            page_entries = sorted_entries[start:end]
+            embed = nextcord.Embed(
+                title="Lottery Entries",
+                color=16711680
+            )
+            descp = ""
+            embed.set_footer(text=f"Robbing Central Lotteries - Page {page+1}/{total_pages}", icon_url=interaction.guild.icon.url)
+            for idx, (user_id, entry) in enumerate(page_entries, start=start + 1):
+                user_display = f"<@{user_id}>"
+                line = f"{idx}. {user_display} - `{entry:,}` Entries"
+                descp += f"{line}\n"
+            embed.description = descp
+            return embed
+
+        class EntriesView(View):
+            def __init__(self, author, timeout=60):
+                super().__init__(timeout=timeout)
+                self.page = 0
+                self.author = author
+
+            async def update_embed(self, interaction):
+                embed = get_embed(self.page)
+                await interaction.response.edit_message(embed=embed, view=self)
+
+            @Button(label="⏪", style=nextcord.ButtonStyle.secondary, row=0)
+            async def first(self, button, interaction):
+                if interaction.user != self.author:
+                    await interaction.response.send_message("You can't control this pagination.", ephemeral=True)
+                    return
+                self.page = 0
+                await self.update_embed(interaction)
+
+            @Button(label="◀️", style=nextcord.ButtonStyle.secondary, row=0)
+            async def prev(self, button, interaction):
+                if interaction.user != self.author:
+                    await interaction.response.send_message("You can't control this pagination.", ephemeral=True)
+                    return
+                if self.page > 0:
+                    self.page -= 1
+                    await self.update_embed(interaction)
+                else:
+                    await interaction.response.defer()
+
+            @Button(label="▶️", style=nextcord.ButtonStyle.secondary, row=0)
+            async def next(self, button, interaction):
+                if interaction.user != self.author:
+                    await interaction.response.send_message("You can't control this pagination.", ephemeral=True)
+                    return
+                if self.page < total_pages - 1:
+                    self.page += 1
+                    await self.update_embed(interaction)
+                else:
+                    await interaction.response.defer()
+
+            @Button(label="⏩", style=nextcord.ButtonStyle.secondary, row=0)
+            async def last(self, button, interaction):
+                if interaction.user != self.author:
+                    await interaction.response.send_message("You can't control this pagination.", ephemeral=True)
+                    return
+                self.page = total_pages - 1
+                await self.update_embed(interaction)
+
+        view = EntriesView(interaction.user)
+        embed = get_embed(0)
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
     @lottery.subcommand(name="removeentries", description="Removes entries from a user for the current lottery.")
     async def removeentries(self, interaction: nextcord.Interaction, user: nextcord.Member, quantity: int):
         if not interaction.user.guild_permissions.administrator:
