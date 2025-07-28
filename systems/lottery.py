@@ -1,5 +1,6 @@
 import random
 import nextcord
+import math
 import asyncio
 import json
 from nextcord.ext import commands, tasks
@@ -327,7 +328,7 @@ class Lottery(commands.Cog):
         if not doc:
             await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
             return
-        if user.id not in doc["entries"]:
+        if str(user.id) not in doc["entries"]:
             doc["entries"][str(user.id)] = 0
         doc["entries"][str(user.id)] += quantity
         collection.update_one({"_id": "lottery"}, {"$set": {"entries": doc["entries"]}})
@@ -343,7 +344,7 @@ class Lottery(commands.Cog):
         if not doc:
             await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
             return
-        if interaction.user.id not in doc["entries"]:
+        if str(interaction.user.id) not in doc["entries"]:
             await interaction.response.send_message("You have no entries for the current lottery.", ephemeral=True)
             return
         entries = doc["entries"][str(interaction.user.id)]
@@ -351,9 +352,6 @@ class Lottery(commands.Cog):
 
     @lottery.subcommand(name="entries", description="Views the entries for the current lottery.")
     async def entries(self, interaction: nextcord.Interaction):
-        import math
-        from nextcord.ui import View, Button
-
         doc = collection.find_one({"_id": "lottery"})
         if not doc:
             await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
@@ -382,7 +380,7 @@ class Lottery(commands.Cog):
             embed.description = descp
             return embed
 
-        class EntriesView(View):
+        class EntriesView(nextcord.ui.View):
             def __init__(self, author, timeout=60):
                 super().__init__(timeout=timeout)
                 self.page = 0
@@ -392,7 +390,7 @@ class Lottery(commands.Cog):
                 embed = get_embed(self.page)
                 await interaction.response.edit_message(embed=embed, view=self)
 
-            @Button(label="⏪", style=nextcord.ButtonStyle.secondary, row=0)
+            @nextcord.ui.button(label="⏪", style=nextcord.ButtonStyle.secondary, row=0)
             async def first(self, button, interaction):
                 if interaction.user != self.author:
                     await interaction.response.send_message("You can't control this pagination.", ephemeral=True)
@@ -400,7 +398,7 @@ class Lottery(commands.Cog):
                 self.page = 0
                 await self.update_embed(interaction)
 
-            @Button(label="◀️", style=nextcord.ButtonStyle.secondary, row=0)
+            @nextcord.ui.button(label="◀️", style=nextcord.ButtonStyle.secondary, row=0)
             async def prev(self, button, interaction):
                 if interaction.user != self.author:
                     await interaction.response.send_message("You can't control this pagination.", ephemeral=True)
@@ -411,7 +409,7 @@ class Lottery(commands.Cog):
                 else:
                     await interaction.response.defer()
 
-            @Button(label="▶️", style=nextcord.ButtonStyle.secondary, row=0)
+            @nextcord.ui.button(label="▶️", style=nextcord.ButtonStyle.secondary, row=0)
             async def next(self, button, interaction):
                 if interaction.user != self.author:
                     await interaction.response.send_message("You can't control this pagination.", ephemeral=True)
@@ -422,7 +420,7 @@ class Lottery(commands.Cog):
                 else:
                     await interaction.response.defer()
 
-            @Button(label="⏩", style=nextcord.ButtonStyle.secondary, row=0)
+            @nextcord.ui.button(label="⏩", style=nextcord.ButtonStyle.secondary, row=0)
             async def last(self, button, interaction):
                 if interaction.user != self.author:
                     await interaction.response.send_message("You can't control this pagination.", ephemeral=True)
@@ -443,7 +441,7 @@ class Lottery(commands.Cog):
         if not doc:
             await interaction.response.send_message("There is no ongoing lottery.", ephemeral=True)
             return
-        if user.id not in doc["entries"]:
+        if str(user.id) not in doc["entries"]:
             doc["entries"][str(user.id)] = 0
         doc["entries"][str(user.id)] -= quantity
         collection.update_one({"_id": "lottery"}, {"$set": {"entries": doc["entries"]}})
