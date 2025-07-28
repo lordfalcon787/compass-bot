@@ -348,7 +348,8 @@ class Lottery(commands.Cog):
             await interaction.response.send_message("You have no entries for the current lottery.", ephemeral=True)
             return
         entries = doc["entries"][str(interaction.user.id)]
-        await interaction.response.send_message(content=f"You have `{entries:,}` entries for the current lottery.", ephemeral=True)
+        total_entries = sum(entry for _, entry in doc["entries"].items())
+        await interaction.response.send_message(content=f"You have `{entries:,}` entries for the current lottery. There are `{total_entries:,}` total entries. You have `{entries/total_entries*100:.2f}%` chance of winning the lottery.", ephemeral=True)
 
     @lottery.subcommand(name="entries", description="Views the entries for the current lottery.")
     async def entries(self, interaction: nextcord.Interaction):
@@ -372,7 +373,8 @@ class Lottery(commands.Cog):
                 color=16711680
             )
             descp = ""
-            embed.set_footer(text=f"Robbing Central Lotteries - Page {page+1}/{total_pages}", icon_url=interaction.guild.icon.url)
+            total_entries = sum(entry for _, entry in entries_list)
+            embed.set_footer(text=f"Robbing Central Lotteries - Page {page+1}/{total_pages} | Total Entries: `{total_entries:,}`", icon_url=interaction.guild.icon.url)
             for idx, (user_id, entry) in enumerate(page_entries, start=start + 1):
                 user_display = f"<@{user_id}>"
                 line = f"{idx}. {user_display} - `{entry:,}` Entries"
@@ -390,15 +392,7 @@ class Lottery(commands.Cog):
                 embed = get_embed(self.page)
                 await interaction.response.edit_message(embed=embed, view=self)
 
-            @nextcord.ui.button(label="⏪", style=nextcord.ButtonStyle.secondary, row=0)
-            async def first(self, button, interaction):
-                if interaction.user != self.author:
-                    await interaction.response.send_message("You can't control this pagination.", ephemeral=True)
-                    return
-                self.page = 0
-                await self.update_embed(interaction)
-
-            @nextcord.ui.button(label="◀️", style=nextcord.ButtonStyle.secondary, row=0)
+            @nextcord.ui.button(emoji="<a:arrow_left:1316079524710191156>", style=nextcord.ButtonStyle.secondary, row=0)
             async def prev(self, button, interaction):
                 if interaction.user != self.author:
                     await interaction.response.send_message("You can't control this pagination.", ephemeral=True)
@@ -409,7 +403,7 @@ class Lottery(commands.Cog):
                 else:
                     await interaction.response.defer()
 
-            @nextcord.ui.button(label="▶️", style=nextcord.ButtonStyle.secondary, row=0)
+            @nextcord.ui.button(emoji="<a:arrow_right:1316079547124285610>", style=nextcord.ButtonStyle.secondary, row=0)
             async def next(self, button, interaction):
                 if interaction.user != self.author:
                     await interaction.response.send_message("You can't control this pagination.", ephemeral=True)
@@ -419,14 +413,6 @@ class Lottery(commands.Cog):
                     await self.update_embed(interaction)
                 else:
                     await interaction.response.defer()
-
-            @nextcord.ui.button(label="⏩", style=nextcord.ButtonStyle.secondary, row=0)
-            async def last(self, button, interaction):
-                if interaction.user != self.author:
-                    await interaction.response.send_message("You can't control this pagination.", ephemeral=True)
-                    return
-                self.page = total_pages - 1
-                await self.update_embed(interaction)
 
         view = EntriesView(interaction.user)
         embed = get_embed(0)
