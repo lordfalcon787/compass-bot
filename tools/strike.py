@@ -1,7 +1,7 @@
 import nextcord
 from nextcord.ext import commands
 from utils.mongo_connection import MongoConnection
-from datetime import datetime
+from datetime import datetime, timezone
 
 GREEN_CHECK = "<:green_check:1218286675508199434>"
 RED_X = "<:red_x:1218287859963007057>"
@@ -107,7 +107,7 @@ class Strike(commands.Cog):
             except:
                 break
             if isinstance(value, dict):
-                timestamp = int(value['date'].timestamp())
+                timestamp = int(value['date'])
                 embed.add_field(
                     name=f"Strike #{num}",
                     value=f"**Reason:** `{value['reason']}`\n**Date:** <t:{timestamp}:F>",
@@ -163,7 +163,7 @@ class Strike(commands.Cog):
         
         strike_data = {
             "reason": reason,
-            "date": datetime.now(datetime.UTC)
+            "date": int(datetime.now().timestamp())
         }
         collection.update_one(
             {"_id": f"strikes_{ctx.guild.id}"},
