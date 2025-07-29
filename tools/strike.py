@@ -86,8 +86,15 @@ class Strike(commands.Cog):
     @commands.command(name="strikes")
     async def display_strikes(self, ctx):
         user = ctx.author
-        if ctx.author.guild_permissions.administrator and len(ctx.message.content.split(" ")) > 1:
-            user = ctx.message.content.split(" ")[1]
+        split = ctx.message.content.split(" ")
+        if ctx.author.guild_permissions.administrator and len(split) > 1:
+            user = split[1]
+            if user.lower() == "remove":
+                await self.remove_strike(ctx)
+                return
+            if user.lower() == "clear":
+                await self.clear_strikes(ctx)
+                return
             user = user.replace("<@", "").replace(">", "").replace("!", "")
             try:
                 user = await self.bot.fetch_user(user)
