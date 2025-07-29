@@ -19,6 +19,14 @@ class Strike(commands.Cog):
     async def on_ready(self):
         print("Strike cog loaded.")
 
+    @commands.command(name="fixstrikes")
+    async def fix_strikes_command(self, ctx):
+        if not ctx.author.guild_permissions.administrator:
+            await ctx.message.add_reaction(RED_X)
+            return
+        await self.fix_strikes(ctx.guild.id)
+        await ctx.message.add_reaction(GREEN_CHECK)
+
     async def fix_strikes(self, guild_id):
         doc = collection.find_one({"_id": f"strikes_{guild_id}"})
         if not doc:
