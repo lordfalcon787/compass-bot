@@ -29,10 +29,8 @@ class Strike(commands.Cog):
 
     async def fix_strikes(self, guild_id):
         doc = collection.find_one({"_id": f"strikes_{guild_id}"})
-        if not doc:
-            if not doc:
-                return
-            updated = False
+        updated = False
+        if doc:
             for user_id in list(doc.keys()):
                 if user_id == "_id":
                     continue
@@ -51,15 +49,6 @@ class Strike(commands.Cog):
                     if list(user_strikes.values()) != list(new_strikes.values()) or list(user_strikes.keys()) != list(new_strikes.keys()):
                         doc[user_id] = new_strikes
                         updated = True
-                else:
-                    if isinstance(doc[user_id], dict):
-                        old_keys = sorted([int(k) for k in doc[user_id].keys()])
-                        if old_keys != list(range(1, len(old_keys) + 1)):
-                            new_strikes = {}
-                            for idx, k in enumerate(old_keys, start=1):
-                                new_strikes[str(idx)] = doc[user_id][str(k)]
-                            doc[user_id] = new_strikes
-                            updated = True
             if updated:
                 collection.update_one({"_id": f"strikes_{guild_id}"}, {"$set": doc})
 
