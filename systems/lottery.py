@@ -139,13 +139,16 @@ class Lottery(commands.Cog):
         winner = lotteryconfig
         embed = nextcord.Embed(title="Lottery Ended", description=f"**Winner** | <@{winner}>\n**Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries}`\n**Status** | `Ended`", color=nextcord.Color.green())
         sorted_entrants = sorted(doc["entries"].items(), key=lambda x: x[1], reverse=True)
-        top_3_list = []
-        for idx, (user_id, entry_count) in enumerate(sorted_entrants[:3], start=1):
-            top_3_list.append(f"{idx}. <@{user_id}> - `{entry_count:,}` Entries")
-        if top_3_list:
-            embed.add_field(name="Top 3 Entrants", value="\n".join(top_3_list), inline=False)
-        else:
-            embed.add_field(name="Top 3 Entrants", value="No entrants.", inline=False)
+        try:
+            top_3_list = []
+            for idx, (user_id, entry_count) in enumerate(sorted_entrants[:3], start=1):
+                top_3_list.append(f"{idx}. <@{user_id}> - `{entry_count:,}` Entries")
+            if top_3_list:
+                embed.add_field(name="Top 3 Entrants", value="\n".join(top_3_list), inline=False)
+            else:
+                embed.add_field(name="Top 3 Entrants", value="No entrants.", inline=False)
+        except:
+            pass
         embed.set_footer(text=f"Robbing Central Lotteries", icon_url=guild.icon.url)
         embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/6851/6851332.png")
         await message.edit(embed=embed, view=None)
