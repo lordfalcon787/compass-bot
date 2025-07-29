@@ -1,6 +1,7 @@
 import nextcord
 from nextcord.ext import commands
 from utils.mongo_connection import MongoConnection
+from datetime import datetime
 
 GREEN_CHECK = "<:green_check:1218286675508199434>"
 RED_X = "<:red_x:1218287859963007057>"
@@ -17,6 +18,33 @@ class Strike(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print("Strike cog loaded.")
+
+    async def fix_strikes(self, guild_id):
+        doc = collection.find_one({"_id": f"strikes_{guild_id}"})
+        if not doc:
+            if not doc:
+                return
+            updated = False
+            for user_id in list(doc.keys()):
+                if user_id == "_id":
+                    continue
+                user_strikes = doc[user_id]
+                if isinstance(user_strikes, dict):
+                    sorted_strikes = sorted(user_strikes.items(), key=lambda x: int(x[0]))
+                    new_strikes = {}
+                    for idx, (_, value) in enumerate(sorted_strikes, start=1):
+                        if isinstance(value, dict) and "reason" in value and "date" in value:
+                            new_strikes[str(idx)] = {
+                                "reason": value["reason"],
+                                "date": value["date"]
+                            }
+                        else:
+                            new_strikes[str(idx)] = value
+                    if list(user_strikes.values()) != list(new_strikes.values()) or list(user_strikes.keys()) != list(new_strikes.keys()):
+                        doc[user_id] = new_strikes
+                        updated = True
+            if updated:
+                collection.update_one({"_id": f"strikes_{guild_id}"}, {"$set": doc})
 
     async def remove_strike(self, ctx):
         try:
@@ -44,6 +72,7 @@ class Strike(commands.Cog):
             del doc[str(user)][str(strike_num)]
             collection.update_one({"_id": f"strikes_{ctx.guild.id}"}, {"$set": doc})
             await ctx.message.add_reaction(GREEN_CHECK)
+            await self.fix_strikes(ctx.guild.id)
         except Exception as e:
             await ctx.message.add_reaction(RED_X)
             await ctx.reply(f"An error occurred: {str(e)}", mention_author=False)
@@ -71,7 +100,15 @@ class Strike(commands.Cog):
                 value = doc[str(user.id)][str(num)]
             except:
                 break
-            embed.add_field(name=f"Strike #{num}", value=f"`{value}`", inline=False)
+            if isinstance(value, dict):
+                timestamp = int(value['date'].timestamp())
+                embed.add_field(
+                    name=f"Strike #{num}",
+                    value=f"**Reason:** `{value['reason']}`\n**Date:** <t:{timestamp}:F>",
+                    inline=False
+                )
+            else:
+                embed.add_field(name=f"Strike #{num}", value=f"**Reason:** `{value}`", inline=False)
             num = num + 1
         await ctx.reply(embed=embed, mention_author=False)
 
@@ -99,7 +136,7 @@ class Strike(commands.Cog):
         except:
             await ctx.message.add_reaction(RED_X)
             return
-        
+        await self.fix_strikes(ctx.guild.id)
         doc = collection.find_one({"_id": f"strikes_{ctx.guild.id}"})
         strike_num = 0
         if not doc:
@@ -110,7 +147,15 @@ class Strike(commands.Cog):
             else:
                 strike_num = 1
         
-        collection.update_one({"_id": f"strikes_{ctx.guild.id}"}, {"$set": {f"{user.id}.{strike_num}": reason}}, upsert=True)
+        strike_data = {
+            "reason": reason,
+            "date": datetime.now(datetime.UTC)
+        }
+        collection.update_one(
+            {"_id": f"strikes_{ctx.guild.id}"},
+            {"$set": {f"{user.id}.{strike_num}": strike_data}},
+            upsert=True
+        )
         guild = str(ctx.guild.id)
         embed = nextcord.Embed(title=f"Strike #{strike_num}", description=f"{user.mention} has received a strike for: {reason}", color=65280)
         config = configuration.find_one({"_id": f"config"})
