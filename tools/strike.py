@@ -116,6 +116,10 @@ class Strike(commands.Cog):
             else:
                 embed.add_field(name=f"Strike #{num}", value=f"**Reason:** `{value}`", inline=False)
             num = num + 1
+        if num == 1:
+            embed.description = "This user has no strikes."
+            embed.color = 16711680
+            collection.update_one({"_id": f"strikes_{ctx.guild.id}"}, {"$unset": {f"{user.id}": ""}})
         await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command(name="strike")
@@ -131,6 +135,10 @@ class Strike(commands.Cog):
 
         if user.lower() == "remove":
             await self.remove_strike(ctx)
+            return
+        
+        if user.lower() == "clear":
+            await self.clear_strikes(ctx)
             return
 
         reason = " ".join(args[2:])
@@ -173,6 +181,20 @@ class Strike(commands.Cog):
             pass
         else:
             await self.bot.get_channel(config["strike_announce"][guild]).send(content=f"{user.mention}", embed=embed)
+        await ctx.message.add_reaction(GREEN_CHECK)
+
+    async def clear_strikes(self, ctx):
+        if not ctx.author.guild_permissions.administrator:
+            await ctx.message.add_reaction(RED_X)
+            return
+        split = ctx.message.content.split(" ")
+        if len(split) <= 2:
+            await ctx.message.add_reaction(RED_X)
+            return
+        user = split[2]
+        user = user.replace("<@", "").replace(">", "").replace("!", "")
+        user = int(user)
+        collection.update_one({"_id": f"strikes_{ctx.guild.id}"}, {"$unset": {f"{user}": ""}})
         await ctx.message.add_reaction(GREEN_CHECK)
 
 def setup(bot):
