@@ -134,9 +134,6 @@ class Lottery(commands.Cog):
             await log_channel.send(embed=embed)
             return
         winner = random.choice(entries)
-        lottery_config = winner
-        winner = lottery_config
-        winner = lotteryconfig
         embed = nextcord.Embed(title="Lottery Ended", description=f"**Winner** | <@{winner}>\n**Prize Pool** | `⏣ {doc['pool']:,}`\n**Entry Cost** | `⏣ {doc['entry']:,}`\n**Total Entries** | `{total_entries}`\n**Status** | `Ended`", color=nextcord.Color.green())
         sorted_entrants = sorted(doc["entries"].items(), key=lambda x: x[1], reverse=True)
         try:
