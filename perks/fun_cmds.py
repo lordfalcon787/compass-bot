@@ -52,11 +52,22 @@ class FunCommands(commands.Cog):
         elif not any(role in snipe_roles for role in user_roles) and not ctx.author.guild_permissions.administrator:
             await ctx.message.add_reaction(RED_X)
             return
-        elif str(ctx.channel.id) not in self.deleted_messages:
+        split = ctx.message.content.split(" ")
+        if len(split) < 2:
+            channel = ctx.channel
+        else:
+            channel = split[1]
+            channel = channel.replace("<", "").replace("#", "").replace(">", "")
+            channel = ctx.guild.get_channel(int(channel))
+        if ctx.author not in channel.members:
+            await ctx.message.add_reaction(RED_X)
+            await ctx.reply("You cannot snipe in this channel.", mention_author=False)
+            return
+        if str(channel.id) not in self.deleted_messages:
             await ctx.message.add_reaction(RED_X)
             await ctx.reply("There are no recently deleted messages in this channel.", mention_author=False)
             return 
-        message_data = self.deleted_messages[str(ctx.channel.id)]
+        message_data = self.deleted_messages[str(channel.id)]
         author = self.bot.get_user(message_data["author_id"])
         embed = nextcord.Embed(description=f"{message_data['content']} (<t:{message_data['timestamp']}:R>)", color=0x3498db)
         embed.timestamp = datetime.now()
