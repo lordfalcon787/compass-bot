@@ -1192,6 +1192,72 @@ class Moderation(commands.Cog):
             readable = f"{seconds} seconds"
             
         return seconds, readable
+    
+    @commands.Cog.listener()
+    async def on_auto_moderation_action_execution(self, execution):
+        """
+        Triggered when an automod rule executes an action
+        execution: nextcord.AutoModerationActionExecution object
+        """
+        SPECIFIC_RULE_ID = 1380814453255176262
+        logs = 1205270489954652179
+
+        if execution.rule_id == SPECIFIC_RULE_ID:
+            guild = self.bot.get_guild(execution.guild_id)
+            if not guild:
+                return
+            if guild.id != 1205270486230110330:
+                return
+            bot = guild.get_member(self.bot.user.id)
+            if not bot:
+                return
+                
+            member = guild.get_member(execution.member_id)
+            if not member:
+                return
+                
+            if member.guild_permissions.administrator:
+                return
+                
+            if member.top_role.position >= bot.top_role.position:
+                return
+                
+            link = f"https://discord.com/channels/{guild.id}/{execution.channel_id}/{execution.message_id}"
+            link2 = f"https://discord.com/channels/{guild.id}/1216556332539314207/{execution.alert_system_message_id}"
+            reason = f"Auto ban under Monitored Category N/F; the n and/or f word are prohibited. If you believe this is a mistake, please appeal at discord.gg/VPByJQW3ek - [Original Message]({link}) - [AutoMod Message]({link2})"
+            
+            try:
+                await member.send(f"You have been banned from the server for violating the rules by saying the n and/or f word. If you believe this is a mistake, please appeal at discord.gg/VPByJQW3ek")
+            except:
+                pass
+                
+            try:
+                await member.ban(reason=reason)
+            except Exception as e:
+                print(f"Failed to ban member {member.id}: {e}")
+                return
+                
+            try:
+                doc = collection.find_one({"_id": f"mod_logs_{guild.id}"})
+                if not doc:
+                    doc = 0
+                else:
+                    doc = doc.get("current_case")
+                doc += 1
+                collection.update_one({"_id": f"mod_logs_{guild.id}"}, {"$set": {"current_case": doc, f"{doc}": {"member": member.id, "reason": reason, "moderator": f"{self.bot.user.id}", "type": "ban", "date": datetime.now().strftime("%m/%d/%Y")}}}, upsert=True)
+            except Exception as e:
+                print(f"Failed to update moderation logs: {e}")
+                
+            if logs:
+                embed = nextcord.Embed(title=f"Member Ban | Case #{doc}", description=f"**User Banned:** {member.name} ({member.id})\n**Moderator:** Automatic\n**Reason:** {reason}", color=nextcord.Color.blurple())
+                embed.set_footer(text=f"ID: {member.id}")
+                embed.timestamp = datetime.now()
+                logs = self.bot.get_channel(int(logs))
+                try:
+                    await logs.send(embed=embed)
+                except Exception as e:
+                    print(f"Failed to send log message: {e}")
+            
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
