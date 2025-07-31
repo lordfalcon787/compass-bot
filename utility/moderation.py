@@ -1257,6 +1257,10 @@ class Moderation(commands.Cog):
                     await logs.send(embed=embed)
                 except Exception as e:
                     print(f"Failed to send log message: {e}")
+
+            message = await guild.get_channel(1216556332539314207)
+            message = await message.fetch_message(execution.alert_system_message_id)
+            await message.add_reaction(GREEN_CHECK)
             
 
 def setup(bot):
