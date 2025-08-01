@@ -67,7 +67,7 @@ class misc(commands.Cog):
                 message_to_reply_to = await channel.fetch_message(int(reply))
                 try:
                     msg = await message_to_reply_to.reply(message)
-                    channellog = self.bot.get_channel(1266257466677792768)
+                    channellog = self.bot.get_channel(1319532098633338950)
                     embed = nextcord.Embed(title="Echo Logged", description=f"Guild: {interaction.guild.name}\nMessage URL: {msg.jump_url}\nMessage: `{message}`\nChannel: {channel.mention}\nUser: {interaction.user.mention}", color=0xff69b4)
                     await channellog.send(embed=embed)
                 except nextcord.HTTPException as e:
@@ -77,7 +77,7 @@ class misc(commands.Cog):
             else:
                 try:
                     msg = await channel.send(message)
-                    channellog = self.bot.get_channel(1266257466677792768)
+                    channellog = self.bot.get_channel(1319532098633338950)
                     embed = nextcord.Embed(title="Echo Logged", description=f"Guild: {interaction.guild.name}\nMessage URL: {msg.jump_url}\nMessage: `{message}`\nChannel: {channel.mention}\nUser: {interaction.user.mention}", color=0xff69b4)
                     await channellog.send(embed=embed)
                 except nextcord.HTTPException as e:
