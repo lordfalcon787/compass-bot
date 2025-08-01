@@ -1224,7 +1224,7 @@ class Moderation(commands.Cog):
                 
             link = f"https://discord.com/channels/{guild.id}/{execution.channel_id}/{execution.message_id}"
             link2 = f"https://discord.com/channels/{guild.id}/1216556332539314207/{execution.alert_system_message_id}"
-            reason = f"Auto ban under Monitored Category N/F; the n and/or f word are prohibited. If you believe this is a mistake, please appeal at discord.gg/VPByJQW3ek - [Original Message]({link}) - [AutoMod Message]({link2})"
+            reason = f"Auto ban under Monitored Category N/F; the n and/or f word are prohibited. If you believe this is a mistake, please appeal at discord.gg/VPByJQW3ek - [Original Message Area]({link}) - [AutoMod Message]({link2})"
             
             try:
                 await member.send(f"You have been banned from the server for violating the rules by saying the n and/or f word. If you believe this is a mistake, please appeal at discord.gg/VPByJQW3ek")
