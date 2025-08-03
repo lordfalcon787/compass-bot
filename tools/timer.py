@@ -85,10 +85,19 @@ class Timer(commands.Cog):
         split = ctx.message.content.split(" ")
         time = split[1]
         total_seconds = 0
-        time = time.replace("d", "*86400+").replace("h", "*3600+").replace("m", "*60+").replace("s", "*1+")
-        if time.endswith('+'):
-            time = time[:-1]
-        total_seconds = eval(time)
+        import re
+        pattern = r'(\d+)([dhms])'
+        matches = re.findall(pattern, time)
+        for value, unit in matches:
+            value = int(value)
+            if unit == 'd':
+                total_seconds += value * 86400
+            elif unit == 'h':
+                total_seconds += value * 3600
+            elif unit == 'm':
+                total_seconds += value * 60
+            elif unit == 's':
+                total_seconds += value
         if total_seconds < 1:
             await ctx.reply("Invalid time entered.", mention_author=False)
             return
