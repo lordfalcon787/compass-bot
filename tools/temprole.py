@@ -152,7 +152,7 @@ class TempRole(commands.Cog):
             return
         
         if role in user.roles:
-            await ctx.reply(f"{user.mention} already has the {role.name} role.", mention_author=False)
+            await ctx.reply(f"{user.mention} already has the <@&{role.id}> role.", allowed_mentions=nextcord.AllowedMentions(roles=False), mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
         
