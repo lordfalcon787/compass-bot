@@ -33,7 +33,6 @@ class TempRole(commands.Cog):
             return None
 
     def find_best_role_match(self, guild, role_name):
-        """Find the best matching role based on partial name"""
         role_name = role_name.lower()
         best_match = None
         best_ratio = 0
@@ -53,7 +52,6 @@ class TempRole(commands.Cog):
         return best_match
 
     def parse_command_parts(self, message_content):
-        """Parse command to extract user, role name, and duration"""
         parts = message_content.split()
         
         if len(parts) < 3:
