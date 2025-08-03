@@ -5,6 +5,7 @@ from nextcord.ext import commands, tasks
 from datetime import datetime, timedelta
 from utils.mongo_connection import MongoConnection
 from difflib import SequenceMatcher
+import difflib
 
 mongo = MongoConnection.get_instance()
 db = mongo.get_db()
@@ -108,6 +109,59 @@ class TempRole(commands.Cog):
         await user.remove_roles(role)
         collection.delete_one({"_id": case["_id"]})
         self.cache.remove(case["_id"])
+
+    @commands.command(name="sotw")
+    async def sotw(self, ctx):
+        if not ctx.author.guild_permissions.administrator:
+            await ctx.send("You do not have permission to use this command.")
+            return
+        role = None
+        target_role_name = "staff of the week"
+        best_match = None
+        highest_ratio = 0
+        for role in ctx.guild.roles:
+            ratio = difflib.SequenceMatcher(None, role.name.lower(), target_role_name.lower()).ratio()
+            if ratio > highest_ratio:
+                highest_ratio = ratio
+                best_match = role
+        if best_match:
+            role = best_match
+        else:
+            await ctx.send("Could not find a role matching 'staff of the week'.")
+        await self.add_temprole_cog(ctx.author.id, role.id, ctx.guild.id, "7d")
+        embed = nextcord.Embed(title=f"Staff of the Week", description=f"Added <@&{role.id}> to {ctx.author.mention} for 7 days.", color=nextcord.Color.yellow())
+        await ctx.send(embed=embed)
+
+    async def add_temprole_cog(self, user, role, guild, duration):
+        current_case = collection.find_one({"_id": "current_case"})
+        if not current_case:
+            current_case = 0
+        else:
+            current_case = current_case["current_case"]
+        current_case += 1
+        guild = self.bot.get_guild(guild)
+        if not guild:
+            return
+        user = guild.get_member(user)
+        if not user:
+            return
+        role = guild.get_role(role)
+        if not role:
+            return
+        if role in user.roles:
+            return
+        await user.add_roles(role)
+        doc = {
+            "_id": current_case,
+            "user": user,
+            "role": role,
+            "guild": guild,
+            "duration": duration,
+            "end_time": datetime.now() + timedelta(seconds=duration)
+        }
+        collection.insert_one(doc)
+        if duration < 3600:
+            asyncio.create_task(self.end_temprole(doc))
 
     @commands.command(name="temprole")
     async def temprole(self, ctx):
