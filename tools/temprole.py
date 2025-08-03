@@ -111,7 +111,7 @@ class TempRole(commands.Cog):
         self.cache.remove(case["_id"])
 
     @commands.command(name="sotw")
-    async def sotw(self, ctx):
+    async def sotw(self, ctx, user: nextcord.Member = None):
         if not ctx.author.guild_permissions.administrator:
             await ctx.send("You do not have permission to use this command.")
             return
@@ -128,9 +128,12 @@ class TempRole(commands.Cog):
             role = best_match
         else:
             await ctx.send("Could not find a role matching 'staff of the week'.")
-        case = await self.add_temprole_cog(ctx.author.id, role.id, ctx.guild.id, "7d")
+        case = await self.add_temprole_cog(user.id, role.id, ctx.guild.id, "7d")
         if not case:
             await ctx.send("Failed to add temporary role.")
+            return
+        if case == "already has role":
+            await ctx.send("That user already has the role.")
             return
         embed = nextcord.Embed(title=f"Staff of the Week", description=f"Added <@&{role.id}> to {ctx.author.mention} for 7 days.", color=nextcord.Color.yellow())
         embed.set_footer(text=f"Case ID: #{case}")
@@ -154,7 +157,7 @@ class TempRole(commands.Cog):
         if not role:
             return None
         if role in user.roles:
-            return None
+            return "already has role"
         duration = self.get_duration(duration)
         if duration < 1:
             return None
