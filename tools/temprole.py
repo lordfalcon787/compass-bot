@@ -164,9 +164,9 @@ class TempRole(commands.Cog):
         await user.add_roles(role)
         doc = {
             "_id": current_case,
-            "user": user,
-            "role": role,
-            "guild": guild,
+            "user": user.id,
+            "role": role.id,
+            "guild": guild.id,
             "duration": duration,
             "end_time": datetime.now() + timedelta(seconds=duration)
         }
