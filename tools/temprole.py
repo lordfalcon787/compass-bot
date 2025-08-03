@@ -147,6 +147,7 @@ class TempRole(commands.Cog):
         else:
             current_case = current_case["current_case"]
         current_case += 1
+        collection.update_one({"_id": "current_case"}, {"$set": {"current_case": current_case}}, upsert=True)
         guild = self.bot.get_guild(guild)
         if not guild:
             return None
