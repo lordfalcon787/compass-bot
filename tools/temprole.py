@@ -155,6 +155,9 @@ class TempRole(commands.Cog):
             return None
         if role in user.roles:
             return None
+        duration = self.get_duration(duration)
+        if duration < 1:
+            return None
         await user.add_roles(role)
         doc = {
             "_id": current_case,
