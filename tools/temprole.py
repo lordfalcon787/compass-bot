@@ -162,6 +162,8 @@ class TempRole(commands.Cog):
         current_case = collection.find_one({"_id": "current_case"})
         if not current_case:
             current_case = 0
+        else:
+            current_case = current_case["current_case"]
         current_case += 1
         collection.update_one({"_id": "current_case"}, {"$set": {"current_case": current_case}}, upsert=True)
         doc = {
@@ -242,6 +244,8 @@ class TempRole(commands.Cog):
         current_case = collection.find_one({"_id": "current_case"})
         if not current_case:
             current_case = 0
+        else:
+            current_case = current_case["current_case"]
         current_case += 1
         collection.update_one({"_id": "current_case"}, {"$set": {"current_case": current_case}}, upsert=True)
         collection.insert_one({"_id": current_case, "user": user.id, "role": role.id, "guild": interaction.guild.id, "duration": duration, "end_time": datetime.now() + timedelta(seconds=duration)})
