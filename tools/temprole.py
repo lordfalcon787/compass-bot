@@ -164,7 +164,15 @@ class TempRole(commands.Cog):
             current_case = 0
         current_case += 1
         collection.update_one({"_id": "current_case"}, {"$set": {"current_case": current_case}}, upsert=True)
-        collection.insert_one({"_id": current_case, "user": user.id, "role": role.id, "guild": ctx.guild.id, "duration": duration, "end_time": datetime.now() + timedelta(seconds=duration)})
+        doc = {
+            "_id": current_case,
+            "user": user.id,
+            "role": role.id,
+            "guild": ctx.guild.id,
+            "duration": duration,
+            "end_time": datetime.now() + timedelta(seconds=duration)
+        }
+        collection.insert_one(doc)
         
         embed = nextcord.Embed(
             title=f"Temporary Role Case #{current_case}", 
@@ -175,7 +183,7 @@ class TempRole(commands.Cog):
         await ctx.message.add_reaction(GREEN_CHECK)
         
         if duration < 3600:
-            asyncio.create_task(self.end_temprole(current_case))
+            asyncio.create_task(self.end_temprole(doc))
 
     async def temprole_cancel(self, ctx):
         split = ctx.message.content.split(" ")
