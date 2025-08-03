@@ -52,22 +52,48 @@ class FunCommands(commands.Cog):
         elif not any(role in snipe_roles for role in user_roles) and not ctx.author.guild_permissions.administrator:
             await ctx.message.add_reaction(RED_X)
             return
+
         split = ctx.message.content.split(" ")
         if len(split) < 2:
             channel = ctx.channel
+            split_index = 1
         else:
-            channel = split[1]
-            channel = channel.replace("<", "").replace("#", "").replace(">", "")
-            channel = ctx.guild.get_channel(int(channel))
+            if "<#" in split[1]:
+                channel = split[1]
+                channel = channel.replace("<", "").replace("#", "").replace(">", "")
+                channel = ctx.guild.get_channel(int(channel))
+                if len(split) < 3:
+                    split_index = 1
+                else:
+                    try:
+                        split_index = int(split[2])
+                    except:
+                        await ctx.reply("Please specify a message number between 1 and 5 (e.g. `!snipe #channel 2`).", mention_author=False)
+                        return
+            else:
+                channel = ctx.channel
+                try:
+                    split_index = int(split[1])
+                except:
+                    await ctx.reply("Please specify a message number between 1 and 5 (e.g. `!snipe 2`).", mention_author=False)
+                    return
+
         if ctx.author not in channel.members:
             await ctx.message.add_reaction(RED_X)
             await ctx.reply("You cannot snipe in this channel.", mention_author=False)
             return
-        if str(channel.id) not in self.deleted_messages:
+        if str(channel.id) not in self.deleted_messages or not self.deleted_messages[str(channel.id)]:
             await ctx.message.add_reaction(RED_X)
             await ctx.reply("There are no recently deleted messages in this channel.", mention_author=False)
-            return 
-        message_data = self.deleted_messages[str(channel.id)]
+            return
+
+        messages = self.deleted_messages[str(channel.id)]
+        if len(messages) < split_index:
+            await ctx.message.add_reaction(RED_X)
+            await ctx.reply("There are not that many deleted messages in this channel. You can only snipe the last 5 deleted messages.", mention_author=False)
+            return
+
+        message_data = messages[-split_index]
         author = self.bot.get_user(message_data["author_id"])
         embed = nextcord.Embed(description=f"{message_data['content']} (<t:{message_data['timestamp']}:R>)", color=0x3498db)
         embed.timestamp = datetime.now()
@@ -75,7 +101,7 @@ class FunCommands(commands.Cog):
             embed.set_author(name=f"{author.name} ({author.id})", icon_url=author.display_avatar.url)
         else:
             embed.set_author(name=f"Unknown ({message_data['author_id']})")
-        embed.set_footer(text=f"Sniped by {ctx.author.name}")
+        embed.set_footer(text=f"Sniped by {ctx.author.name} • Message #{index}")
         await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command(name="kill")
@@ -222,11 +248,16 @@ class FunCommands(commands.Cog):
     async def on_message_delete(self, message: nextcord.Message):
         if not message.content or message.content == "":
             return
-        self.deleted_messages[str(message.channel.id)] = {
+        channel_id = str(message.channel.id)
+        msg_data = {
             "content": message.content,
             "author_id": message.author.id,
             "timestamp": int(datetime.now().timestamp())
         }
+        if channel_id not in self.deleted_messages or not isinstance(self.deleted_messages[channel_id], list):
+            self.deleted_messages[channel_id] = []
+        self.deleted_messages[channel_id].append(msg_data)
+        self.deleted_messages[channel_id] = self.deleted_messages[channel_id][-5:]
 
 def setup(bot):
     bot.add_cog(FunCommands(bot))
