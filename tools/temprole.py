@@ -4,6 +4,7 @@ import re
 from nextcord.ext import commands, tasks
 from datetime import datetime, timedelta
 from utils.mongo_connection import MongoConnection
+from difflib import SequenceMatcher
 
 mongo = MongoConnection.get_instance()
 db = mongo.get_db()
@@ -21,6 +22,62 @@ class TempRole(commands.Cog):
     async def on_ready(self):
         print("TempRole cog loaded")
         self.check_temprole.start()
+
+    def extract_user_id(self, user_text):
+        match = re.match(r'<@!?(\d+)>', user_text)
+        if match:
+            return int(match.group(1))
+        try:
+            return int(user_text)
+        except ValueError:
+            return None
+
+    def find_best_role_match(self, guild, role_name):
+        """Find the best matching role based on partial name"""
+        role_name = role_name.lower()
+        best_match = None
+        best_ratio = 0
+        
+        for role in guild.roles:
+            if role.name == "@everyone":
+                continue
+            if role.name.lower() == role_name:
+                return role
+            if role_name in role.name.lower():
+                return role
+            ratio = SequenceMatcher(None, role_name, role.name.lower()).ratio()
+            if ratio > best_ratio and ratio > 0.6:
+                best_ratio = ratio
+                best_match = role
+        
+        return best_match
+
+    def parse_command_parts(self, message_content):
+        """Parse command to extract user, role name, and duration"""
+        parts = message_content.split()
+        
+        if len(parts) < 3:
+            return None, None, None
+        
+        user_part = parts[1]
+        
+        duration_pattern = r'\d+[dhms]'
+        duration_part = None
+        role_parts = []
+        
+        for i in range(len(parts) - 1, 1, -1):
+            if re.match(duration_pattern, parts[i]):
+                duration_part = parts[i]
+                role_parts = parts[2:i]
+                break
+        
+        if duration_part is None:
+            duration_part = parts[-1]
+            role_parts = parts[2:-1]
+        
+        role_name = " ".join(role_parts) if role_parts else ""
+        
+        return user_part, role_name, duration_part
 
     @tasks.loop(hours=1)
     async def check_temprole(self):
@@ -59,65 +116,66 @@ class TempRole(commands.Cog):
         if not ctx.author.guild_permissions.manage_roles:
             await ctx.send("You do not have permission to use this command.")
             return
+        
         split = ctx.message.content.split(" ")
-        if len(split) < 2:
-            await ctx.reply("Correct usage: `!temprole [user] [duration] [role]`", mention_author=False)
-            await ctx.message.add_reaction(RED_X)
-            return
-        user = split[1]
-        if user == "cancel":
+        if len(split) >= 2 and split[1] == "cancel":
             await self.temprole_cancel(ctx)
             return
-        if len(split) < 3:
-            await ctx.reply("Correct usage: `!temprole [user] [duration] [role]`", mention_author=False)
+        
+        user_part, role_name, duration_part = self.parse_command_parts(ctx.message.content)
+        
+        if not user_part or not role_name or not duration_part:
+            await ctx.reply("Correct usage: `!temprole [user] [role name] [duration]`\nExample: `!temprole @user Member of the Month 30d`", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
-        duration = split[2]
-        if len(split) < 4:
-            await ctx.reply("Correct usage: `!temprole [user] [duration] [role]`", mention_author=False)
+        
+        user_id = self.extract_user_id(user_part)
+        if not user_id:
+            await ctx.reply("Invalid user. Please mention a user or provide a valid user ID.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
-        role = split[3]
-        try:
-            user = ctx.guild.get_member(int(user))
-        except ValueError:
-            await ctx.reply("Invalid user ID.", mention_author=False)
-            await ctx.message.add_reaction(RED_X)
-            return
+        
+        user = ctx.guild.get_member(user_id)
         if not user:
-            await ctx.reply("Invalid user.", mention_author=False)
+            await ctx.reply("User not found in this server.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
-        if duration.isdigit() or "<@&" in duration:
-            old_role = role
-            role = duration
-            duration = old_role
-        try:
-            role = ctx.guild.get_role(int(role))
-        except ValueError:
-            await ctx.reply("Invalid role ID.", mention_author=False)
-            await ctx.message.add_reaction(RED_X)
-            return
+        
+        role = self.find_best_role_match(ctx.guild, role_name)
         if not role:
-            await ctx.reply("Invalid role.", mention_author=False)
+            await ctx.reply(f"Could not find a role matching '{role_name}'. Please check the role name.", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
-        duration = self.get_duration(duration)
+        
+        duration = self.get_duration(duration_part)
         if duration < 1:
-            await ctx.reply("Invalid duration.", mention_author=False)
+            await ctx.reply("Invalid duration. Use formats like: 30d, 12h, 45m, 60s", mention_author=False)
             await ctx.message.add_reaction(RED_X)
             return
+        
+        if role in user.roles:
+            await ctx.reply(f"{user.mention} already has the {role.name} role.", mention_author=False)
+            await ctx.message.add_reaction(RED_X)
+            return
+        
         readable = self.get_readable_duration(duration)
         await user.add_roles(role)
+        
         current_case = collection.find_one({"_id": "current_case"})
         if not current_case:
             current_case = 0
         current_case += 1
         collection.update_one({"_id": "current_case"}, {"$set": {"current_case": current_case}}, upsert=True)
         collection.insert_one({"_id": current_case, "user": user.id, "role": role.id, "guild": ctx.guild.id, "duration": duration, "end_time": datetime.now() + timedelta(seconds=duration)})
-        embed = nextcord.Embed(title=f"Temporary Role Case #{current_case}", description=f"Added temporary role {role.name} to {user.mention} for {readable}, it will be removed in <t:{int((datetime.now() + timedelta(seconds=duration)).timestamp())}:R>.", color=nextcord.Color.blurple())
+        
+        embed = nextcord.Embed(
+            title=f"Temporary Role Case #{current_case}", 
+            description=f"Added temporary role **{role.name}** to {user.mention} for **{readable}**.\nIt will be removed <t:{int((datetime.now() + timedelta(seconds=duration)).timestamp())}:R>.", 
+            color=nextcord.Color.blurple()
+        )
         await ctx.reply(embed=embed, mention_author=False)
         await ctx.message.add_reaction(GREEN_CHECK)
+        
         if duration < 3600:
             asyncio.create_task(self.end_temprole(current_case))
 
@@ -188,12 +246,10 @@ class TempRole(commands.Cog):
         time = duration.lower()
         total_seconds = 0
         
-        # Extract time units safely using regex
         pattern = r'(\d+)([dhms])'
         matches = re.findall(pattern, time)
         
         if not matches:
-            # If no matches found, try to parse as plain number (assume seconds)
             try:
                 total_seconds = int(duration)
             except ValueError:
