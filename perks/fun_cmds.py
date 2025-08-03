@@ -54,6 +54,14 @@ class FunCommands(commands.Cog):
             return
 
         split = ctx.message.content.split(" ")
+        if len(split) >= 2 and split[1].lower() == "list":
+            if len(split) >= 3 and "<#" in split[2]:
+                channel_id = split[2].replace("<", "").replace("#", "").replace(">", "")
+                channel = ctx.guild.get_channel(int(channel_id))
+            else:
+                channel = ctx.channel
+            await self.snipe_list(ctx, channel)
+            return
         if len(split) < 2:
             channel = ctx.channel
             split_index = 1
@@ -68,14 +76,14 @@ class FunCommands(commands.Cog):
                     try:
                         split_index = int(split[2])
                     except:
-                        await ctx.reply("Please specify a message number between 1 and 5 (e.g. `!snipe #channel 2`).", mention_author=False)
+                        await ctx.reply("Please specify a message number between 1 and 100 (e.g. `!snipe #channel 2`).", mention_author=False)
                         return
             else:
                 channel = ctx.channel
                 try:
                     split_index = int(split[1])
                 except:
-                    await ctx.reply("Please specify a message number between 1 and 5 (e.g. `!snipe 2`).", mention_author=False)
+                    await ctx.reply("Please specify a message number between 1 and 100 (e.g. `!snipe 2`).", mention_author=False)
                     return
 
         if ctx.author not in channel.members:
@@ -93,7 +101,7 @@ class FunCommands(commands.Cog):
         messages = self.deleted_messages[str(channel.id)]
         if len(messages) < split_index:
             await ctx.message.add_reaction(RED_X)
-            await ctx.reply("There are not that many deleted messages in this channel. You can only snipe the last 5 deleted messages.", mention_author=False)
+            await ctx.reply("There are not that many deleted messages in this channel. You can only snipe the last 100 deleted messages.", mention_author=False)
             return
 
         message_data = messages[-split_index]
@@ -106,6 +114,79 @@ class FunCommands(commands.Cog):
             embed.set_author(name=f"Unknown ({message_data['author_id']})")
         embed.set_footer(text=f"Sniped by {ctx.author.name} • Message #{split_index}")
         await ctx.reply(embed=embed, mention_author=False)
+
+    async def snipe_list(self, ctx: commands.Context, channel: nextcord.TextChannel):
+        messages = self.deleted_messages[str(channel.id)]
+        if not messages:
+            await ctx.message.add_reaction(RED_X)
+            await ctx.reply("There are no recently deleted messages in this channel.", mention_author=False)
+            return
+
+        per_page = 5
+        pages = [messages[i:i+per_page] for i in range(0, len(messages), per_page)]
+        total_pages = len(pages)
+
+        def make_embed(page_idx):
+            embed = nextcord.Embed(
+                title=f"Deleted Messages in #{channel.name} (Page {page_idx+1}/{total_pages})",
+                color=0x3498db,
+                timestamp=datetime.now()
+            )
+            page = pages[page_idx]
+            for idx, msg_data in enumerate(reversed(page), start=1 + page_idx*per_page):
+                author = self.bot.get_user(msg_data["author_id"])
+                author_name = f"{author.name} ({author.id})" if author else f"Unknown ({msg_data['author_id']})"
+                content = msg_data["content"]
+                timestamp_str = f"<t:{msg_data['timestamp']}:R>"
+                embed.add_field(
+                    name=f"#{idx} by {author_name}",
+                    value=f"{content}\n{timestamp_str}",
+                    inline=False
+                )
+            embed.set_footer(text=f"Sniped by {ctx.author.name}")
+            return embed
+
+        class SnipeListView(nextcord.ui.View):
+            def __init__(self, author, timeout=600):
+                super().__init__(timeout=timeout)
+                self.page = 0
+                self.author = author
+
+            async def interaction_check(self, interaction: nextcord.Interaction) -> bool:
+                return interaction.user.id == self.author.id
+
+            @nextcord.ui.button(label="⏪", style=nextcord.ButtonStyle.secondary)
+            async def first(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
+                self.page = 0
+                await interaction.response.edit_message(embed=make_embed(self.page), view=self)
+
+            @nextcord.ui.button(label="◀️", style=nextcord.ButtonStyle.primary)
+            async def prev(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
+                if self.page > 0:
+                    self.page -= 1
+                    await interaction.response.edit_message(embed=make_embed(self.page), view=self)
+                else:
+                    await interaction.response.defer()
+
+            @nextcord.ui.button(label="▶️", style=nextcord.ButtonStyle.primary)
+            async def next(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
+                if self.page < total_pages - 1:
+                    self.page += 1
+                    await interaction.response.edit_message(embed=make_embed(self.page), view=self)
+                else:
+                    await interaction.response.defer()
+
+            @nextcord.ui.button(label="⏩", style=nextcord.ButtonStyle.secondary)
+            async def last(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
+                self.page = total_pages - 1
+                await interaction.response.edit_message(embed=make_embed(self.page), view=self)
+
+            async def on_timeout(self):
+                for item in self.children:
+                    item.disabled = True
+
+        view = SnipeListView(ctx.author)
+        await ctx.reply(embed=make_embed(0), view=view, mention_author=False)
 
     @commands.command(name="kill")
     async def kill(self, ctx: commands.Context):
@@ -260,7 +341,7 @@ class FunCommands(commands.Cog):
         if channel_id not in self.deleted_messages or not isinstance(self.deleted_messages[channel_id], list):
             self.deleted_messages[channel_id] = []
         self.deleted_messages[channel_id].append(msg_data)
-        self.deleted_messages[channel_id] = self.deleted_messages[channel_id][-5:]
+        self.deleted_messages[channel_id] = self.deleted_messages[channel_id][-100:]
 
 def setup(bot):
     bot.add_cog(FunCommands(bot))
