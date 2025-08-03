@@ -128,9 +128,14 @@ class TempRole(commands.Cog):
             role = best_match
         else:
             await ctx.send("Could not find a role matching 'staff of the week'.")
-        await self.add_temprole_cog(ctx.author.id, role.id, ctx.guild.id, "7d")
+        case = await self.add_temprole_cog(ctx.author.id, role.id, ctx.guild.id, "7d")
+        if not case:
+            await ctx.send("Failed to add temporary role.")
+            return
         embed = nextcord.Embed(title=f"Staff of the Week", description=f"Added <@&{role.id}> to {ctx.author.mention} for 7 days.", color=nextcord.Color.yellow())
+        embed.set_footer(text=f"Case ID: #{case}")
         await ctx.send(embed=embed)
+        await ctx.message.add_reaction(GREEN_CHECK)
 
     async def add_temprole_cog(self, user, role, guild, duration):
         current_case = collection.find_one({"_id": "current_case"})
@@ -141,15 +146,15 @@ class TempRole(commands.Cog):
         current_case += 1
         guild = self.bot.get_guild(guild)
         if not guild:
-            return
+            return None
         user = guild.get_member(user)
         if not user:
-            return
+            return None
         role = guild.get_role(role)
         if not role:
-            return
+            return None
         if role in user.roles:
-            return
+            return None
         await user.add_roles(role)
         doc = {
             "_id": current_case,
@@ -162,6 +167,7 @@ class TempRole(commands.Cog):
         collection.insert_one(doc)
         if duration < 3600:
             asyncio.create_task(self.end_temprole(doc))
+        return current_case
 
     @commands.command(name="temprole")
     async def temprole(self, ctx):
