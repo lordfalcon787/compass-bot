@@ -36,6 +36,9 @@ class TempRole(commands.Cog):
         self.cache.append(case["_id"])
         if not doc:
             return
+        seconds_to_wait = (doc["end_time"] - datetime.now()).total_seconds()
+        if seconds_to_wait > 0:
+            await asyncio.sleep(seconds_to_wait)
         guild = self.bot.get_guild(doc["guild"])
         if not guild:
             return
@@ -115,6 +118,8 @@ class TempRole(commands.Cog):
         embed = nextcord.Embed(title=f"Temporary Role Case #{current_case}", description=f"Added temporary role {role.name} to {user.mention} for {readable}, it will be removed in <t:{int((datetime.now() + timedelta(seconds=duration)).timestamp())}:R>.", color=nextcord.Color.blurple())
         await ctx.reply(embed=embed, mention_author=False)
         await ctx.message.add_reaction(GREEN_CHECK)
+        if duration < 3600:
+            asyncio.create_task(self.end_temprole(current_case))
 
     async def temprole_cancel(self, ctx):
         split = ctx.message.content.split(" ")
