@@ -116,10 +116,14 @@ class FunCommands(commands.Cog):
         await ctx.reply(embed=embed, mention_author=False)
 
     async def snipe_list(self, ctx: commands.Context, channel: nextcord.TextChannel):
+        if str(channel.id) not in self.deleted_messages:
+            await ctx.message.add_reaction(RED_X)
+            await ctx.reply("There are no recently deleted messages in this/that channel.", mention_author=False)
+            return
         messages = self.deleted_messages[str(channel.id)]
         if not messages:
             await ctx.message.add_reaction(RED_X)
-            await ctx.reply("There are no recently deleted messages in this channel.", mention_author=False)
+            await ctx.reply("There are no recently deleted messages in this/that channel.", mention_author=False)
             return
 
         per_page = 5
