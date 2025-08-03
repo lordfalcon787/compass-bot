@@ -168,7 +168,7 @@ class TempRole(commands.Cog):
         
         embed = nextcord.Embed(
             title=f"Temporary Role Case #{current_case}", 
-            description=f"Added temporary role **{role.name}** to {user.mention} for **{readable}**.\nIt will be removed <t:{int((datetime.now() + timedelta(seconds=duration)).timestamp())}:R>.", 
+            description=f"Added temporary role **{role.name}** to {user.mention} for **{readable}**.", 
             color=nextcord.Color.blurple()
         )
         await ctx.reply(embed=embed, mention_author=False)
@@ -237,7 +237,7 @@ class TempRole(commands.Cog):
         current_case += 1
         collection.update_one({"_id": "current_case"}, {"$set": {"current_case": current_case}}, upsert=True)
         collection.insert_one({"_id": current_case, "user": user.id, "role": role.id, "guild": interaction.guild.id, "duration": duration, "end_time": datetime.now() + timedelta(seconds=duration)})
-        embed = nextcord.Embed(title=f"Temporary Role Case #{current_case}", description=f"Added temporary role {role.name} to {user.mention} for {readable}, it will be removed in <t:{int((datetime.now() + timedelta(seconds=duration)).timestamp())}:R>.", color=nextcord.Color.blurple())
+        embed = nextcord.Embed(title=f"Temporary Role Case #{current_case}", description=f"Added temporary role {role.name} to {user.mention} for {readable}.", color=nextcord.Color.blurple())
         await interaction.response.send_message(embed=embed, ephemeral=False)
     
     def get_duration(self, duration: str):
