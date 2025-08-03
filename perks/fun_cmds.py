@@ -84,7 +84,10 @@ class FunCommands(commands.Cog):
             return
         if str(channel.id) not in self.deleted_messages or not self.deleted_messages[str(channel.id)]:
             await ctx.message.add_reaction(RED_X)
-            await ctx.reply("There are no recently deleted messages in this channel.", mention_author=False)
+            if ctx.channel.id == channel.id:
+                await ctx.reply("There are no recently deleted messages in this channel.", mention_author=False)
+            else:
+                await ctx.reply("There are no recently deleted messages in that channel.", mention_author=False)
             return
 
         messages = self.deleted_messages[str(channel.id)]
