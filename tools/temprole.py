@@ -15,8 +15,12 @@ RED_X = "<:red_x2:1292657124832448584>"
 class TempRole(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.check_temprole.start()
         self.cache = []
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print("TempRole cog loaded")
+        self.check_temprole.start()
 
     @tasks.loop(hours=1)
     async def check_temprole(self):
