@@ -101,7 +101,7 @@ class FunCommands(commands.Cog):
             embed.set_author(name=f"{author.name} ({author.id})", icon_url=author.display_avatar.url)
         else:
             embed.set_author(name=f"Unknown ({message_data['author_id']})")
-        embed.set_footer(text=f"Sniped by {ctx.author.name} • Message #{index}")
+        embed.set_footer(text=f"Sniped by {ctx.author.name} • Message #{split_index}")
         await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command(name="kill")
