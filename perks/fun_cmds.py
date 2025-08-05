@@ -4,9 +4,6 @@ from nextcord.ext import commands, tasks
 import random
 from datetime import datetime, timedelta
 
-fivehundred = 1386481737478967296
-billion = 1386481804105748620
-
 GREEN_CHECK = "<:green_check2:1291173532432203816>"
 RED_X = "<:red_x2:1292657124832448584>"
 
@@ -192,10 +189,37 @@ class FunCommands(commands.Cog):
         view = SnipeListView(ctx.author)
         await ctx.reply(embed=make_embed(0), view=view, mention_author=False)
 
+    @nextcord.slash_command(name="killcmdsetperms", description="Set the permissions for the kill command.", guild_ids=[1205270486230110330])
+    async def killcmdsetperms(
+        self,
+        interaction: nextcord.Interaction,
+        access_role: nextcord.Role = nextcord.SlashOption(
+            required=False,
+            description="Role that can use the kill command."
+        ),
+        cooldown_reduce_role: nextcord.Role = nextcord.SlashOption(
+            required=False,
+            description="Role that gets reduced cooldown for the kill command."
+        )
+    ):
+        if not interaction.guild.id == 1205270486230110330:
+            return
+        if not interaction.author.guild_permissions.administrator:
+            await interaction.response.send_message("You do not have the required permissions to use this command.", ephemeral=True)
+            return
+        if access_role:
+            collection.update_one({"_id": "kill_cmd_perms"}, {"$set": {"fivehundred": access_role.id}}, upsert=True)
+        if cooldown_reduce_role:
+            collection.update_one({"_id": "kill_cmd_perms"}, {"$set": {"billion": cooldown_reduce_role.id}}, upsert=True)
+        await interaction.response.send_message("Successfully set the permissions for the kill command.", ephemeral=True)
+
     @commands.command(name="kill")
     async def kill(self, ctx: commands.Context):
         roles = [role.id for role in ctx.author.roles]
-        if fivehundred  not in roles and ctx.author.id != 748339732605436055:
+        doc2 = collection.find_one({"_id": "kill_cmd_perms"})
+        fivehundred = doc2["fivehundred"]
+        billion = doc2["billion"]
+        if fivehundred not in roles and billion not in roles and ctx.author.id != 748339732605436055:
             await ctx.message.add_reaction(RED_X)
             return
         

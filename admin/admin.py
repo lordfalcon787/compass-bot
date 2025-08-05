@@ -272,8 +272,9 @@ class Admin(commands.Cog):
 
     @commands.command(name="whitelist")
     async def whitelist(self, ctx: commands.Context):
-        admins = acollection.find_one({"_id": "bot_admins"})
-        if ctx.author.id not in admins["admins"]:
+        if not ctx.guild.id == 1205270486230110330:
+            return
+        if not ctx.author.guild_permissions.administrator:
             embed = nextcord.Embed(title="Invalid Permissions", description="You do not have the required permissions to use this command.", color=nextcord.Color.red())
             await ctx.reply(embed=embed, mention_author=False)
             await ctx.message.add_reaction(RED_X)
