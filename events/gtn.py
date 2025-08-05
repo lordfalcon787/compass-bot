@@ -13,6 +13,7 @@ ARROW_DOWN = "<:arrow_down:1227877135423897623>"
 mongo = MongoConnection.get_instance()
 db = mongo.get_db()
 collection = db["GTN"]
+misc = db["Misc"]
 configuration = db["Configuration"]
 
 class Gtn(commands.Cog):
@@ -122,6 +123,29 @@ class Gtn(commands.Cog):
         await ctx.message.add_reaction(GREEN_CHECK)
         await ctx.author.send(f"The number is {rand}.")
 
+    @nextcord.slash_command(name="gtn")
+    async def gtn_slash(self, interaction):
+        pass
+
+    @gtn_slash.subcommand(name="arrowexempt", description="Exempt a channel from arrows.")
+    async def gtn_slash_exempt(self, interaction, channel: nextcord.TextChannel):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(f"{RED_X} You do not have permission to use this command.", ephemeral=True)
+            return
+        arrow_exempt = misc.find_one({"_id": "arrow_exempt"})
+        if arrow_exempt:
+            arrow_exempt = arrow_exempt.get(str(interaction.guild.id), [])
+        else:
+            arrow_exempt = []
+        if channel.id in arrow_exempt:
+            arrow_exempt.remove(channel.id)
+            misc.update_one({"_id": "arrow_exempt"}, {"$set": {str(interaction.guild.id): arrow_exempt}}, upsert=True)
+            await interaction.response.send_message(f"{GREEN_CHECK} Channel removed from arrow exempt list.", ephemeral=True)
+        else:
+            arrow_exempt.append(channel.id)
+            misc.update_one({"_id": "arrow_exempt"}, {"$set": {str(interaction.guild.id): arrow_exempt}}, upsert=True)
+            await interaction.response.send_message(f"{GREEN_CHECK} Channel exempted from arrows.", ephemeral=True)
+
     @commands.Cog.listener()
     async def on_message(self, message):
         if not message.content.isdigit():
@@ -138,7 +162,12 @@ class Gtn(commands.Cog):
                     self.gtn_win(message)
                 )
                 return 
-            if message.channel.id == 1338945586233217055:
+            arrow_exempt = misc.find_one({"_id": "arrow_exempt"})
+            if arrow_exempt:
+                arrow_exempt = arrow_exempt.get(str(message.guild.id), [])
+            else:
+                arrow_exempt = []
+            if message.channel.id in arrow_exempt:
                 if guess != number:
                     asyncio.create_task(self.red_x(message))
                 return
