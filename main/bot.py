@@ -519,6 +519,17 @@ async def prefix_cmd(ctx):
             json.dump(prefixes, file, indent=4)
         await ctx.reply("Prefix set.", mention_author=False)
         return
+    
+
+@bot.event
+async def on_guild_join(guild):
+    if len(bot.guilds) >= 99:
+        try:
+            await guild.system_channel.send("Sorry, I cannot join more than 99 servers. Leaving this server.")
+        except Exception:
+            pass
+        await guild.leave()
+
 
 @bot.command(name="ping")
 async def latency_cmd(ctx):
