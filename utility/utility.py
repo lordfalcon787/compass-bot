@@ -45,6 +45,7 @@ class View(nextcord.ui.View):
 class utility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.reminder_cache = {}
 
     @tasks.loop(hours=1)
     async def reminder_task(self):
@@ -52,7 +53,7 @@ class utility(commands.Cog):
         for doc in docs:
             if doc["_id"] == "current_reminder_id":
                 continue
-            if doc["end_time"] < datetime.now():
+            if doc["end_time"] <= datetime.now() + timedelta(hours=1):
                 asyncio.create_task(self.reminder_fulfilled(doc))
 
     @commands.Cog.listener()
@@ -304,6 +305,9 @@ class utility(commands.Cog):
         time_left = (reminder_data["end_time"] - datetime.now()).total_seconds()
         if time_left < 0:
             time_left = 0
+        if reminder_data["_id"] in self.reminder_cache:
+            return
+        self.reminder_cache[reminder_data["_id"]] = True
         await asyncio.sleep(time_left)
         time_ago = datetime.now() - reminder_data["sent_time"]
         seconds = int(time_ago.total_seconds())
@@ -339,6 +343,7 @@ class utility(commands.Cog):
             await user.send(embed=embed)
         except:
             pass
+        self.reminder_cache.pop(reminder_data["_id"])
 
     def get_best_match(self, members, args):
         name_dict = {}
