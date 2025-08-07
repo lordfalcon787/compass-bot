@@ -51,8 +51,8 @@ class Gtn(commands.Cog):
         channel = guild.get_channel(1224120097929691237)
         ranges = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 2000]
         range = random.choice(ranges)
-        rand = random.randint(1, range)
-        embed = nextcord.Embed(title="Game Started", description=f"Guess the number between 1 and {range}.", color=8421504)
+        rand = random.randint(13, range)
+        embed = nextcord.Embed(title="Game Started", description=f"Guess the number between 13 and {range}.", color=8421504)
         embed.set_footer(text=f"First to guess the correct number wins.")
         await channel.send(embed=embed)
         self.cache[channel.id] = rand
@@ -106,15 +106,15 @@ class Gtn(commands.Cog):
                 await ctx.message.add_reaction(RED_X)
                 return
             
-        if quantity < 2:
+        if quantity < 14:
             await ctx.message.add_reaction(RED_X)
             return
 
         if collection.find_one({"_id": ctx.channel.id}):
             await ctx.message.add_reaction(RED_X)
             return
-        rand = random.randint(1, quantity)
-        embed = nextcord.Embed(title="Game Started", description=f"Guess the number between 1 and {quantity}.", color=8421504)
+        rand = random.randint(13, quantity)
+        embed = nextcord.Embed(title="Game Started", description=f"Guess the number between 13 and {quantity}.", color=8421504)
         embed.set_footer(text=f"First to guess the correct number wins.")
         self.cache[ctx.channel.id] = rand
         collection.insert_one({"_id": ctx.channel.id, "number": rand})
