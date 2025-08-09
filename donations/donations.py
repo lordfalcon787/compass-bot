@@ -76,7 +76,8 @@ class Donations(commands.Cog):
             amount = amount.replace("⏣ ", "")
             amount = amount.replace(",", "")
             amount = int(amount)
-            collection.update_one({"_id": "rc_donations"}, {"$inc": {"Regular": amount}}, upsert=True)
+            user_id = message.interaction.user.id
+            collection.update_one({"_id": "rc_donations"}, {"$inc": {f"Regular.{user_id}": amount}}, upsert=True)
             await message.add_reaction(GREEN_CHECK)
             embed = nextcord.Embed(
                 title="Donation Logged",
@@ -94,7 +95,8 @@ class Donations(commands.Cog):
             item = items.find_one({"_id": second})
             value = item["value"]
             total_added = value * first
-            collection.update_one({"_id": "rc_donations"}, {"$inc": {"Regular": total_added}}, upsert=True)
+            user_id = message.interaction.user.id
+            collection.update_one({"_id": "rc_donations"}, {"$inc": {f"Regular.{user_id}": total_added}}, upsert=True)
             await message.add_reaction(GREEN_CHECK)
             embed = nextcord.Embed(
                 title="Donation Logged",
